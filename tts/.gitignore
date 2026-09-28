@@ -1,0 +1,2 @@
+# Native third-party sources fetched by src/main/cpp/fetch_deps.sh — not vendored in git.
+src/main/cpp/third_party/
