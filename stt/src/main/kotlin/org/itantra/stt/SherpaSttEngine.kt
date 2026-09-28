@@ -177,8 +177,12 @@ class SherpaSttEngine(
         }
     }
 
-    /** Decodes a snapshot of the in-progress utterance on the background worker, at most 2x/s. */
+    /** Decodes a snapshot of the in-progress utterance on the background worker, at most 2x/s.
+     * No-op with no listener attached (Profile.LITE turns partials off — see
+     * app/.../Orchestrator.onLocalPartial) so LITE phones skip this decode entirely, not just the
+     * callback. */
     private fun maybeEmitPartial() {
+        if (partialListener == null) return
         val id = currentUtteranceId ?: return
         val now = System.currentTimeMillis()
         if (now - lastPartialEmitMs < 500) return

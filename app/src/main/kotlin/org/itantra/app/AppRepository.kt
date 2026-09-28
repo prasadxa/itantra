@@ -23,6 +23,10 @@ object AppRepository {
     val partials = MutableStateFlow<Map<String, PartialEntry>>(emptyMap())
     val metrics = MutableStateFlow<List<MessageMetrics>>(emptyList())
     val engineStatus = MutableStateFlow<EngineStatus?>(null)
+    /** Device profile the current engines were built with (see [ProfileManager]). */
+    val profile = MutableStateFlow<Profile?>(null)
+    /** id -> duration (seconds) of received messages whose synthesized audio is still cached for replay. */
+    val voiceNoteDurations = MutableStateFlow<Map<String, Float>>(emptyMap())
     /** id of the message currently audible through TTS playback, for the "speaking…" bubble indicator. */
     val speakingId = MutableStateFlow<String?>(null)
     /** True while TTS is playing (+ a short tail); mic input is gated during this to avoid self-transcription. */
@@ -53,5 +57,6 @@ object AppRepository {
         metrics.value = emptyList()
         speakingId.value = null
         ttsPlaying.value = false
+        voiceNoteDurations.value = emptyMap()
     }
 }

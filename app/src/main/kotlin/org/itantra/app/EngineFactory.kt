@@ -26,11 +26,13 @@ object EngineFactory {
         val root = File(context.getExternalFilesDir(null), "models")
         root.mkdirs()
         val paths = ModelPaths(root)
+        val profile = ProfileManager.resolve(context)
+        val numThreads = if (profile == Profile.LITE) 2 else 4
 
         var sttError: String? = null
         val sttLoadStart = System.currentTimeMillis()
         val stt: SttEngine? = try {
-            SherpaSttEngine(paths)
+            SherpaSttEngine(paths, numThreads = numThreads)
         } catch (t: Throwable) {
             sttError = t.message ?: t.toString(); null
         }
@@ -39,7 +41,11 @@ object EngineFactory {
         var ttsError: String? = null
         val ttsLoadStart = System.currentTimeMillis()
         val ttsEngine = try {
-            FallbackTtsEngine(context, paths).also { it.warmUp() }
+            // preferFast (VITS-first where it has a voice) already matches both profiles; LITE
+            // additionally halves numThreads. The LITE-only lite/q4 Mio GGUF and the 60s Mio
+            // unload-after-idle hook need a model-path + unload API in :tts `engine/` (owned by
+            // another agent) — see docs/design.md "Profiles" and the handoff note in the report.
+            FallbackTtsEngine(context, paths, numThreads = numThreads, preferFast = true).also { it.warmUp() }
         } catch (t: Throwable) {
             ttsError = t.message ?: t.toString(); null
         }
@@ -86,6 +92,7 @@ object EngineFactory {
         if (Metrics.isDebuggable(context)) {
             Metrics.log(
                 "event" to "engine_load",
+                "profile" to profile.name, "numThreads" to numThreads,
                 "sttReady" to (stt != null), "sttLoadMs" to sttLoadMs, "sttError" to sttError,
                 "ttsReady" to (speechOutput != null), "ttsLoadMs" to ttsLoadMs, "ttsError" to ttsError,
                 "textReady" to (textPipeline != null), "textLoadMs" to textLoadMs, "textError" to textError,
@@ -96,6 +103,7 @@ object EngineFactory {
 
         return EngineBundle(
             paths = paths,
+            profile = profile,
             stt = stt,
             ttsEngine = ttsEngine,
             speechOutput = speechOutput,
@@ -120,6 +128,7 @@ data class EngineStatus(
 
 class EngineBundle(
     val paths: ModelPaths,
+    val profile: Profile,
     val stt: SttEngine?,
     /** Raw :tts engine (Mio+VITS fallback), kept alongside [speechOutput] for debug tooling. */
     val ttsEngine: org.itantra.core.TtsEngine?,
@@ -142,4 +151,9 @@ private class SpeechOutputAdapter(private val delegate: SpeechOutput) : SpeechOu
     override fun stopNormal() = delegate.stopNormal()
     override fun close() = delegate.close()
     override val isPlaying: kotlinx.coroutines.flow.StateFlow<Boolean> get() = delegate.isPlaying
+    override fun replay(id: String, onPlayStarted: (id: String, epochMs: Long) -> Unit) = delegate.replay(id, onPlayStarted)
+    override fun durationSeconds(id: String): Float? = delegate.durationSeconds(id)
+    override var onVoiceNoteStored: ((id: String, durationSeconds: Float) -> Unit)?
+        get() = delegate.onVoiceNoteStored
+        set(value) { delegate.onVoiceNoteStored = value }
 }

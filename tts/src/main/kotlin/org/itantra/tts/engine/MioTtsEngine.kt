@@ -18,7 +18,14 @@ import org.itantra.tts.mio.MioNative
  */
 class MioTtsEngine(private val paths: ModelPaths, private val numThreads: Int) : TtsEngine {
 
-    private val lmGguf = File(paths.mioDir, "indic-mio-q8_0.gguf")
+    // Prefer the Q4_0 LLM (llama.cpp repacks Q4_0 at load into ARM dotprod/i8mm-optimised
+    // layouts) when present — half the size and faster matmuls than q8_0, at a small quality
+    // cost; see tools/tts/quantize_q4.sh. Falls back to q8_0 so devices/builds without the q4
+    // file (or an older push) keep working unmodified. Filename fixed at "indic-mio-q4.gguf" —
+    // the app's LITE profile expects exactly this name.
+    private val q4Gguf = File(paths.mioDir, "indic-mio-q4.gguf")
+    private val q8Gguf = File(paths.mioDir, "indic-mio-q8_0.gguf")
+    private val lmGguf = if (q4Gguf.exists()) q4Gguf else q8Gguf
     private val codecGguf = File(paths.mioDir, "miocodec.gguf")
     private val wavlmGguf = File(paths.mioDir, "wavlm.gguf")
 

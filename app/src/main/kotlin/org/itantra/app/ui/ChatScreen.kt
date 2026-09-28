@@ -99,6 +99,7 @@ fun ChatScreen(onOpenModels: () -> Unit) {
     val speakingId by AppRepository.speakingId.collectAsState()
     val ttsPlaying by AppRepository.ttsPlaying.collectAsState()
     val micLevel by AppRepository.micLevel.collectAsState()
+    val voiceNoteDurations by AppRepository.voiceNoteDurations.collectAsState()
 
     val finalIds = remember(messages) { messages.map { it.id }.toHashSet() }
     val items = remember(messages, partials) {
@@ -132,12 +133,18 @@ fun ChatScreen(onOpenModels: () -> Unit) {
                 items(items, key = { it.id }) { item ->
                     when (item) {
                         is ChatItem.Final -> if (item.entry.alert) {
-                            AlertRow(item.entry)
+                            AlertRow(
+                                entry = item.entry,
+                                durationSeconds = voiceNoteDurations[item.entry.id],
+                                onReplay = { TalkService.instance?.onReplay(item.entry.id) },
+                            )
                         } else {
                             TranscriptRow(
                                 entry = item.entry,
                                 metrics = metrics.find { it.id == item.entry.id && it.direction == item.entry.direction },
                                 speaking = speakingId == item.entry.id,
+                                durationSeconds = voiceNoteDurations[item.entry.id],
+                                onReplay = { TalkService.instance?.onReplay(item.entry.id) },
                             )
                         }
                         is ChatItem.Live -> LivePartialRow(item.entry)
@@ -195,16 +202,44 @@ private fun PeerTalkingBanner() {
 }
 
 @Composable
-private fun AlertRow(entry: LogEntry) {
+private fun AlertRow(entry: LogEntry, durationSeconds: Float?, onReplay: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .background(MaterialTheme.colorScheme.error)
             .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         MonoText("ALERT", color = Color.White, fontWeight = FontWeight.Medium)
-        Text(entry.text, color = Color.White, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 12.dp))
+        Text(
+            entry.text,
+            color = Color.White,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(start = 12.dp).weight(1f),
+        )
+        if (entry.direction == Direction.RECEIVED && durationSeconds != null) {
+            ReplayButton(durationSeconds, tint = Color.White, onClick = onReplay)
+        }
+    }
+}
+
+/** Mono "field radio" replay control — the same monospace glyph/label language used for status
+ * chips elsewhere (see [LangButton], [MonoText]), not a Material icon, so it reads as an
+ * instrument readout rather than a media-player button. */
+@Composable
+private fun ReplayButton(durationSeconds: Float, tint: Color, onClick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .padding(start = 10.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(tint.copy(alpha = 0.14f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+    ) {
+        MonoText("▶ REPLAY", color = tint, fontWeight = FontWeight.Medium)
+        MonoText(" %.1fs".format(durationSeconds), color = tint.copy(alpha = 0.8f))
     }
 }
 
@@ -222,7 +257,13 @@ private fun telemetryLine(m: MessageMetrics): String = buildString {
 }
 
 @Composable
-private fun TranscriptRow(entry: LogEntry, metrics: MessageMetrics?, speaking: Boolean) {
+private fun TranscriptRow(
+    entry: LogEntry,
+    metrics: MessageMetrics?,
+    speaking: Boolean,
+    durationSeconds: Float?,
+    onReplay: () -> Unit,
+) {
     val sent = entry.direction == Direction.SENT
     val ruleColor = if (sent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
     var expanded by remember { mutableStateOf(false) }
@@ -239,10 +280,15 @@ private fun TranscriptRow(entry: LogEntry, metrics: MessageMetrics?, speaking: B
                 MonoText(
                     "${if (sent) "YOU" else "PEER"} · ${entry.lang.code.uppercase()} · ${timeOf(entry.timestamp)}",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f, fill = false),
                 )
                 if (speaking) {
                     Spacer(Modifier.width(8.dp))
                     LevelGlyph(color = ruleColor)
+                }
+                if (!sent && durationSeconds != null) {
+                    Spacer(Modifier.width(8.dp))
+                    ReplayButton(durationSeconds, tint = MaterialTheme.colorScheme.onSurfaceVariant, onClick = onReplay)
                 }
             }
             Text(entry.text, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)

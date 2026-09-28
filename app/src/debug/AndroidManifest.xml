@@ -12,6 +12,8 @@
             <intent-filter>
                 <action android:name="org.itantra.DEBUG_STT_WAV" />
                 <action android:name="org.itantra.DEBUG_SPEAK" />
+                <action android:name="org.itantra.DEBUG_STT_BATCH" />
+                <action android:name="org.itantra.DEBUG_TTS_SAVE" />
             </intent-filter>
         </receiver>
     </application>

@@ -19,8 +19,18 @@ set(GGML_SYSTEM_ARCH "ARM")
 set(GGML_NATIVE OFF CACHE BOOL "" FORCE)
 set(GGML_OPENMP OFF CACHE BOOL "" FORCE)
 set(GGML_CPU_ALL_VARIANTS OFF CACHE BOOL "" FORCE)
-# Baseline for nearly all arm64 phones since ~2019 (Cortex-A55/A75+): enables SDOT kernels for q8_0.
-set(GGML_CPU_ARM_ARCH "armv8.2-a+dotprod+fp16" CACHE STRING "" FORCE)
+# Single static ggml-cpu build (no GGML_CPU_ALL_VARIANTS/GGML_BACKEND_DL multi-.so packaging,
+# which would need jniLibs changes outside this module's ownership) targeting a base of
+# armv8.2-a+dotprod+fp16 (SDOT kernels for q8_0; nearly all arm64 phones since ~2019,
+# Cortex-A55/A75+) plus +i8mm as an *optional* feature flag layered on that same 8.2 baseline
+# (does not raise the required base ISA to 8.6). i8mm-using code (ggml's ARM repack.cpp GEMM
+# kernels, which llama.cpp uses to repack Q4_0/Q8_0 weight blocks into i8mm-friendly layouts at
+# load time) is compiled in behind `#if defined(__ARM_FEATURE_MATMUL_INT8)` AND additionally
+# runtime-dispatched via ggml_cpu_has_matmul_int8() before ever being called — so a single binary
+# runs correctly on both older dotprod-only phones (i8mm path never invoked) and newer
+# dotprod+i8mm phones like Snapdragon 8 Gen 3 (Cortex-X4/A720, both i8mm-capable), which get the
+# faster kernels automatically. See ggml/src/ggml-cpu/{ggml-cpu.c,repack.cpp,arch/arm/*}.
+set(GGML_CPU_ARM_ARCH "armv8.2-a+dotprod+fp16+i8mm" CACHE STRING "" FORCE)
 set(GGML_CPU_KLEIDIAI OFF CACHE BOOL "" FORCE)
 set(GGML_LLAMAFILE OFF CACHE BOOL "" FORCE)
 set(GGML_BACKEND_DL OFF CACHE BOOL "" FORCE)

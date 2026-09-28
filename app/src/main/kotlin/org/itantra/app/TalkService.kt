@@ -15,8 +15,11 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import kotlin.math.sqrt
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.itantra.core.Frame
 import org.itantra.core.Lang
@@ -78,8 +81,10 @@ class TalkService : LifecycleService() {
 
         engines = EngineFactory.create(applicationContext, deviceId, deviceName, lifecycleScope)
         AppRepository.engineStatus.value = engines.status
+        AppRepository.profile.value = engines.profile
         transport = engines.transport ?: NullTransport("transport module unavailable")
 
+        val lite = engines.profile == Profile.LITE
         orchestrator = Orchestrator(
             deviceId = deviceId,
             stt = engines.stt,
@@ -95,11 +100,20 @@ class TalkService : LifecycleService() {
             onRtt = { rtt, offset -> AppRepository.rttMs.value = rtt; AppRepository.clockOffsetMs.value = offset },
             alertProvider = { AppRepository.alertNext.value },
             ttsSupports = { lang -> engines.ttsEngine?.supports(lang) ?: false },
+            // LITE: live STT partials off (spec allows "off, or every 1.5s"; off saves the most -
+            // see Orchestrator.onLocalPartial / the SherpaSttEngine partial-decode early-return).
+            partialsEnabled = !lite,
+            partialSendIntervalMs = if (lite) 1500L else 500L,
         ).also { it.mode = AppRepository.mode.value; it.language = AppRepository.language.value }
+
+        engines.speechOutput?.onVoiceNoteStored = { id, durationSeconds ->
+            AppRepository.voiceNoteDurations.update { it + (id to durationSeconds) }
+        }
 
         lifecycleScope.launch { transport.state.collect { AppRepository.linkState.value = it } }
         lifecycleScope.launch { transport.start() }
         orchestrator.start()
+        startResourceMetricsLoop()
 
         // Half-duplex mic gating: while our own TTS is audible (+ a short tail), drop mic input
         // before it ever reaches SttEngine, and discard whatever partial utterance VAD had
@@ -157,6 +171,24 @@ class TalkService : LifecycleService() {
     fun onTextSend(text: String, lang: Lang, ssml: Boolean) {
         if (text.isBlank()) return
         orchestrator.sendText(text, lang, ssml)
+    }
+
+    /** Re-plays a received message's cached audio (see :tts `SpeechOutput.replay`); no-op if the
+     * TTS engine is unavailable or the audio has since been evicted from the LRU cache. */
+    fun onReplay(id: String) {
+        engines.speechOutput?.replay(id) { replayedId, _ -> AppRepository.speakingId.value = replayedId }
+    }
+
+    /** Every 30s, regardless of build type: idle CPU% + PSS, for judges/testers to `adb logcat`
+     * without a debug build (see docs/design.md "Metrics"). */
+    private fun startResourceMetricsLoop() {
+        lifecycleScope.launch {
+            while (isActive) {
+                delay(30_000)
+                val cpu = CpuSampler.samplePercent(1000)
+                Metrics.log("event" to "resource", "idleCpuPercent" to cpu, "pssKb" to android.os.Debug.getPss())
+            }
+        }
     }
 
     private fun startMic(mode: CaptureMode) {

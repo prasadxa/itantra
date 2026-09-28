@@ -66,6 +66,18 @@ interface SpeechOutputPort {
     /** True while any audio is being written to a track (NORMAL or ALERT). Used to half-duplex-gate
      * the mic so the device never transcribes its own TTS output. */
     val isPlaying: kotlinx.coroutines.flow.StateFlow<Boolean>
+
+    /** Re-plays a received message's cached audio (see :tts `SpeechOutput.replay`). Returns false
+     * if not (or no longer) cached. Default no-op so existing fakes/tests need no changes. */
+    fun replay(id: String, onPlayStarted: (id: String, epochMs: Long) -> Unit = { _, _ -> }): Boolean = false
+
+    /** Duration in seconds of the cached voice note for [id], or null if not cached. */
+    fun durationSeconds(id: String): Float? = null
+
+    /** Fired once a received message's audio has been fully cached for [replay]. */
+    var onVoiceNoteStored: ((id: String, durationSeconds: Float) -> Unit)?
+        get() = null
+        set(_) {}
 }
 
 /**
@@ -97,6 +109,13 @@ class Orchestrator(
      * existing fakes/tests (which don't model per-language support) are unaffected.
      */
     private val ttsSupports: (Lang) -> Boolean = { true },
+    /** Profile.LITE: turn off live STT partials (both the local shimmering bubble and the
+     * over-the-wire [Frame.Partial]) to save CPU/battery/bandwidth on low/mid-range phones; the
+     * decode itself is throttled inside SttEngine, this just stops us from doing anything with it.
+     * Profile.FULL (default true) keeps the current behaviour. */
+    private val partialsEnabled: Boolean = true,
+    /** Minimum gap between [Frame.Partial] sends over the wire; UI updates are not throttled. */
+    private val partialSendIntervalMs: Long = 500L,
 ) {
     var mode: Mode = Mode.PTT
 
@@ -123,7 +142,9 @@ class Orchestrator(
 
     init {
         stt?.listener = { sentence -> onRecognized(sentence) }
-        stt?.partialListener = { id, text -> onLocalPartial(id, text) }
+        // Left null (not a no-op lambda) when disabled so SttEngine implementations can skip the
+        // partial-decode work entirely, not just the callback (see SherpaSttEngine.maybeEmitPartial).
+        stt?.partialListener = if (partialsEnabled) { id, text -> onLocalPartial(id, text) } else null
     }
 
     fun start() {
@@ -172,11 +193,13 @@ class Orchestrator(
 
     private fun priority(): Priority = if (alertProvider()) Priority.ALERT else Priority.NORMAL
 
-    /** Fired by [SttEngine.partialListener] every ~500ms while the local mic is mid-utterance. */
+    /** Fired by [SttEngine.partialListener] every ~500ms while the local mic is mid-utterance.
+     * No-op entirely when [partialsEnabled] is false (Profile.LITE). */
     private fun onLocalPartial(id: String, text: String) {
+        if (!partialsEnabled) return
         onPartial(PartialEntry(id, Direction.SENT, text, language, clock()))
         val now = clock()
-        if (now - lastPartialSentAt >= 500) {
+        if (now - lastPartialSentAt >= partialSendIntervalMs) {
             lastPartialSentAt = now
             scope.launch { transport.send(Frame.Partial(id, deviceId, language, text)) }
         }

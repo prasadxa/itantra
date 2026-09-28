@@ -14,6 +14,8 @@ import org.itantra.core.VoiceMessage
 private const val TAG = "DebugCommandReceiver"
 private const val ACTION_DEBUG_STT_WAV = "org.itantra.DEBUG_STT_WAV"
 private const val ACTION_DEBUG_SPEAK = "org.itantra.DEBUG_SPEAK"
+private const val ACTION_DEBUG_STT_BATCH = "org.itantra.DEBUG_STT_BATCH"
+private const val ACTION_DEBUG_TTS_SAVE = "org.itantra.DEBUG_TTS_SAVE"
 
 /**
  * Debug-build-only hooks for automated on-device testing (this whole `app/src/debug` source set
@@ -61,6 +63,44 @@ class DebugCommandReceiver : BroadcastReceiver() {
                     ssml = intent.getBooleanExtra("ssml", false),
                     play = intent.getBooleanExtra("play", true),
                 )
+            }
+            ACTION_DEBUG_STT_BATCH -> {
+                val manifest = intent.getStringExtra("manifest")
+                if (manifest == null) {
+                    Metrics.log("event" to "debug_hook_error", "action" to intent.action, "reason" to "missing 'manifest' extra")
+                    return
+                }
+                // A batch of hundreds of clips run sequentially can easily take tens of seconds,
+                // far past Android's BroadcastReceiver.onReceive() ANR watchdog (~10s) - this
+                // genuinely happened during eval harness runs (ANR on DEBUG_STT_BATCH). goAsync()
+                // + a background thread lets onReceive() return immediately while the batch keeps
+                // running; pendingResult.finish() only after every event is logged.
+                val pending = goAsync()
+                Thread {
+                    try {
+                        handleSttBatch(service, manifest)
+                    } finally {
+                        pending.finish()
+                    }
+                }.start()
+            }
+            ACTION_DEBUG_TTS_SAVE -> {
+                val text = intent.getStringExtra("text")
+                val out = intent.getStringExtra("out")
+                if (text == null || out == null) {
+                    Metrics.log("event" to "debug_hook_error", "action" to intent.action, "reason" to "missing 'text' or 'out' extra")
+                    return
+                }
+                // Same ANR-safety reasoning as DEBUG_STT_BATCH above: a long alert sentence at a
+                // slow synthesis RTF can approach the onReceive() watchdog even for one call.
+                val pending = goAsync()
+                Thread {
+                    try {
+                        handleTtsSave(service, text, intent.getStringExtra("lang"), out)
+                    } finally {
+                        pending.finish()
+                    }
+                }.start()
             }
         }
     }
@@ -122,6 +162,169 @@ class DebugCommandReceiver : BroadcastReceiver() {
             "totalMs" to (System.currentTimeMillis() - t0),
         )
         collected.forEach { prevListener?.invoke(it) }
+    }
+
+    /**
+     * Runs every clip in a manifest.tsv (as written by tools/eval/fetch_fleurs.py: header
+     * `filename<TAB>lang<TAB>transcript<TAB>duration_sec<TAB>source_id`, `filename` relative to
+     * the manifest's own directory, e.g. `hi/clip_000.wav`) through the same STT path as
+     * [handleSttWav], sequentially, with the mic paused for the whole batch. Logs one
+     * `debug_stt_batch_clip` event per clip (consumed by tools/eval/score_stt.py) plus one
+     * `debug_stt_batch_done` summary event.
+     */
+    private fun handleSttBatch(service: TalkService, manifestPath: String) {
+        val sttEngine = service.engines.stt
+        if (sttEngine == null) {
+            Metrics.log("event" to "debug_stt_batch_done", "manifest" to manifestPath, "error" to "stt_unavailable (models missing)")
+            return
+        }
+        val manifestFile = File(manifestPath)
+        val lines = try {
+            manifestFile.readLines()
+        } catch (t: Throwable) {
+            Metrics.log("event" to "debug_stt_batch_done", "manifest" to manifestPath, "error" to "manifest_read_failed: ${t.message}")
+            return
+        }
+        val rows = lines
+            .map { it.trimEnd('\r') }
+            .filter { it.isNotBlank() && !it.startsWith("filename\t") }
+            .mapNotNull { line ->
+                val cols = line.split("\t")
+                if (cols.size < 3) null else Triple(cols[0], cols[1], cols[2])
+            }
+        if (rows.isEmpty()) {
+            Metrics.log("event" to "debug_stt_batch_done", "manifest" to manifestPath, "error" to "manifest_empty_or_unparseable")
+            return
+        }
+
+        val prevListener = sttEngine.listener
+        val prevLang = sttEngine.language
+        val micWasOn = service.engines.micCapture?.isRunning == true
+        service.engines.micCapture?.stop()
+        val batchStart = System.currentTimeMillis()
+        var ok = 0
+        var failed = 0
+        try {
+            for ((relPath, langCode, _transcript) in rows) {
+                val lang = runCatching { Lang.of(langCode) }.getOrNull()
+                if (lang == null) {
+                    Metrics.log("event" to "debug_stt_batch_clip", "filename" to relPath, "lang" to langCode, "error" to "unknown_lang")
+                    failed++
+                    continue
+                }
+                val wavFile = File(manifestFile.parentFile, relPath)
+                val wav = try {
+                    readWavMonoFloat(wavFile)
+                } catch (t: Throwable) {
+                    Metrics.log("event" to "debug_stt_batch_clip", "filename" to relPath, "lang" to lang.code, "error" to "wav_read_failed: ${t.message}")
+                    failed++
+                    continue
+                }
+                if (wav == null) {
+                    Metrics.log("event" to "debug_stt_batch_clip", "filename" to relPath, "lang" to lang.code, "error" to "invalid_wav")
+                    failed++
+                    continue
+                }
+                val collected = mutableListOf<org.itantra.core.RecognizedSentence>()
+                sttEngine.listener = { collected += it }
+                sttEngine.language = lang
+                sttEngine.reset()
+                sttEngine.accept(wav.samples)
+                sttEngine.flush()
+                val decodeMs = collected.sumOf { it.decodeMs }
+                val audioSeconds = wav.samples.size / 16000f
+                Metrics.log(
+                    "event" to "debug_stt_batch_clip",
+                    "filename" to relPath,
+                    "lang" to lang.code,
+                    "text" to collected.joinToString(" ") { it.text },
+                    "segments" to collected.size,
+                    "audioSeconds" to audioSeconds,
+                    "decodeMs" to decodeMs,
+                    "sttLatencyMs" to collected.lastOrNull()?.let { it.sttDoneAt - it.speechEndAt },
+                    "rtf" to if (audioSeconds > 0f) decodeMs / (audioSeconds * 1000f) else null,
+                )
+                ok++
+            }
+        } finally {
+            sttEngine.listener = prevListener
+            sttEngine.language = prevLang
+            if (micWasOn) service.resumeMicAfterDebug()
+        }
+        Metrics.log(
+            "event" to "debug_stt_batch_done", "manifest" to manifestPath,
+            "clips" to rows.size, "ok" to ok, "failed" to failed,
+            "totalMs" to (System.currentTimeMillis() - batchStart),
+        )
+    }
+
+    /**
+     * Synthesizes [text] through the same TextPipeline -> TTS path as [handleSpeak] but never
+     * plays it: collects every PCM chunk, resamples to 16 kHz mono if the engine's native rate
+     * differs, and writes a WAV to [outPath] (must be under the app's own external files dir,
+     * e.g. under `/sdcard/Android/data/org.itantra.app/files/...`, so no extra storage
+     * permission is needed). Used by tools/eval/tts_intelligibility.py.
+     */
+    private fun handleTtsSave(service: TalkService, text: String, langCode: String?, outPath: String) {
+        val lang = langCode?.let { runCatching { Lang.of(it) }.getOrNull() } ?: service.orchestrator.language
+        val textPipeline = service.engines.textPipeline
+        val ttsEngine = service.engines.ttsEngine
+        if (textPipeline == null || ttsEngine == null) {
+            Metrics.log("event" to "debug_tts_save", "text" to text, "lang" to lang.code, "out" to outPath, "error" to "engine_unavailable (models missing)")
+            return
+        }
+        if (!ttsEngine.supports(lang)) {
+            Metrics.log("event" to "debug_tts_save", "text" to text, "lang" to lang.code, "out" to outPath, "error" to "tts_unavailable (no Mio/VITS voice for ${lang.code})")
+            return
+        }
+
+        val now = System.currentTimeMillis()
+        val message = VoiceMessage(
+            id = UUID.randomUUID().toString(), from = service.deviceId, lang = lang, text = text,
+            priority = Priority.NORMAL, emotion = null, ssml = false,
+            speechEndAt = now, sttDoneAt = now, sentAt = now,
+        )
+        val plan = textPipeline.plan(message)
+        val engineUsed = probeEngineName(ttsEngine, plan.lang)
+
+        val chunks = mutableListOf<FloatArray>()
+        var firstChunkMs: Long? = null
+        var synthMs = 0L
+        val start = System.currentTimeMillis()
+        try {
+            for (segment in plan.segments) {
+                val segStart = System.currentTimeMillis()
+                ttsEngine.synthesize(plan.lang, segment) { chunk ->
+                    if (firstChunkMs == null) firstChunkMs = System.currentTimeMillis() - start
+                    chunks += chunk
+                }
+                synthMs += System.currentTimeMillis() - segStart
+            }
+        } catch (t: Throwable) {
+            Metrics.log("event" to "debug_tts_save", "text" to text, "lang" to lang.code, "out" to outPath, "engine" to engineUsed, "error" to "synth_failed: ${t.message}")
+            return
+        }
+
+        val nativeRate = ttsEngine.sampleRate
+        var samples = concatFloatArrays(chunks)
+        val audioSeconds = samples.size / nativeRate.toFloat()
+        if (nativeRate != 16000) {
+            samples = resampleLinear(samples, nativeRate, 16000)
+        }
+
+        try {
+            File(outPath).also { it.parentFile?.mkdirs() }.let { writeWavMono16(it, samples, 16000) }
+        } catch (t: Throwable) {
+            Metrics.log("event" to "debug_tts_save", "text" to text, "lang" to lang.code, "out" to outPath, "engine" to engineUsed, "error" to "wav_write_failed: ${t.message}")
+            return
+        }
+
+        val rtf = if (audioSeconds > 0f) synthMs / (audioSeconds * 1000f) else null
+        Metrics.log(
+            "event" to "debug_tts_save", "text" to text, "lang" to lang.code, "out" to outPath,
+            "segments" to plan.segments.size, "engine" to engineUsed, "nativeSampleRate" to nativeRate,
+            "audioSeconds" to audioSeconds, "synthMs" to synthMs, "rtf" to rtf, "firstChunkMs" to firstChunkMs,
+        )
     }
 
     /** Runs the receive path locally: TextPipeline -> TTS -> SpeechOutput, as if a Frame.Msg arrived. */
@@ -211,6 +414,63 @@ class DebugCommandReceiver : BroadcastReceiver() {
 
     private fun probeEngineName(ttsEngine: TtsEngine, lang: Lang): String =
         (ttsEngine as? org.itantra.tts.engine.FallbackTtsEngine)?.engineNameFor(lang) ?: "unknown"
+}
+
+private fun concatFloatArrays(chunks: List<FloatArray>): FloatArray {
+    val total = chunks.sumOf { it.size }
+    val out = FloatArray(total)
+    var pos = 0
+    for (c in chunks) {
+        System.arraycopy(c, 0, out, pos, c.size)
+        pos += c.size
+    }
+    return out
+}
+
+/** Simple linear-interpolation resampler - good enough for ASR-intelligibility eval, not for playback quality. */
+private fun resampleLinear(samples: FloatArray, fromRate: Int, toRate: Int): FloatArray {
+    if (fromRate == toRate || samples.isEmpty()) return samples
+    val outLen = ((samples.size.toLong() * toRate) / fromRate).toInt().coerceAtLeast(1)
+    val out = FloatArray(outLen)
+    val ratio = (samples.size - 1).toFloat() / (outLen - 1).coerceAtLeast(1)
+    for (i in 0 until outLen) {
+        val srcPos = i * ratio
+        val i0 = srcPos.toInt().coerceIn(0, samples.size - 1)
+        val i1 = (i0 + 1).coerceAtMost(samples.size - 1)
+        val frac = srcPos - i0
+        out[i] = samples[i0] * (1 - frac) + samples[i1] * frac
+    }
+    return out
+}
+
+/** Writes 16 kHz(-or-whatever-[sampleRateHz]) mono PCM16 WAV - the mirror of [readWavMonoFloat]. */
+private fun writeWavMono16(file: File, samples: FloatArray, sampleRateHz: Int) {
+    val dataSize = samples.size * 2
+    val byteRate = sampleRateHz * 2
+    val out = java.io.BufferedOutputStream(java.io.FileOutputStream(file))
+    out.use { os ->
+        fun u32le(v: Int) { os.write(v and 0xFF); os.write((v ushr 8) and 0xFF); os.write((v ushr 16) and 0xFF); os.write((v ushr 24) and 0xFF) }
+        fun u16le(v: Int) { os.write(v and 0xFF); os.write((v ushr 8) and 0xFF) }
+        os.write("RIFF".toByteArray(Charsets.US_ASCII)); u32le(36 + dataSize)
+        os.write("WAVE".toByteArray(Charsets.US_ASCII))
+        os.write("fmt ".toByteArray(Charsets.US_ASCII)); u32le(16)
+        u16le(1) // PCM
+        u16le(1) // mono
+        u32le(sampleRateHz)
+        u32le(byteRate)
+        u16le(2) // block align
+        u16le(16) // bits per sample
+        os.write("data".toByteArray(Charsets.US_ASCII)); u32le(dataSize)
+        val buf = ByteArray(dataSize)
+        var pos = 0
+        for (s in samples) {
+            val clamped = (s.coerceIn(-1f, 1f) * 32767f).toInt()
+            buf[pos] = (clamped and 0xFF).toByte()
+            buf[pos + 1] = ((clamped ushr 8) and 0xFF).toByte()
+            pos += 2
+        }
+        os.write(buf)
+    }
 }
 
 private class WavPcm(val samples: FloatArray, val sampleRateHz: Int, val channels: Int)

@@ -26,14 +26,18 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import csv
 import json
+import os
 import socket
 import struct
+import subprocess
 import sys
 import threading
 import time
 import uuid
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional
 
 try:
@@ -50,6 +54,12 @@ except ImportError:
 
 SERVICE_TYPE = "_itantra._tcp.local."
 MAX_FRAME_BYTES = 64 * 1024
+
+# ---- --bench: adb-driven end-to-end latency bench (Mac plays the second phone) ----
+ADB_BIN = os.environ.get("ADB_BIN", str(Path.home() / "Library/Android/sdk/platform-tools/adb"))
+ADB_SERIAL = os.environ.get("ITANTRA_ADB_SERIAL", "adb-689a084b-N7eCzC._adb-tls-connect._tcp")
+DEVICE_FILES_ROOT = "/sdcard/Android/data/org.itantra.app/files"
+DEBUG_COMPONENT = "org.itantra.app/.DebugCommandReceiver"
 
 
 # ---- Wire framing: 4-byte big-endian length + UTF-8 JSON Frame (FrameCodec.kt) ----
@@ -226,6 +236,10 @@ class Session:
     device_id: str
     pending: dict = field(default_factory=dict)  # msg_id -> PendingSend
     stop: threading.Event = field(default_factory=threading.Event)
+    # --bench bookkeeping (see run_bench()): appended to by the reader thread, polled by main.
+    msg_events: list = field(default_factory=list)  # (recv_at_mac_ms, message_dict)
+    ack_results: dict = field(default_factory=dict)  # msg_id -> {receivedAt, playStartedAt, sent_at_mac_ms, recv_at_mac_ms}
+    pong_samples: list = field(default_factory=list)  # (t0_sent_mac_ms, t1_phone_ms, t2_recv_mac_ms)
 
     def reader_loop(self) -> None:
         try:
@@ -254,6 +268,8 @@ class Session:
             t0, t1 = frame.get("t0"), frame.get("t1")
             rtt = recv_at - t0 if t0 is not None else None
             print(f"[peer_sim] <- pong t0={t0} t1={t1} rttMs={rtt}")
+            if t0 is not None and t1 is not None:
+                self.pong_samples.append((t0, t1, recv_at))
         elif ftype == "msg":
             message = frame.get("message", {})
             print(
@@ -262,6 +278,7 @@ class Session:
             )
             write_frame(self.sock, frame_ack(message.get("id"), recv_at))
             print(f"[peer_sim] -> ack id={message.get('id')}")
+            self.msg_events.append((recv_at, message))
         elif ftype == "ack":
             msg_id = frame.get("id")
             pending = self.pending.pop(msg_id, None)
@@ -273,6 +290,12 @@ class Session:
                     f"playStartedAt={play_started_at} roundTripMs={latency_ms}"
                     + (" (TTS did not play: playStartedAt=0, e.g. models missing)" if play_started_at == 0 else "")
                 )
+                self.ack_results[msg_id] = {
+                    "receivedAt": frame.get("receivedAt"),
+                    "playStartedAt": play_started_at,
+                    "sent_at_mac_ms": pending.sent_at_ms,
+                    "recv_at_mac_ms": recv_at,
+                }
             else:
                 print(f"[peer_sim] <- ack id={msg_id} (no matching pending send)")
         elif ftype == "ptt":
@@ -288,6 +311,239 @@ class Session:
         print(f"[peer_sim] -> msg id={msg_id} lang={lang} alert={alert} text={text!r}")
         return msg_id
 
+    def send_ping(self) -> None:
+        write_frame(self.sock, frame_ping(now_ms()))
+
+
+# ---- --bench helpers ----
+
+
+def percentile(values: list[float], p: float) -> Optional[float]:
+    if not values:
+        return None
+    s = sorted(values)
+    k = (len(s) - 1) * (p / 100.0)
+    f, c = int(k), min(int(k) + 1, len(s) - 1)
+    if f == c:
+        return s[f]
+    return s[f] + (s[c] - s[f]) * (k - f)
+
+
+def median(values: list[float]) -> Optional[float]:
+    return percentile(values, 50)
+
+
+def adb_run(*args: str, timeout: float = 60.0) -> subprocess.CompletedProcess:
+    return subprocess.run([ADB_BIN, "-s", ADB_SERIAL, *args], capture_output=True, text=True, timeout=timeout)
+
+
+def adb_broadcast(action: str, extras: dict[str, str]) -> None:
+    import shlex
+
+    remote_cmd = f"am broadcast -a {shlex.quote(action)} -n {DEBUG_COMPONENT}"
+    for k, v in extras.items():
+        remote_cmd += f" --es {k} {shlex.quote(str(v))}"
+    adb_run("shell", remote_cmd, timeout=60.0)
+
+
+def adb_wake_device() -> None:
+    """Wakes the screen, extends screen-off timeout, and disables Doze for this session - a
+    screen-off/idle phone dropped the Wi-Fi TCP connection mid-bench in an earlier run (see
+    tools/eval/_adb.py:wake_device(), duplicated here for the same standalone-peer_sim reason)."""
+    for cmd in ("input keyevent KEYCODE_WAKEUP", "settings put system screen_off_timeout 1800000", "dumpsys deviceidle disable"):
+        try:
+            adb_run("shell", cmd, timeout=15.0)
+        except Exception as e:
+            print(f"[bench] wake_device: {cmd!r} failed: {e}")
+
+
+def adb_thermal_status() -> str:
+    """See tools/eval/_adb.py:thermal_status() for the same parsing (kept duplicated here so
+    peer_sim.py stays runnable standalone, without tools/eval on sys.path)."""
+    try:
+        r = adb_run("shell", "dumpsys", "thermalservice", timeout=20.0)
+    except Exception as e:
+        return f"thermal_check_failed: {e}"
+    status, max_temp = None, None
+    for line in r.stdout.splitlines():
+        line = line.strip()
+        if line.startswith("Thermal Status:"):
+            status = line.split(":", 1)[1].strip()
+        elif line.startswith("Temperature{"):
+            for part in line.split(","):
+                part = part.strip()
+                if part.startswith("mValue="):
+                    try:
+                        v = float(part.split("=", 1)[1])
+                        max_temp = v if max_temp is None else max(max_temp, v)
+                    except ValueError:
+                        pass
+    if status is None and max_temp is None:
+        return "unknown (dumpsys thermalservice returned no parseable status)"
+    return f"thermalStatus={status} maxCachedTempC={max_temp}"
+
+
+def load_stt_manifest(path: Path) -> dict[str, list[dict]]:
+    """Groups tools/eval/fetch_fleurs.py's combined manifest.tsv rows (filename like
+    "hi/clip_000.wav", lang, transcript, ...) by language."""
+    by_lang: dict[str, list[dict]] = {}
+    with open(path, newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f, delimiter="\t"):
+            by_lang.setdefault(row["lang"], []).append(row)
+    return by_lang
+
+
+def sync_clock_offset(session: Session, rounds: int = 5, timeout: float = 8.0) -> Optional[float]:
+    """NTP-style: sends `rounds` Pings, averages t1_phone - (t0_sent+t2_recv)/2 over the replies.
+    Returns the median offset in ms (phone_clock - mac_clock), or None if no Pongs arrived."""
+    baseline = len(session.pong_samples)
+    for _ in range(rounds):
+        session.send_ping()
+        time.sleep(0.15)
+    deadline = time.time() + timeout
+    while len(session.pong_samples) < baseline + rounds and time.time() < deadline:
+        time.sleep(0.1)
+    samples = session.pong_samples[baseline:]
+    if not samples:
+        return None
+    offsets = sorted(t1 - (t0 + t2) / 2.0 for t0, t1, t2 in samples)
+    return offsets[len(offsets) // 2]
+
+
+def run_bench(session: Session, n: int, manifest_path: Path, out_path: Path, langs_filter: Optional[list[str]], per_step_timeout: float) -> None:
+    """--bench N: estimates "sentence said on phone -> audio starts on the other phone" using the
+    Mac as the second phone (see tools/eval/README.md for the full explanation):
+      (a) phone -> Mac: adb-triggers DEBUG_STT_WAV on the phone for real FLEURS clips; the app's
+          normal orchestrator forwards the recognized sentence as a Frame.Msg, same as if it had
+          been spoken live. speechEndAt/sttDoneAt/sentAt travel on the wire (VoiceMessage), so no
+          logcat parsing is needed here - just clock-offset-corrected arithmetic on the frame.
+      (b) Mac -> phone: sends N Msg frames per language (the manifest's own transcripts) and
+          collects Acks, which carry receivedAt/playStartedAt (both phone-clock).
+    Combined estimate = phoneA sttLatency + phoneA network + phoneB receiver-TTS-start, per
+    language - an approximation of a real two-phone conversation using one physical phone in
+    both roles, not a simultaneous two-device measurement.
+    """
+    adb_wake_device()
+    print("[bench] syncing clock offset (phone vs Mac) via Ping/Pong ...")
+    offset = sync_clock_offset(session)
+    if offset is None:
+        print("[bench] WARNING: no Pong received; proceeding with offset=0 (results will include phone/Mac clock skew)")
+        offset = 0.0
+    else:
+        print(f"[bench] clock offset (phone_clock - mac_clock) ~= {offset:.1f} ms")
+
+    thermal_before = adb_thermal_status()
+    print(f"[bench] thermal before: {thermal_before}")
+
+    by_lang = load_stt_manifest(manifest_path)
+    langs = langs_filter or sorted(by_lang.keys())
+
+    phase_a: dict[str, list[dict]] = {}
+    phase_b: dict[str, list[dict]] = {}
+
+    # A dropped TCP connection (e.g. the phone's screen locking mid-run and Wi-Fi going into
+    # power-save) must not lose every result gathered so far - each row is best-effort, and both
+    # phases bail out early (not raise) once the connection is visibly dead.
+    print(f"[bench] phase (a) phone -> Mac: {n} clip(s)/lang via DEBUG_STT_WAV ...")
+    for lang in langs:
+        if session.stop.is_set():
+            print("[bench] connection dropped - stopping phase (a) early")
+            break
+        rows = by_lang.get(lang, [])[:n]
+        results = []
+        for row in rows:
+            if session.stop.is_set():
+                print("[bench] connection dropped - stopping phase (a) early")
+                break
+            try:
+                remote_path = f"{DEVICE_FILES_ROOT}/models/eval/stt/{row['filename']}"
+                before = len(session.msg_events)
+                adb_broadcast("org.itantra.DEBUG_STT_WAV", {"path": remote_path, "lang": lang})
+                deadline = time.time() + per_step_timeout
+                while len(session.msg_events) <= before and time.time() < deadline and not session.stop.is_set():
+                    time.sleep(0.1)
+                if len(session.msg_events) <= before:
+                    print(f"[bench]   {row['filename']}: TIMEOUT/no-connection waiting for Frame.Msg")
+                    continue
+                recv_at_mac, message = session.msg_events[-1]
+                stt_latency_ms = message.get("sttDoneAt", 0) - message.get("speechEndAt", 0)
+                speech_end_to_received_ms = recv_at_mac - (message.get("speechEndAt", 0) - offset)
+                network_ms = recv_at_mac - (message.get("sentAt", 0) - offset)
+                results.append(
+                    {
+                        "filename": row["filename"], "sttLatencyMs": stt_latency_ms,
+                        "networkMs": network_ms, "speechEndToReceivedMs": speech_end_to_received_ms,
+                    }
+                )
+                print(f"[bench]   {row['filename']}: sttLatencyMs={stt_latency_ms} networkMs={network_ms:.0f} speechEnd->receivedMs={speech_end_to_received_ms:.0f}")
+            except OSError as e:
+                print(f"[bench]   {row['filename']}: connection error ({e}), skipping")
+        phase_a[lang] = results
+
+    print(f"[bench] phase (b) Mac -> phone: {n} msg(s)/lang, collecting Acks ...")
+    for lang in langs:
+        if session.stop.is_set():
+            print("[bench] connection dropped - stopping phase (b) early")
+            break
+        rows = by_lang.get(lang, [])[:n]
+        results = []
+        for row in rows:
+            if session.stop.is_set():
+                print("[bench] connection dropped - stopping phase (b) early")
+                break
+            try:
+                text = row.get("transcript") or f"test message {row['filename']}"
+                msg_id = session.send_msg(text, lang, alert=False, ssml=False)
+                deadline = time.time() + per_step_timeout
+                while msg_id not in session.ack_results and time.time() < deadline and not session.stop.is_set():
+                    time.sleep(0.1)
+                ack = session.ack_results.pop(msg_id, None)
+                if ack is None:
+                    print(f"[bench]   {lang} msg {msg_id}: TIMEOUT/no-connection waiting for Ack")
+                    continue
+                if not ack["playStartedAt"]:
+                    print(f"[bench]   {lang} msg {msg_id}: TTS did not play (playStartedAt=0; models missing?)")
+                    continue
+                tts_latency_ms = ack["playStartedAt"] - ack["receivedAt"]
+                sent_to_play_ms = (ack["playStartedAt"] - offset) - ack["sent_at_mac_ms"]
+                results.append({"msg_id": msg_id, "ttsLatencyMs": tts_latency_ms, "sentToPlayMs": sent_to_play_ms})
+                print(f"[bench]   {lang} msg {msg_id}: receiverTtsLatencyMs={tts_latency_ms} sent->playMs={sent_to_play_ms:.0f}")
+            except OSError as e:
+                print(f"[bench]   {lang} msg: connection error ({e}), skipping")
+        phase_b[lang] = results
+
+    thermal_after = adb_thermal_status()
+    print(f"[bench] thermal after: {thermal_after}")
+
+    summary: dict[str, dict] = {}
+    for lang in langs:
+        a, b = phase_a.get(lang, []), phase_b.get(lang, [])
+        stt_lat = [r["sttLatencyMs"] for r in a]
+        net = [r["networkMs"] for r in a]
+        tts_lat = [r["ttsLatencyMs"] for r in b]
+        combined_ms = (
+            (median(stt_lat) + median(net) + median(tts_lat)) if (stt_lat and net and tts_lat) else None
+        )
+        summary[lang] = {
+            "n_phaseA": len(a), "n_phaseB": len(b),
+            "sttLatencyMs_p50": percentile(stt_lat, 50), "sttLatencyMs_p95": percentile(stt_lat, 95),
+            "networkMs_p50": percentile(net, 50), "networkMs_p95": percentile(net, 95),
+            "receiverTtsLatencyMs_p50": percentile(tts_lat, 50), "receiverTtsLatencyMs_p95": percentile(tts_lat, 95),
+            "speechEndToReceivedMs_p50": percentile([r["speechEndToReceivedMs"] for r in a], 50),
+            "sentToPlayMs_p50": percentile([r["sentToPlayMs"] for r in b], 50),
+            "estimatedSpeechSaidToAudioStartedMs": combined_ms,
+        }
+
+    out = {
+        "clockOffsetMsPhoneMinusMac": offset, "thermal_before": thermal_before, "thermal_after": thermal_after,
+        "by_lang": summary, "raw": {"phase_a": phase_a, "phase_b": phase_b},
+        "note": "estimatedSpeechSaidToAudioStartedMs = median(phaseA sttLatency) + median(phaseA network) + median(phaseB receiverTtsLatency); phaseA and phaseB use the same physical phone in sender/receiver roles sequentially (only one phone available), not two phones simultaneously.",
+    }
+    print(json.dumps(summary, indent=2, ensure_ascii=False))
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"[bench] wrote {out_path}")
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="iTantra host-side test peer (mDNS + TCP framing)")
@@ -300,7 +556,14 @@ def main() -> int:
     parser.add_argument("--lang", default="hi", help="ISO 639-1 code for --send, e.g. hi/gu/mr/kn/ml/ta/te/or/bn/en")
     parser.add_argument("--alert", action="store_true", help="mark --send as Priority.ALERT")
     parser.add_argument("--ssml", action="store_true", help="mark --send's text as an SSML document")
+    parser.add_argument("--bench", type=int, default=0, metavar="N", help="run the adb-driven end-to-end latency bench with N samples/language (see run_bench())")
+    parser.add_argument("--bench-manifest", default=str(Path(__file__).resolve().parents[1] / "models" / "eval" / "stt" / "manifest.tsv"), help="tools/eval/fetch_fleurs.py combined manifest.tsv")
+    parser.add_argument("--bench-out", default=str(Path(__file__).resolve().parents[1] / "models" / "eval" / "results" / "e2e_bench.json"))
+    parser.add_argument("--bench-langs", default=None, help="comma-separated subset of languages (default: all in the manifest)")
+    parser.add_argument("--bench-step-timeout", type=float, default=20.0, help="seconds to wait for each Frame.Msg/Ack in the bench")
     args = parser.parse_args()
+    if args.bench and args.timeout < 60.0:
+        args.timeout = 60.0  # --bench drives the session itself; the outer timeout is just a safety net
 
     zc = Zeroconf()
     server: Optional[socket.socket] = None
@@ -365,9 +628,15 @@ def main() -> int:
             time.sleep(0.3)  # let Hello land first
             session.send_msg(args.send, args.lang, args.alert, args.ssml)
 
-        deadline = time.time() + args.timeout
-        while time.time() < deadline and not session.stop.is_set():
-            time.sleep(0.2)
+        if args.bench:
+            time.sleep(0.3)  # let Hello land first
+            langs_filter = [l.strip() for l in args.bench_langs.split(",")] if args.bench_langs else None
+            run_bench(session, args.bench, Path(args.bench_manifest), Path(args.bench_out), langs_filter, args.bench_step_timeout)
+
+        if not args.bench:
+            deadline = time.time() + args.timeout
+            while time.time() < deadline and not session.stop.is_set():
+                time.sleep(0.2)
 
         if args.send:
             still_pending = list(session.pending.keys())

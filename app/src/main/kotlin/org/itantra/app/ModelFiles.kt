@@ -20,6 +20,8 @@ object ExpectedModelFiles {
         for (name in listOf("indic-mio-q8_0.gguf", "miocodec.gguf", "wavlm.gguf")) {
             entries += ModelFileEntry("tts/mio/$name", File(paths.mioDir, name))
         }
+        // Optional: smaller/faster weights for Profile.LITE (see ProfileManager); not required.
+        entries += ModelFileEntry("tts/mio/indic-mio-q4.gguf", paths.mioModelLite)
         for (lang in Lang.entries) {
             entries += ModelFileEntry("tts/mio/voices/${lang.code}.emb.gguf", paths.mioVoice(lang))
         }

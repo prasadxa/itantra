@@ -41,6 +41,7 @@ import org.itantra.app.AppRepository
 import org.itantra.app.CpuSampler
 import org.itantra.app.ExpectedModelFiles
 import org.itantra.app.MessageMetrics
+import org.itantra.app.Profile
 import org.itantra.app.ui.theme.MonoText
 
 private val COLS = listOf(56.dp, 44.dp, 56.dp, 48.dp, 56.dp, 56.dp, 56.dp)
@@ -51,26 +52,44 @@ fun MetricsScreen() {
     val context = LocalContext.current
     val metrics by AppRepository.metrics.collectAsState()
     val engineStatus by AppRepository.engineStatus.collectAsState()
+    val profile by AppRepository.profile.collectAsState()
     var pssKb by remember { mutableStateOf<Int?>(null) }
-    var cpuPercent by remember { mutableStateOf<Float?>(null) }
+    var javaHeapKb by remember { mutableStateOf<Long?>(null) }
+    var nativeHeapKb by remember { mutableStateOf<Long?>(null) }
+    // Sampled over a full 10s window per the judging spec ("idle CPU% over the last 10s").
+    var cpuPercent10s by remember { mutableStateOf<Float?>(null) }
     var exportMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         while (true) {
             pssKb = Debug.getPss().toInt()
-            cpuPercent = CpuSampler.samplePercent(1000)
+            val runtime = Runtime.getRuntime()
+            javaHeapKb = (runtime.totalMemory() - runtime.freeMemory()) / 1024
+            nativeHeapKb = Debug.getNativeHeapAllocatedSize() / 1024
+            cpuPercent10s = CpuSampler.samplePercent(10_000)
         }
     }
 
     val modelsRoot = File(context.getExternalFilesDir(null), "models")
     val modelFiles = remember(modelsRoot) { ExpectedModelFiles.list(org.itantra.core.ModelPaths(modelsRoot)) }
     val totalModelBytes = modelFiles.sumOf { it.sizeBytes }
+    val apkSizeBytes = remember {
+        val info = context.applicationInfo
+        (listOf(info.sourceDir) + (info.splitSourceDirs?.toList() ?: emptyList()))
+            .sumOf { runCatching { File(it).length() }.getOrDefault(0L) }
+    }
 
     Column(Modifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 10.dp)) {
         MonoText(
-            "RAM ${pssKb?.let { "${it / 1024}MB" } ?: "…"}  ·  CPU ${cpuPercent?.let { "%.1f%%".format(it) } ?: "…"}  ·  " +
-                "MODELS ${totalModelBytes / (1024 * 1024)}MB",
+            "PROFILE ${profile?.name ?: "…"}  ·  RAM ${pssKb?.let { "${it / 1024}MB" } ?: "…"}  ·  " +
+                "CPU(10s) ${cpuPercent10s?.let { "%.1f%%".format(it) } ?: "…"}",
             color = MaterialTheme.colorScheme.onSurface,
+        )
+        MonoText(
+            "JAVA ${javaHeapKb?.let { "${it / 1024}MB" } ?: "…"}  ·  NATIVE ${nativeHeapKb?.let { "${it / 1024}MB" } ?: "…"}  ·  " +
+                "MODELS ${totalModelBytes / (1024 * 1024)}MB  ·  APK ${apkSizeBytes / (1024 * 1024)}MB",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 2.dp),
         )
         if (engineStatus != null) {
             MonoText(
@@ -81,7 +100,11 @@ fun MetricsScreen() {
         }
 
         Spacer(Modifier.height(10.dp))
-        OutlinedButton(onClick = { exportMessage = exportCsv(context, metrics) }) { Text("Export CSV") }
+        OutlinedButton(onClick = {
+            exportMessage = exportCsv(
+                context, metrics, profile, pssKb, javaHeapKb, nativeHeapKb, cpuPercent10s, totalModelBytes, apkSizeBytes,
+            )
+        }) { Text("Export CSV") }
         exportMessage?.let { MonoText(it, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp)) }
 
         Spacer(Modifier.height(14.dp))
@@ -145,13 +168,28 @@ private fun MetricsRow(m: MessageMetrics) {
 
 private fun Double.fmt(): String = if (isNaN()) "—" else "%.0f".format(this)
 
-private fun exportCsv(context: Context, metrics: List<MessageMetrics>): String {
+private fun exportCsv(
+    context: Context,
+    metrics: List<MessageMetrics>,
+    profile: Profile?,
+    pssKb: Int?,
+    javaHeapKb: Long?,
+    nativeHeapKb: Long?,
+    cpuPercent10s: Float?,
+    modelBytes: Long,
+    apkSizeBytes: Long,
+): String {
     return try {
         val dir = context.getExternalFilesDir(null) ?: return "No external files dir"
         val name = "itantra_metrics_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.csv"
         val file = File(dir, name)
         FileWriter(file).use { w ->
-            w.append("id,direction,lang,priority,sttLatencyMs,rtf,networkMs,ttsStartMs,endToEndMs,timestamp\n")
+            // Resource snapshot (judging efficiency criteria) as a one-row header block, then the
+            // per-message telemetry table below it.
+            w.append("# resource_snapshot\n")
+            w.append("profile,pssKb,javaHeapKb,nativeHeapKb,cpuPercent10s,modelBytes,apkSizeBytes\n")
+            w.append("${profile?.name ?: ""},${pssKb ?: ""},${javaHeapKb ?: ""},${nativeHeapKb ?: ""},${cpuPercent10s ?: ""},$modelBytes,$apkSizeBytes\n")
+            w.append("\nid,direction,lang,priority,sttLatencyMs,rtf,networkMs,ttsStartMs,endToEndMs,timestamp\n")
             metrics.forEach { m ->
                 w.append("${m.id},${m.direction},${m.lang.code},${m.priority},${m.sttLatencyMs ?: ""},${m.rtf ?: ""},${m.networkMs ?: ""},${m.ttsStartMs ?: ""},${m.endToEndMs ?: ""},${m.timestamp}\n")
             }

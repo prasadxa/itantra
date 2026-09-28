@@ -24,6 +24,10 @@ import org.itantra.tts.dsp.Wsola
 
 private const val TAG = "SpeechOutput"
 
+/** Voice-note replay cache bounds — see the class doc and [replay]. */
+private const val MAX_VOICE_NOTES = 20
+private const val MAX_VOICE_NOTES_BYTES = 20L * 1024 * 1024
+
 /**
  * Drives [tts] on a worker thread and streams the resulting PCM to an [AudioTrack]
  * (`MODE_STREAM`, float PCM, [tts]'s sample rate).
@@ -39,18 +43,56 @@ private const val TAG = "SpeechOutput"
  * PCM chunk as it arrives from [tts], not buffered for the whole segment — this keeps first-chunk
  * latency low (the metric that matters, see `docs/design.md`) at the cost of WSOLA's
  * cross-correlation search only ever seeing one ~50-token chunk of context at a time.
+ *
+ * Also retains the post-DSP PCM of the last [MAX_VOICE_NOTES] received messages (bounded to
+ * [MAX_VOICE_NOTES_BYTES], oldest evicted first) so [replay] can re-play a message — NORMAL or
+ * ALERT — without re-running TTS.
  */
 class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
 
-    private data class Job(
-        val id: String,
-        val plan: SynthesisPlan,
-        val phoneMode: Boolean,
-        val onPlayStarted: (id: String, epochMs: Long) -> Unit,
-    )
+    private sealed interface Job {
+        val id: String
+        val priority: Priority
+        val onPlayStarted: (id: String, epochMs: Long) -> Unit
+
+        /** Fresh synthesis via [tts]; its PCM is cached afterwards as a [VoiceNote] for [replay]. */
+        data class Synthesize(
+            override val id: String,
+            val plan: SynthesisPlan,
+            val phoneMode: Boolean,
+            override val onPlayStarted: (id: String, epochMs: Long) -> Unit,
+        ) : Job {
+            override val priority get() = plan.priority
+        }
+
+        /** Re-plays already-synthesized PCM from [voiceNotes]; no [tts] call. */
+        data class Replay(
+            override val id: String,
+            val note: VoiceNote,
+            override val onPlayStarted: (id: String, epochMs: Long) -> Unit,
+        ) : Job {
+            override val priority get() = note.priority
+        }
+    }
+
+    /** Retained synthesized audio for a received message, so [replay] doesn't need to re-run TTS. */
+    private class VoiceNote(val samples: FloatArray, val sampleRate: Int, val priority: Priority) {
+        val durationSeconds: Float get() = samples.size / sampleRate.toFloat()
+        val bytes: Long get() = samples.size.toLong() * 4
+    }
 
     private val normalQueue = LinkedBlockingDeque<Job>()
     private val alertQueue = LinkedBlockingDeque<Job>()
+
+    private val voiceNotesLock = Any()
+
+    // Insertion-ordered; oldest evicted first once over MAX_VOICE_NOTES or MAX_VOICE_NOTES_BYTES.
+    // Guarded by [voiceNotesLock] since it's written from the worker thread and read from
+    // whichever thread calls [replay]/[durationSeconds]/[voiceNoteBytes] (typically the UI).
+    private val voiceNotes = LinkedHashMap<String, VoiceNote>()
+
+    /** Fired on the worker thread once a received message's audio has been fully cached for replay. */
+    var onVoiceNoteStored: ((id: String, durationSeconds: Float) -> Unit)? = null
 
     @Volatile private var closed = false
     @Volatile private var stopNormalRequested = false
@@ -81,8 +123,42 @@ class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
     /** Queues [plan] for playback; ALERT jumps ahead of any queued/playing NORMAL message. */
     fun enqueue(id: String, plan: SynthesisPlan, phoneMode: Boolean, onPlayStarted: (id: String, epochMs: Long) -> Unit) {
         if (closed) return
-        val job = Job(id, plan, phoneMode, onPlayStarted)
+        val job = Job.Synthesize(id, plan, phoneMode, onPlayStarted)
         if (plan.priority == Priority.ALERT) alertQueue.put(job) else normalQueue.put(job)
+    }
+
+    /**
+     * Re-plays the cached audio of a previously received message [id] (last 20, LRU, see
+     * [voiceNotes]) without re-running TTS. ALERT notes queue-jump and use the same alarm path
+     * (max STREAM_ALARM volume, AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE) as their original playback.
+     * Returns false if [id] is no longer cached (evicted, never spoken, or engine unavailable).
+     */
+    fun replay(id: String, onPlayStarted: (id: String, epochMs: Long) -> Unit = { _, _ -> }): Boolean {
+        if (closed) return false
+        val note = synchronized(voiceNotesLock) { voiceNotes[id] } ?: return false
+        val job = Job.Replay(id, note, onPlayStarted)
+        if (note.priority == Priority.ALERT) alertQueue.put(job) else normalQueue.put(job)
+        return true
+    }
+
+    /** Duration of the cached voice note for [id] in seconds, or null if not (or no longer) cached. */
+    fun durationSeconds(id: String): Float? = synchronized(voiceNotesLock) { voiceNotes[id]?.durationSeconds }
+
+    /** Total bytes of PCM currently retained for replay (for the Metrics screen / diagnostics). */
+    fun voiceNoteBytes(): Long = synchronized(voiceNotesLock) { voiceNotes.values.sumOf { it.bytes } }
+
+    private fun storeVoiceNote(id: String, samples: FloatArray, sampleRate: Int, priority: Priority) {
+        if (samples.isEmpty() || closed) return
+        val note = VoiceNote(samples, sampleRate, priority)
+        synchronized(voiceNotesLock) {
+            voiceNotes.remove(id)
+            voiceNotes[id] = note
+            while (voiceNotes.size > MAX_VOICE_NOTES || voiceNotes.values.sumOf { it.bytes } > MAX_VOICE_NOTES_BYTES) {
+                val oldest = voiceNotes.keys.firstOrNull() ?: break
+                voiceNotes.remove(oldest)
+            }
+        }
+        onVoiceNoteStored?.invoke(id, note.durationSeconds)
     }
 
     /** Stops/clears NORMAL playback only; never affects an ALERT. */
@@ -103,6 +179,7 @@ class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
         closed = true
         normalQueue.clear()
         alertQueue.clear()
+        synchronized(voiceNotesLock) { voiceNotes.clear() }
         _isPlaying.value = false
         worker.interrupt()
         try {
@@ -130,32 +207,18 @@ class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
     }
 
     private fun playNormal(job: Job) {
-        val usage = if (job.phoneMode) AudioAttributes.USAGE_VOICE_COMMUNICATION else AudioAttributes.USAGE_MEDIA
+        val phoneMode = (job as? Job.Synthesize)?.phoneMode ?: false
+        val usage = if (phoneMode) AudioAttributes.USAGE_VOICE_COMMUNICATION else AudioAttributes.USAGE_MEDIA
         val track = buildTrack(usage)
         currentNormalTrack = track
         beginPlayback()
         try {
             track.play()
-            var playStartedFired = false
-            for (segment in job.plan.segments) {
-                if (stopNormalRequested || closed) break
-                // ALERT queue-jumps: pause here (coarse-grained, between segments) and let the
-                // alert drain before continuing this NORMAL message.
-                if (alertQueue.isNotEmpty()) {
-                    track.pause()
-                    while (!closed) {
-                        val alertJob = alertQueue.poll() ?: break
-                        runCatching { playAlert(alertJob) }.onFailure { Log.e(TAG, "ALERT playback failed", it) }
-                    }
-                    if (stopNormalRequested || closed) break
-                    track.play()
+            when (job) {
+                is Job.Synthesize -> playSynthesizeSegments(track, job, respectNormalControls = true) { pcm ->
+                    storeVoiceNote(job.id, pcm, tts.sampleRate, job.plan.priority)
                 }
-                playSegment(track, job.plan, segment) {
-                    if (!playStartedFired) {
-                        playStartedFired = true
-                        job.onPlayStarted(job.id, System.currentTimeMillis())
-                    }
-                }
+                is Job.Replay -> playStoredPcm(track, job, respectNormalControls = true)
             }
         } finally {
             currentNormalTrack = null
@@ -174,15 +237,11 @@ class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
         beginPlayback()
         try {
             track.play()
-            var playStartedFired = false
-            for (segment in job.plan.segments) {
-                if (closed) break
-                playSegment(track, job.plan, segment) {
-                    if (!playStartedFired) {
-                        playStartedFired = true
-                        job.onPlayStarted(job.id, System.currentTimeMillis())
-                    }
+            when (job) {
+                is Job.Synthesize -> playSynthesizeSegments(track, job, respectNormalControls = false) { pcm ->
+                    storeVoiceNote(job.id, pcm, tts.sampleRate, job.plan.priority)
                 }
+                is Job.Replay -> playStoredPcm(track, job, respectNormalControls = false)
             }
         } finally {
             releaseTrack(track)
@@ -192,7 +251,71 @@ class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
         }
     }
 
-    private fun playSegment(track: AudioTrack, plan: SynthesisPlan, segment: TtsSegment, onFirstChunk: () -> Unit) {
+    /**
+     * Plays [job]'s segments through [tts], accumulating the post-DSP PCM actually written to
+     * [track] so [onComplete] can cache it as a [VoiceNote]. When [respectNormalControls] (i.e.
+     * this is a NORMAL job, not an in-progress ALERT), honours [stopNormalRequested] and lets a
+     * newly-queued ALERT queue-jump between segments, exactly as the original single-path
+     * implementation did.
+     */
+    private fun playSynthesizeSegments(
+        track: AudioTrack,
+        job: Job.Synthesize,
+        respectNormalControls: Boolean,
+        onComplete: (FloatArray) -> Unit,
+    ) {
+        var playStartedFired = false
+        val accumulator = PcmAccumulator()
+        for (segment in job.plan.segments) {
+            if (closed) break
+            if (respectNormalControls && stopNormalRequested) break
+            if (respectNormalControls && alertQueue.isNotEmpty()) {
+                track.pause()
+                while (!closed) {
+                    val alertJob = alertQueue.poll() ?: break
+                    runCatching { playAlert(alertJob) }.onFailure { Log.e(TAG, "ALERT playback failed", it) }
+                }
+                if (stopNormalRequested || closed) break
+                track.play()
+            }
+            playSegment(track, job.plan, segment, accumulator) {
+                if (!playStartedFired) {
+                    playStartedFired = true
+                    job.onPlayStarted(job.id, System.currentTimeMillis())
+                }
+            }
+        }
+        if (!closed) onComplete(accumulator.toArray())
+    }
+
+    /** Re-plays already-synthesized PCM (see [replay]); no [tts] call, so no re-accumulation. */
+    private fun playStoredPcm(track: AudioTrack, job: Job.Replay, respectNormalControls: Boolean) {
+        val samples = job.note.samples
+        var fired = false
+        var offset = 0
+        val chunkSamples = maxOf(job.note.sampleRate / 4, 1) // ~250ms per write, matches synth chunking
+        while (offset < samples.size && !closed) {
+            if (respectNormalControls && stopNormalRequested) break
+            if (respectNormalControls && alertQueue.isNotEmpty()) {
+                track.pause()
+                while (!closed) {
+                    val alertJob = alertQueue.poll() ?: break
+                    runCatching { playAlert(alertJob) }.onFailure { Log.e(TAG, "ALERT playback failed", it) }
+                }
+                if (stopNormalRequested || closed) break
+                track.play()
+            }
+            val end = minOf(offset + chunkSamples, samples.size)
+            writeBlocking(track, samples.copyOfRange(offset, end))
+            if (!fired) {
+                fired = true
+                job.onPlayStarted(job.id, System.currentTimeMillis())
+            }
+            offset = end
+        }
+    }
+
+    private fun playSegment(track: AudioTrack, plan: SynthesisPlan, segment: TtsSegment, accumulator: PcmAccumulator, onFirstChunk: () -> Unit) {
         val silence = Silence.samples(segment.pauseBeforeMs, tts.sampleRate)
         if (silence.isNotEmpty()) writeBlocking(track, silence)
 
@@ -204,10 +327,32 @@ class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
             if (segment.pitchSemitones != 0f) chunk = Pitch.shiftSemitones(chunk, segment.pitchSemitones, tts.sampleRate)
             if (segment.volumeDb != 0f) chunk = Gain.applyDb(chunk, segment.volumeDb)
             writeBlocking(track, chunk)
+            accumulator.add(chunk)
             if (firstChunk) {
                 firstChunk = false
                 onFirstChunk()
             }
+        }
+    }
+
+    /** Growable float buffer for the PCM actually written during one synthesis job, cheaper than
+     * an ArrayList<Float> (no boxing) — flattened once into a [VoiceNote] at job end. */
+    private class PcmAccumulator {
+        private val chunks = ArrayList<FloatArray>()
+        private var total = 0
+        fun add(chunk: FloatArray) {
+            if (chunk.isEmpty()) return
+            chunks.add(chunk)
+            total += chunk.size
+        }
+        fun toArray(): FloatArray {
+            val out = FloatArray(total)
+            var pos = 0
+            for (c in chunks) {
+                c.copyInto(out, pos)
+                pos += c.size
+            }
+            return out
         }
     }
 
