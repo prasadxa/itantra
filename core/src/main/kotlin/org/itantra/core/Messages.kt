@@ -39,6 +39,10 @@ sealed interface Frame {
     @Serializable @SerialName("msg")
     data class Msg(val message: VoiceMessage) : Frame
 
+    /** Live in-progress transcript for utterance [id], sent while the speaker is still talking. */
+    @Serializable @SerialName("partial")
+    data class Partial(val id: String, val from: String, val lang: Lang, val text: String) : Frame
+
     /** Receiver → sender once playback of [id] starts; enables end-to-end latency measurement. */
     @Serializable @SerialName("ack")
     data class Ack(val id: String, val receivedAt: Long, val playStartedAt: Long = 0) : Frame

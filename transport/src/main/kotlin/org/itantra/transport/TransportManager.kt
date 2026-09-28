@@ -16,13 +16,17 @@ import org.itantra.core.LinkKind
 import org.itantra.core.LinkState
 import org.itantra.core.Transport
 
+private const val WIFI_DIRECT_FALLBACK_DELAY_MS = 4_000L
 private const val BLE_FALLBACK_DELAY_MS = 8_000L
 
 /**
- * App-facing [Transport]: starts Wi-Fi ([WifiTransport]); if it hasn't connected within ~8s also
- * starts BLE ([BleTransport]) as a fallback. [kind]/[state] reflect whichever link is active,
- * [incoming] merges both, and [send] prefers Wi-Fi, falling back to BLE. Sends [Frame.Hello] as
- * soon as a link connects.
+ * App-facing [Transport]: starts Wi-Fi ([WifiTransport], NSD/LAN); if it hasn't connected within
+ * ~4s also starts Wi-Fi Direct ([WifiDirectHelper]) so two phones with no shared router/hotspot
+ * can still find each other (a connected P2P socket is handed back into [WifiTransport.attach],
+ * so it shows up as an ordinary [LinkKind.WIFI] link); if *neither* has connected within ~8s,
+ * starts BLE ([BleTransport]) as a last-resort fallback. [kind]/[state] reflect whichever link is
+ * active, [incoming] merges all of them, and [send] prefers Wi-Fi, falling back to BLE. Sends
+ * [Frame.Hello] as soon as a link connects.
  */
 class TransportManager(
     private val context: Context,
@@ -33,6 +37,9 @@ class TransportManager(
 
     private val wifi = WifiTransport(context, deviceId, deviceName, scope)
     private val ble = BleTransport(context, deviceId, deviceName, scope)
+    private val wifiDirect = WifiDirectHelper(context, scope) { socket ->
+        wifi.attach(socket, peerName = "wifi-direct-peer")
+    }
 
     private val _state = MutableStateFlow<LinkState>(LinkState.Idle)
     override val state: StateFlow<LinkState> = _state.asStateFlow()
@@ -41,9 +48,11 @@ class TransportManager(
     override val incoming: SharedFlow<Frame> = _incoming.asSharedFlow()
 
     @Volatile private var activeKind: LinkKind? = null
+    @Volatile private var wifiDirectStarted = false
     override val kind: LinkKind get() = activeKind ?: LinkKind.WIFI
 
     private var supervisorJob: Job? = null
+    private var wifiDirectFallbackJob: Job? = null
     private var bleFallbackJob: Job? = null
 
     override suspend fun start() {
@@ -55,6 +64,13 @@ class TransportManager(
             launch { ble.state.collect { onLinkState(LinkKind.BLE, it) } }
         }
         wifi.start()
+        wifiDirectFallbackJob = scope.launch {
+            delay(WIFI_DIRECT_FALLBACK_DELAY_MS)
+            if (activeKind != LinkKind.WIFI) {
+                wifiDirectStarted = true
+                wifiDirect.start()
+            }
+        }
         bleFallbackJob = scope.launch {
             delay(BLE_FALLBACK_DELAY_MS)
             if (activeKind != LinkKind.WIFI) {
@@ -64,12 +80,18 @@ class TransportManager(
     }
 
     override suspend fun stop() {
+        wifiDirectFallbackJob?.cancel()
+        wifiDirectFallbackJob = null
         bleFallbackJob?.cancel()
         bleFallbackJob = null
         supervisorJob?.cancel()
         supervisorJob = null
         wifi.stop()
         ble.stop()
+        if (wifiDirectStarted) {
+            wifiDirect.stop()
+            wifiDirectStarted = false
+        }
         activeKind = null
         _state.value = LinkState.Idle
     }
@@ -90,6 +112,12 @@ class TransportManager(
                 activeKind = source
                 _state.value = newState
                 send(Frame.Hello(deviceId, deviceName))
+                // A LAN/NSD (or already-attached Wi-Fi Direct) socket is now the active link;
+                // no need to keep hunting for a second Wi-Fi Direct peer.
+                if (source == LinkKind.WIFI && wifiDirectStarted) {
+                    wifiDirect.stop()
+                    wifiDirectStarted = false
+                }
             }
             // else: BLE connected while Wi-Fi is already active - ignore, Wi-Fi stays primary.
         } else if (source == activeKind) {

@@ -21,6 +21,12 @@ class FallbackTtsEngine(
     context: Context,
     paths: ModelPaths,
     private val numThreads: Int = 4,
+    /**
+     * Prefer VITS where it has a voice (bn, kn, ml, mr, ta, te): measured on a Snapdragon 8 Gen 3 it
+     * runs at RTF ~0.5 vs Indic-Mio's ~1.4-2.5, i.e. the difference between real time and not.
+     * Mio remains the engine for hi/gu/or/en and the fallback if VITS fails.
+     */
+    private val preferFast: Boolean = true,
 ) : TtsEngine {
     private val appContext = context.applicationContext
     private val mio = MioTtsEngine(paths, numThreads)
@@ -30,20 +36,40 @@ class FallbackTtsEngine(
 
     override fun supports(lang: Lang): Boolean = mio.supports(lang) || vits.supports(lang)
 
+    /** Which engine [synthesize] will try first for [lang]: "vits", "mio" or "none". */
+    fun engineNameFor(lang: Lang): String {
+        val order = if (preferFast) listOf("vits" to vits, "mio" to mio) else listOf("mio" to mio, "vits" to vits)
+        return order.firstOrNull { it.second.supports(lang) }?.first ?: "none"
+    }
+
+    /**
+     * Both engines load their weights lazily on first use (~1 GB for Mio), which would otherwise
+     * land on the first received message. Synthesize a throwaway word on a background thread.
+     */
+    fun warmUp() {
+        Thread({
+            for ((engine, lang) in listOf(mio to Lang.HI, vits to Lang.TA)) {
+                if (!engine.supports(lang)) continue
+                runCatching { engine.synthesize(lang, TtsSegment(".")) { } }
+                    .onFailure { Log.w(TAG, "warm-up failed for ${engine.javaClass.simpleName}", it) }
+            }
+        }, "tts-warmup").apply { priority = Thread.MIN_PRIORITY }.start()
+    }
+
     override fun synthesize(lang: Lang, segment: TtsSegment, onChunk: (FloatArray) -> Unit) {
-        if (mio.supports(lang)) {
+        val order = if (preferFast) listOf(vits, mio) else listOf(mio, vits)
+        var lastError: Exception? = null
+        for (engine in order) {
+            if (!engine.supports(lang)) continue
             try {
-                synthesizeResampled(mio, lang, segment, onChunk)
+                synthesizeResampled(engine, lang, segment, onChunk)
                 return
             } catch (e: Exception) {
-                Log.w(TAG, "Mio synthesis failed for $lang, falling back to VITS", e)
+                Log.w(TAG, "${engine.javaClass.simpleName} failed for $lang, trying next engine", e)
+                lastError = e
             }
         }
-        if (vits.supports(lang)) {
-            synthesizeResampled(vits, lang, segment, onChunk)
-            return
-        }
-        error("FallbackTtsEngine: no engine (Mio or VITS) supports $lang")
+        throw IllegalStateException("FallbackTtsEngine: no engine could synthesize $lang", lastError)
     }
 
     private fun synthesizeResampled(

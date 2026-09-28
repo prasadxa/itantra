@@ -28,15 +28,18 @@ object EngineFactory {
         val paths = ModelPaths(root)
 
         var sttError: String? = null
+        val sttLoadStart = System.currentTimeMillis()
         val stt: SttEngine? = try {
             SherpaSttEngine(paths)
         } catch (t: Throwable) {
             sttError = t.message ?: t.toString(); null
         }
+        val sttLoadMs = System.currentTimeMillis() - sttLoadStart
 
         var ttsError: String? = null
+        val ttsLoadStart = System.currentTimeMillis()
         val ttsEngine = try {
-            FallbackTtsEngine(context, paths)
+            FallbackTtsEngine(context, paths).also { it.warmUp() }
         } catch (t: Throwable) {
             ttsError = t.message ?: t.toString(); null
         }
@@ -47,20 +50,25 @@ object EngineFactory {
                 ttsError = t.message ?: t.toString(); null
             }
         }
+        val ttsLoadMs = System.currentTimeMillis() - ttsLoadStart
 
         var textError: String? = null
+        val textLoadStart = System.currentTimeMillis()
         val textPipeline: TextPipeline? = try {
             IndicTextPipeline()
         } catch (t: Throwable) {
             textError = t.message ?: t.toString(); null
         }
+        val textLoadMs = System.currentTimeMillis() - textLoadStart
 
         var transportError: String? = null
+        val transportLoadStart = System.currentTimeMillis()
         val transport: Transport? = try {
             TransportManager(context, deviceId, deviceName, scope)
         } catch (t: Throwable) {
             transportError = t.message ?: t.toString(); null
         }
+        val transportLoadMs = System.currentTimeMillis() - transportLoadStart
 
         val micCapture: MicCapture? = try {
             MicCapture(context)
@@ -75,9 +83,21 @@ object EngineFactory {
             transportReady = transport != null, transportError = transportError,
         )
 
+        if (Metrics.isDebuggable(context)) {
+            Metrics.log(
+                "event" to "engine_load",
+                "sttReady" to (stt != null), "sttLoadMs" to sttLoadMs, "sttError" to sttError,
+                "ttsReady" to (speechOutput != null), "ttsLoadMs" to ttsLoadMs, "ttsError" to ttsError,
+                "textReady" to (textPipeline != null), "textLoadMs" to textLoadMs, "textError" to textError,
+                "transportReady" to (transport != null), "transportLoadMs" to transportLoadMs, "transportError" to transportError,
+                "pssKb" to android.os.Debug.getPss(),
+            )
+        }
+
         return EngineBundle(
             paths = paths,
             stt = stt,
+            ttsEngine = ttsEngine,
             speechOutput = speechOutput,
             textPipeline = textPipeline,
             transport = transport,
@@ -101,6 +121,8 @@ data class EngineStatus(
 class EngineBundle(
     val paths: ModelPaths,
     val stt: SttEngine?,
+    /** Raw :tts engine (Mio+VITS fallback), kept alongside [speechOutput] for debug tooling. */
+    val ttsEngine: org.itantra.core.TtsEngine?,
     val speechOutput: SpeechOutputPort?,
     val textPipeline: TextPipeline?,
     val transport: Transport?,
@@ -119,4 +141,5 @@ private class SpeechOutputAdapter(private val delegate: SpeechOutput) : SpeechOu
 
     override fun stopNormal() = delegate.stopNormal()
     override fun close() = delegate.close()
+    override val isPlaying: kotlinx.coroutines.flow.StateFlow<Boolean> get() = delegate.isPlaying
 }

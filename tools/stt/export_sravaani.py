@@ -17,6 +17,7 @@ Usage:
 """
 
 import argparse
+import os
 from pathlib import Path
 from typing import Dict
 
@@ -59,7 +60,7 @@ def generate_bpe_vocab(asr_model, output_path: str) -> None:
     print(f"[bpe.vocab] wrote {output_path}")
 
 
-def export(model_name: str, out_dir: Path) -> None:
+def export(model_name: str, out_dir: Path, nemo_filename: str) -> None:
     # Imported lazily: these pull in NeMo + torch, which are NOT installed on the
     # dev box on purpose (disk budget). Only import when this script actually runs.
     import nemo.collections.asr as nemo_asr
@@ -67,13 +68,35 @@ def export(model_name: str, out_dir: Path) -> None:
     from onnxruntime.quantization import QuantType, quantize_dynamic
 
     out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = out_dir.resolve()
     os.chdir(out_dir)
 
-    local_nemo = Path(f"./{model_name.split('/')[-1]}.nemo")
-    if local_nemo.is_file():
-        asr_model = nemo_asr.models.ASRModel.restore_from(restore_path=str(local_nemo))
+    if model_name.endswith(".nemo") and Path(model_name).is_file():
+        # Explicit local .nemo file path.
+        nemo_path = Path(model_name).resolve()
     else:
-        asr_model = nemo_asr.models.ASRModel.from_pretrained(model_name=model_name)
+        local_nemo = Path(f"./{model_name.split('/')[-1]}.nemo")
+        if local_nemo.is_file():
+            nemo_path = local_nemo.resolve()
+        elif Path(model_name).is_dir():
+            # Local checkout of the HF repo (e.g. `huggingface-cli download ... --local-dir`).
+            candidate = Path(model_name) / nemo_filename
+            if not candidate.is_file():
+                raise FileNotFoundError(f"{candidate} not found in local repo checkout {model_name}")
+            nemo_path = candidate.resolve()
+        else:
+            # Download ONLY the single .nemo checkpoint file from the HF repo -- NOT
+            # nemo_asr.models.ASRModel.from_pretrained(), which snapshot_downloads the
+            # WHOLE repo (including multi-GB sibling training checkpoints we don't need,
+            # e.g. a `.ckpt`). hf_hub_download fetches just one file.
+            from huggingface_hub import hf_hub_download
+
+            print(f"Downloading only {nemo_filename!r} from {model_name} ...")
+            downloaded = hf_hub_download(repo_id=model_name, filename=nemo_filename)
+            nemo_path = Path(downloaded).resolve()
+
+    print(f"Loading NeMo checkpoint from {nemo_path}")
+    asr_model = nemo_asr.models.ASRModel.restore_from(restore_path=str(nemo_path))
     asr_model.eval()
 
     # tokens.txt: one BPE piece per line, id-ordered, blank appended last (sherpa-onnx convention).
@@ -145,8 +168,15 @@ def main() -> None:
         help="Output directory (defaults to ./sravaani; copy its contents to "
         "ModelPaths.sttDir = <models>/stt/sravaani on the device)",
     )
+    parser.add_argument(
+        "--nemo-filename",
+        default="SraVaani-nemo-checkpoint.nemo",
+        help="Filename of the .nemo checkpoint to fetch from the --model HF repo "
+        "(only this single file is downloaded, not the whole repo -- the repo also "
+        "ships an unrelated multi-GB training .ckpt we must not pull).",
+    )
     args = parser.parse_args()
-    export(args.model, Path(args.out))
+    export(args.model, Path(args.out), args.nemo_filename)
 
 
 if __name__ == "__main__":

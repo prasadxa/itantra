@@ -8,7 +8,11 @@ import android.media.AudioTrack
 import android.util.Log
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.itantra.core.Priority
 import org.itantra.core.SynthesisPlan
 import org.itantra.core.TtsEngine
@@ -54,6 +58,24 @@ class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
 
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
+    // Refcounted (not boolean) because playAlert() can run nested inside playNormal()'s
+    // queue-jump drain loop: without a count, the nested alert's `finally` would flip isPlaying
+    // to false while the outer normal job is still about to resume playback.
+    private val activePlaybacks = AtomicInteger(0)
+    private val _isPlaying = MutableStateFlow(false)
+
+    /** True while any audio (NORMAL or ALERT) is being written to a track. Used by the caller to
+     * half-duplex-gate the mic so we never transcribe our own TTS output ("hearing itself"). */
+    val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
+
+    private fun beginPlayback() {
+        if (activePlaybacks.getAndIncrement() == 0) _isPlaying.value = true
+    }
+
+    private fun endPlayback() {
+        if (activePlaybacks.decrementAndGet() == 0) _isPlaying.value = false
+    }
+
     private val worker = thread(name = "SpeechOutput", isDaemon = true) { runLoop() }
 
     /** Queues [plan] for playback; ALERT jumps ahead of any queued/playing NORMAL message. */
@@ -81,6 +103,7 @@ class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
         closed = true
         normalQueue.clear()
         alertQueue.clear()
+        _isPlaying.value = false
         worker.interrupt()
         try {
             tts.close()
@@ -110,6 +133,7 @@ class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
         val usage = if (job.phoneMode) AudioAttributes.USAGE_VOICE_COMMUNICATION else AudioAttributes.USAGE_MEDIA
         val track = buildTrack(usage)
         currentNormalTrack = track
+        beginPlayback()
         try {
             track.play()
             var playStartedFired = false
@@ -136,6 +160,7 @@ class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
         } finally {
             currentNormalTrack = null
             releaseTrack(track)
+            endPlayback()
         }
     }
 
@@ -146,6 +171,7 @@ class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
 
         val focusRequest = requestAlertFocus()
         val track = buildTrack(AudioAttributes.USAGE_ALARM)
+        beginPlayback()
         try {
             track.play()
             var playStartedFired = false
@@ -162,6 +188,7 @@ class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
             releaseTrack(track)
             audioManager.setStreamVolume(AudioManager.STREAM_ALARM, prevVol, 0)
             abandonAlertFocus(focusRequest)
+            endPlayback()
         }
     }
 

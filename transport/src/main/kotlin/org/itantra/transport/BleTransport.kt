@@ -46,7 +46,13 @@ val BLE_RX_CHAR_UUID: UUID = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA
 val BLE_TX_CHAR_UUID: UUID = UUID.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E")
 private val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 private const val REQUESTED_MTU = 517
-private const val DEVICE_ID_BYTES = 16
+
+// Legacy BLE advertising PDUs (what BluetoothLeAdvertiser.startAdvertising sends) are capped at
+// 31 bytes *per packet*. A "Service Data - 128-bit UUID" AD structure alone costs
+// 1(len) + 1(type) + 16(UUID) = 18 bytes, leaving <= 13 bytes for the payload even with nothing
+// else in that packet - so deviceId has to be truncated and split into its own scan-response
+// packet (see startAdvertising()) rather than sharing the primary packet with the service UUID.
+private const val DEVICE_ID_BYTES = 12
 
 /**
  * BLE fallback transport (kind [LinkKind.BLE]). Every phone runs both roles at once: a GATT
@@ -241,13 +247,20 @@ class BleTransport(
             .setConnectable(true)
             .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
             .build()
-        val idBytes = deviceId.toByteArray(Charsets.UTF_8).copyOf(DEVICE_ID_BYTES)
+        // Primary packet: just the service UUID (18 bytes), so central devices can filter-scan
+        // for us. deviceId (needed by the scanning side to tie-break who dials, see
+        // scanCallback) goes in the scan-response packet instead - splitting it out is what
+        // keeps each individual packet under the 31-byte legacy advertising limit.
         val data = AdvertiseData.Builder()
             .setIncludeDeviceName(false)
             .addServiceUuid(ParcelUuid(BLE_SERVICE_UUID))
+            .build()
+        val idBytes = deviceId.toByteArray(Charsets.UTF_8).copyOf(DEVICE_ID_BYTES)
+        val scanResponse = AdvertiseData.Builder()
+            .setIncludeDeviceName(false)
             .addServiceData(ParcelUuid(BLE_SERVICE_UUID), idBytes)
             .build()
-        adv.startAdvertising(settings, data, advertiseCallback)
+        adv.startAdvertising(settings, data, scanResponse, advertiseCallback)
     }
 
     private val advertiseCallback = object : AdvertiseCallback() {

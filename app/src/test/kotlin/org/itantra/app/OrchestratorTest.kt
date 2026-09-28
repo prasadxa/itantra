@@ -24,6 +24,7 @@ import org.junit.Test
 private class FakeSttEngine : SttEngine {
     override var language: Lang = Lang.HI
     override var listener: ((RecognizedSentence) -> Unit)? = null
+    override var partialListener: ((id: String, text: String) -> Unit)? = null
     override val isSpeechActive: Boolean = false
     var lastHotwords: List<String> = emptyList()
     var flushed = false
@@ -48,6 +49,7 @@ private class FakeSpeechOutput : SpeechOutputPort {
     }
     override fun stopNormal() {}
     override fun close() {}
+    override val isPlaying = MutableStateFlow(false)
 }
 
 private class FakeTransport : Transport {
@@ -85,7 +87,7 @@ class OrchestratorTest {
 
         stt.listener?.invoke(
             RecognizedSentence(
-                text = "hello", lang = Lang.HI, speechStartAt = 0, speechEndAt = 500,
+                id = "s1", text = "hello", lang = Lang.HI, speechStartAt = 0, speechEndAt = 500,
                 sttDoneAt = 900, audioSeconds = 1f, decodeMs = 100,
             ),
         )

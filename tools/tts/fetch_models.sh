@@ -65,14 +65,19 @@ fetch_first() { # fetch_first <dest> <url1> [url2 ...] — first URL that downlo
 mkdir -p "${MIO_DIR}/voices" "${VITS_DIR}"
 
 echo "== Indic-Mio (LLM + MioCodec + WavLM) =="
+# bytepass0/indic-mio-q8-gguf's actual filename in-repo is "indic-mio-q8.gguf" (no underscore
+# before "0"); we still save it locally as indic-mio-q8_0.gguf per ModelPaths.kt's layout.
 fetch_first "${MIO_DIR}/indic-mio-q8_0.gguf" \
-    "$(hf_url bytepass0/indic-mio-q8-gguf indic-mio-q8_0.gguf)" \
-    "$(hf_url mmnga-o/miotts-cpp-gguf indic-mio-q8_0.gguf)"
+    "$(hf_url bytepass0/indic-mio-q8-gguf indic-mio-q8.gguf)"
+# miocodec.gguf in mmnga-o/miotts-cpp-gguf is byte-identical to that repo's miocodec-24khz.gguf
+# (same LFS oid) i.e. Aratako/MioCodec-25Hz-24kHz, matching Indic-Mio's base codec. Do NOT use
+# miocodec-25hz-44k-v2.gguf from that repo — wrong sample rate for this LLM.
 fetch_first "${MIO_DIR}/miocodec.gguf" \
     "$(hf_url mmnga-o/miotts-cpp-gguf miocodec.gguf)"
+# WavLM is NOT hosted in mmnga-o/miotts-cpp-gguf (that repo has no wavlm* file) — it's a
+# separate repo.
 fetch_first "${MIO_DIR}/wavlm.gguf" \
-    "$(hf_url mmnga-o/miotts-cpp-gguf wavlm.gguf)" \
-    "$(hf_url mmnga-o/miotts-cpp-gguf wavlm_base_plus_2l_f32.gguf)"
+    "$(hf_url mmnga-o/wavlm-base-plus-gguf wavlm_base_plus_2l_f32.gguf)"
 
 echo "== VITS fallback (bn, kn, ml, mr, ta, te) =="
 fetch "$(hf_url MatiasLin/sherpa-onnx-vits-rasa-13 model.onnx)" "${VITS_DIR}/model.onnx"

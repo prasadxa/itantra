@@ -62,10 +62,15 @@ class VitsTtsEngine(private val paths: ModelPaths, private val numThreads: Int) 
             sid = SPEAKER_ID_BY_LANG.getValue(lang),
             extra = mapOf("emotion_id" to styleId(segment.emotion).toString()),
         )
-        engine.generateWithConfigAndCallback(segment.text, config) { chunk: FloatArray ->
-            onChunk(chunk)
-            1 // non-zero = keep generating (sherpa-onnx's generateWithCallback stop convention)
+        // Must be a real class, not a lambda: sherpa-onnx's JNI looks up `invoke([F)Ljava/lang/Integer;`,
+        // which Kotlin 2.x invokedynamic lambdas don't expose (NoSuchMethodError → JNI abort).
+        val callback = object : (FloatArray) -> Int {
+            override fun invoke(chunk: FloatArray): Int {
+                onChunk(chunk)
+                return 1 // non-zero = keep generating
+            }
         }
+        engine.generateWithConfigAndCallback(segment.text, config, callback)
     }
 
     override fun close() {

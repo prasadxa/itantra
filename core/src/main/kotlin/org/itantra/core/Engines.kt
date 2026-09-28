@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.StateFlow
 
 /** Output of the STT module: one sentence, cut by VAD at a pause. Times are epoch ms. */
 data class RecognizedSentence(
+    /** Utterance id, shared with the [SttEngine.partialListener] calls for the same utterance. */
+    val id: String,
     val text: String,
     val lang: Lang,
     val speechStartAt: Long,
@@ -26,6 +28,8 @@ interface SttEngine : AutoCloseable {
     fun reset()
     val isSpeechActive: Boolean
     var listener: ((RecognizedSentence) -> Unit)?
+    /** Live in-progress transcript for the utterance currently being spoken, fired periodically. */
+    var partialListener: ((id: String, text: String) -> Unit)?
 }
 
 /** One piece of speech after SSML / style processing. */

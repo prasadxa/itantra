@@ -169,6 +169,10 @@ class WifiTransport(
                     }
                     override fun onServiceResolved(info: NsdServiceInfo) {
                         connecting.set(false)
+                        if (isSelf(info)) {
+                            Log.w(TAG, "skip resolved service that resolves to our own address:port")
+                            return
+                        }
                         scope.launch(Dispatchers.IO) { dial(info) }
                     }
                 })
@@ -178,6 +182,24 @@ class WifiTransport(
         }
         discoveryListener = listener
         nsdManager.discoverServices(NSD_SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, listener)
+    }
+
+    /**
+     * Second loopback guard beyond the `remoteId == deviceId` check above: true if [info] resolves
+     * to one of this device's own local addresses on our own server port (e.g. an mDNS reflection
+     * or a stale/duplicate advertisement), which would otherwise let us dial ourselves.
+     */
+    private fun isSelf(info: NsdServiceInfo): Boolean {
+        val myPort = serverSocket?.localPort ?: return false
+        if (info.port != myPort) return false
+        val host = info.host ?: return false
+        return try {
+            java.net.NetworkInterface.getNetworkInterfaces().asSequence()
+                .flatMap { it.inetAddresses.asSequence() }
+                .any { it.hostAddress == host.hostAddress }
+        } catch (e: Exception) {
+            false
+        }
     }
 
     private fun dial(info: NsdServiceInfo) {

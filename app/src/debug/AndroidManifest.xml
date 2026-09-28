@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug-variant-only manifest fragment (merged only into debug builds): registers the
+     automated-testing broadcast hooks implemented in DebugCommandReceiver.kt, which lives in
+     this same app/src/debug source set and is therefore entirely absent from release builds. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <receiver
+            android:name=".DebugCommandReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="org.itantra.DEBUG_STT_WAV" />
+                <action android:name="org.itantra.DEBUG_SPEAK" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>

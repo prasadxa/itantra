@@ -32,6 +32,13 @@ python export_sravaani.py \
   --out ./sravaani
 ```
 
+The script downloads only the single `SraVaani-nemo-checkpoint.nemo` file (~1.8 GB) from
+the `iAkashPaul/sravaani-indic-asr` HF repo via `huggingface_hub.hf_hub_download` --
+**not** `nemo_asr.models.ASRModel.from_pretrained()`, which would `snapshot_download`
+the *whole* repo, including an unrelated ~5.4 GB `SraVaani-Hybrid-TDT-CTC-BPE.ckpt`
+training checkpoint we don't need. Override the filename with `--nemo-filename` if the
+repo changes.
+
 This adapts sherpa-onnx's own NeMo-TDT exporter
 (`scripts/nemo/parakeet-tdt-0.6b-v3/export_onnx.py` +
 `scripts/nemo/generate_bpe_vocab.py`, both from the k2-fsa/sherpa-onnx repo) for the

@@ -2,19 +2,23 @@ package org.itantra.app.ui
 
 import android.content.Context
 import android.os.Debug
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +29,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import java.io.File
 import java.io.FileWriter
@@ -35,6 +41,10 @@ import org.itantra.app.AppRepository
 import org.itantra.app.CpuSampler
 import org.itantra.app.ExpectedModelFiles
 import org.itantra.app.MessageMetrics
+import org.itantra.app.ui.theme.MonoText
+
+private val COLS = listOf(56.dp, 44.dp, 56.dp, 48.dp, 56.dp, 56.dp, 56.dp)
+private val HEADERS = listOf("DIR", "LANG", "STT", "RTF", "NET", "TTS", "E2E")
 
 @Composable
 fun MetricsScreen() {
@@ -56,61 +66,84 @@ fun MetricsScreen() {
     val modelFiles = remember(modelsRoot) { ExpectedModelFiles.list(org.itantra.core.ModelPaths(modelsRoot)) }
     val totalModelBytes = modelFiles.sumOf { it.sizeBytes }
 
-    Column(Modifier.fillMaxSize().padding(12.dp)) {
-        Text("Metrics", style = MaterialTheme.typography.titleLarge)
-        Text("RAM (PSS): ${pssKb?.let { "${it / 1024} MB" } ?: "measuring…"}")
-        Text("CPU (idle sample): ${cpuPercent?.let { "%.1f%%".format(it) } ?: "measuring…"}")
-        Text("Model files on disk: ${totalModelBytes / (1024 * 1024)} MB")
+    Column(Modifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 10.dp)) {
+        MonoText(
+            "RAM ${pssKb?.let { "${it / 1024}MB" } ?: "…"}  ·  CPU ${cpuPercent?.let { "%.1f%%".format(it) } ?: "…"}  ·  " +
+                "MODELS ${totalModelBytes / (1024 * 1024)}MB",
+            color = MaterialTheme.colorScheme.onSurface,
+        )
         if (engineStatus != null) {
-            Text(
-                "Engines: stt=${engineStatus!!.sttReady} tts=${engineStatus!!.ttsReady} " +
-                    "text=${engineStatus!!.textReady} transport=${engineStatus!!.transportReady}",
-                style = MaterialTheme.typography.labelSmall,
+            MonoText(
+                "STT:${engineStatus!!.sttReady.tick()}  TTS:${engineStatus!!.ttsReady.tick()}  TEXT:${engineStatus!!.textReady.tick()}  LINK:${engineStatus!!.transportReady.tick()}",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 2.dp),
             )
         }
 
-        Button(onClick = { exportMessage = exportCsv(context, metrics) }) { Text("Export CSV") }
-        exportMessage?.let { Text(it, style = MaterialTheme.typography.labelSmall) }
+        Spacer(Modifier.height(10.dp))
+        OutlinedButton(onClick = { exportMessage = exportCsv(context, metrics) }) { Text("Export CSV") }
+        exportMessage?.let { MonoText(it, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp)) }
 
-        Spacer()
+        Spacer(Modifier.height(14.dp))
 
-        val avgSttMs = metrics.mapNotNull { it.sttLatencyMs }.average().takeIf { !it.isNaN() }
-        val avgNetMs = metrics.mapNotNull { it.networkMs }.average().takeIf { !it.isNaN() }
-        val avgTtsMs = metrics.mapNotNull { it.ttsStartMs }.average().takeIf { !it.isNaN() }
-        val avgE2eMs = metrics.mapNotNull { it.endToEndMs }.average().takeIf { !it.isNaN() }
-        Text(
-            "Averages: stt=${avgSttMs?.fmt()} net=${avgNetMs?.fmt()} tts=${avgTtsMs?.fmt()} e2e=${avgE2eMs?.fmt()}",
-            style = MaterialTheme.typography.labelMedium,
-        )
+        val sttVals = metrics.mapNotNull { it.sttLatencyMs }
+        val netVals = metrics.mapNotNull { it.networkMs }
+        val ttsVals = metrics.mapNotNull { it.ttsStartMs }
+        val e2eVals = metrics.mapNotNull { it.endToEndMs }
 
-        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 4.dp)) {
-            listOf("dir", "lang", "stt", "rtf", "net", "tts", "e2e").forEach {
-                Text(it, Modifier.width(64.dp), style = MaterialTheme.typography.labelSmall)
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+            HEADERS.forEachIndexed { i, h ->
+                MonoText(h, Modifier.width(COLS[i]), color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium, textAlign = TextAlign.End)
             }
         }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+
+        SummaryRow("AVG", sttVals.average(), netVals.average(), ttsVals.average(), e2eVals.average())
+        SummaryRow("P95", sttVals.p95(), netVals.p95(), ttsVals.p95(), e2eVals.p95())
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp, modifier = Modifier.padding(vertical = 4.dp))
+
         LazyColumn(Modifier.fillMaxSize()) {
             items(metrics.asReversed()) { m -> MetricsRow(m) }
         }
     }
 }
 
+private fun Boolean.tick() = if (this) "✓" else "—"
+
+private fun List<Long>.p95(): Double {
+    if (isEmpty()) return Double.NaN
+    val sorted = sorted()
+    val idx = ((sorted.size - 1) * 0.95).toInt()
+    return sorted[idx].toDouble()
+}
+
 @Composable
-private fun Spacer() = androidx.compose.foundation.layout.Spacer(Modifier.padding(4.dp))
+private fun SummaryRow(label: String, stt: Double, net: Double, tts: Double, e2e: Double) {
+    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).background(MaterialTheme.colorScheme.surfaceContainer)) {
+        MonoText(label, Modifier.width(COLS[0]), fontWeight = FontWeight.Medium)
+        MonoText("", Modifier.width(COLS[1]))
+        MonoText(stt.fmt(), Modifier.width(COLS[2]), textAlign = TextAlign.End)
+        MonoText("", Modifier.width(COLS[3]))
+        MonoText(net.fmt(), Modifier.width(COLS[4]), textAlign = TextAlign.End)
+        MonoText(tts.fmt(), Modifier.width(COLS[5]), textAlign = TextAlign.End)
+        MonoText(e2e.fmt(), Modifier.width(COLS[6]), textAlign = TextAlign.End)
+    }
+}
 
 @Composable
 private fun MetricsRow(m: MessageMetrics) {
     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
-        Text(m.direction.name.take(4), Modifier.width(64.dp), style = MaterialTheme.typography.bodySmall)
-        Text(m.lang.code, Modifier.width(64.dp), style = MaterialTheme.typography.bodySmall)
-        Text(m.sttLatencyMs?.toString() ?: "-", Modifier.width(64.dp), style = MaterialTheme.typography.bodySmall)
-        Text(m.rtf?.let { "%.2f".format(it) } ?: "-", Modifier.width(64.dp), style = MaterialTheme.typography.bodySmall)
-        Text(m.networkMs?.toString() ?: "-", Modifier.width(64.dp), style = MaterialTheme.typography.bodySmall)
-        Text(m.ttsStartMs?.toString() ?: "-", Modifier.width(64.dp), style = MaterialTheme.typography.bodySmall)
-        Text(m.endToEndMs?.toString() ?: "-", Modifier.width(64.dp), style = MaterialTheme.typography.bodySmall)
+        MonoText(m.direction.name.take(3), Modifier.width(COLS[0]))
+        MonoText(m.lang.code, Modifier.width(COLS[1]))
+        MonoText(m.sttLatencyMs?.toString() ?: "—", Modifier.width(COLS[2]), textAlign = TextAlign.End)
+        MonoText(m.rtf?.let { "%.2f".format(it) } ?: "—", Modifier.width(COLS[3]), textAlign = TextAlign.End)
+        MonoText(m.networkMs?.toString() ?: "—", Modifier.width(COLS[4]), textAlign = TextAlign.End)
+        MonoText(m.ttsStartMs?.toString() ?: "—", Modifier.width(COLS[5]), textAlign = TextAlign.End)
+        MonoText(m.endToEndMs?.toString() ?: "—", Modifier.width(COLS[6]), textAlign = TextAlign.End)
     }
 }
 
-private fun Double.fmt(): String = "%.0fms".format(this)
+private fun Double.fmt(): String = if (isNaN()) "—" else "%.0f".format(this)
 
 private fun exportCsv(context: Context, metrics: List<MessageMetrics>): String {
     return try {

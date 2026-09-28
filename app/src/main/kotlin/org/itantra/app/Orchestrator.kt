@@ -28,6 +28,15 @@ data class LogEntry(
     val timestamp: Long,
 )
 
+/** Live in-progress transcript, shown as a shimmering bubble until the matching [LogEntry] arrives. */
+data class PartialEntry(
+    val id: String,
+    val direction: Direction,
+    val text: String,
+    val lang: Lang,
+    val timestamp: Long,
+)
+
 data class MessageMetrics(
     val id: String,
     val direction: Direction,
@@ -54,6 +63,9 @@ interface SpeechOutputPort {
     )
     fun stopNormal()
     fun close()
+    /** True while any audio is being written to a track (NORMAL or ALERT). Used to half-duplex-gate
+     * the mic so the device never transcribes its own TTS output. */
+    val isPlaying: kotlinx.coroutines.flow.StateFlow<Boolean>
 }
 
 /**
@@ -70,10 +82,21 @@ class Orchestrator(
     private val scope: CoroutineScope,
     private val clock: () -> Long = System::currentTimeMillis,
     private val onLog: (LogEntry) -> Unit = {},
+    private val onPartial: (PartialEntry) -> Unit = {},
     private val onMetrics: (MessageMetrics) -> Unit = {},
     private val onPeerTalking: (Boolean) -> Unit = {},
+    /** Fired with the message id when TTS playback of a received message starts (for a "speaking…" UI badge). */
+    private val onSpeaking: (id: String) -> Unit = {},
     private val onRtt: (rttMs: Long, offsetMs: Long) -> Unit = { _, _ -> },
     private val alertProvider: () -> Boolean = { false },
+    /**
+     * Whether the TTS engine can actually synthesize [Lang] right now (voice/model present).
+     * [SpeechOutputPort.enqueue] has no failure callback - only [onPlayStarted] on success - so
+     * without this check a message in an unsupported language would be silently enqueued, never
+     * play, and never get Acked, leaving the sender waiting forever. Defaults to always-true so
+     * existing fakes/tests (which don't model per-language support) are unaffected.
+     */
+    private val ttsSupports: (Lang) -> Boolean = { true },
 ) {
     var mode: Mode = Mode.PTT
 
@@ -95,8 +118,12 @@ class Orchestrator(
     private var pingJob: Job? = null
     private var incomingJob: Job? = null
 
+    @Volatile
+    private var lastPartialSentAt: Long = 0L
+
     init {
         stt?.listener = { sentence -> onRecognized(sentence) }
+        stt?.partialListener = { id, text -> onLocalPartial(id, text) }
     }
 
     fun start() {
@@ -145,9 +172,19 @@ class Orchestrator(
 
     private fun priority(): Priority = if (alertProvider()) Priority.ALERT else Priority.NORMAL
 
+    /** Fired by [SttEngine.partialListener] every ~500ms while the local mic is mid-utterance. */
+    private fun onLocalPartial(id: String, text: String) {
+        onPartial(PartialEntry(id, Direction.SENT, text, language, clock()))
+        val now = clock()
+        if (now - lastPartialSentAt >= 500) {
+            lastPartialSentAt = now
+            scope.launch { transport.send(Frame.Partial(id, deviceId, language, text)) }
+        }
+    }
+
     private fun onRecognized(sentence: RecognizedSentence) {
         val now = clock()
-        val id = UUID.randomUUID().toString()
+        val id = sentence.id
         val message = VoiceMessage(
             id = id, from = deviceId, lang = sentence.lang, text = sentence.text,
             priority = priority(), emotion = null, ssml = false,
@@ -171,7 +208,12 @@ class Orchestrator(
 
     private fun handleFrame(frame: Frame) {
         when (frame) {
-            is Frame.Msg -> onMessageReceived(frame.message)
+            // Defence-in-depth loopback guard: a self-connected transport (bug, or a stray NSD
+            // resolution) must never make us transcribe-and-reply to our own voice.
+            is Frame.Msg -> if (frame.message.from != deviceId) onMessageReceived(frame.message)
+            is Frame.Partial -> if (frame.from != deviceId) {
+                onPartial(PartialEntry(frame.id, Direction.RECEIVED, frame.text, frame.lang, clock()))
+            }
             is Frame.Ack -> onAckReceived(frame)
             is Frame.Ptt -> {
                 peerHoldsFloor = frame.talking
@@ -189,8 +231,9 @@ class Orchestrator(
         onLog(LogEntry(message.id, Direction.RECEIVED, message.text, message.lang, message.priority == Priority.ALERT, message.ssml, receivedAt))
 
         val plan = textPipeline?.plan(message)
-        if (plan != null && speechOutput != null) {
+        if (plan != null && speechOutput != null && ttsSupports(message.lang)) {
             speechOutput.enqueue(message.id, plan, mode == Mode.PHONE) { id, playedAt ->
+                onSpeaking(id)
                 val ttsStartMs = playedAt - receivedAt
                 val endToEndMs = playedAt - message.speechEndAt
                 onMetrics(
