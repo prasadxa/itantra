@@ -13,3 +13,9 @@
 
 /captions/*
   Content-Type: text/vtt; charset=utf-8
+
+/*.css
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.js
+  Cache-Control: public, max-age=0, must-revalidate

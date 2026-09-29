@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500&display=swap">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
 
@@ -23,7 +23,10 @@
 <header class="topbar">
   <div class="bar-in">
     <a class="brand" href="#top"><img src="assets/logo.png" alt="" width="32" height="32"><span>iTantra</span></a>
-    <nav aria-label="Sections">
+    <button type="button" class="menu-btn" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path class="l1" d="M4 7h16" /><path class="l2" d="M4 12h16" /><path class="l3" d="M4 17h16" /></svg>
+    </button>
+    <nav id="site-nav" aria-label="Sections">
       <a href="#how">How it works</a>
       <a href="#features">Features</a>
       <a href="#screens">Screens</a>
@@ -193,7 +196,7 @@
     <div class="gallery">
       <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/01_alert_card.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/01_alert_card.jpg" width="540" height="1200" alt="Talk screen with a Hindi flood alert"><span>Talk screen with a flood alert</span></a>
       <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/03_sos_sheet.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/03_sos_sheet.jpg" width="540" height="1200" alt="SOS sheet with location and six templates"><span>SOS: location and one-tap templates</span></a>
-      <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/02_sos_sent.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/02_sos_sent.jpg" width="540" height="1200" alt="SOS request delivered"><span>SOS delivered</span></a>
+      <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/onboarding.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/onboarding.jpg" width="486" height="1080" alt="First-run screen: Speak your language, with language cards in ten scripts"><span>First run: pick your language</span></a>
       <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/07_history.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/07_history.jpg" width="540" height="1200" alt="History with Tamil and Hindi messages"><span>History in Tamil and Hindi</span></a>
       <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/07_metrics.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/07_metrics.jpg" width="540" height="1200" alt="Metrics screen with profile, thermal state, memory and latency chart"><span>Metrics: latency, memory, thermal</span></a>
       <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/08_hindi_ui.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/08_hindi_ui.jpg" width="540" height="1200" alt="The app interface in Hindi"><span>Whole interface in Hindi</span></a>
@@ -238,8 +241,8 @@
         <figcaption><b>Metrics and history</b> CPU, RAM, latency histogram, real-time factor, searchable log. 24 s</figcaption></figure>
       <figure><video controls preload="none" playsinline poster="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/08_hindi_ui.jpg" width="576" height="1280"><source src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/08_hindi_ui.mp4" type="video/mp4"></video>
         <figcaption><b>Hindi interface</b> Switching the whole app to हिन्दी and back. 38 s</figcaption></figure>
-      <figure><video controls preload="none" playsinline poster="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/06_settings_text_size.jpg" width="576" height="1280"><source src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/06_settings_text_size.mp4" type="video/mp4"></video>
-        <figcaption><b>Settings</b> Text size S to XL, dark and light theme, speech speed 0.8× to 1.3×. 38 s</figcaption></figure>
+      <figure><video controls preload="none" playsinline poster="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/06_settings_text_size.jpg?v=2" width="576" height="1280"><source src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/06_settings_text_size.mp4?v=2" type="video/mp4"></video>
+        <figcaption><b>Settings</b> Text size S to XL, dark and light theme, speech speed 0.8× to 1.3×. 32 s</figcaption></figure>
     </div>
   </div>
 </section>
@@ -258,7 +261,7 @@
       <div class="stat"><span class="n">688 MB</span><span class="l">memory in the LITE profile when idle</span></div>
     </div>
 
-    <div class="tbl"><table>
+    <div class="tbl rows"><table>
       <thead><tr><th>Metric</th><th class="num">Value</th><th>Note</th></tr></thead>
       <tbody>
         <tr><td>Speech-recognition word error rate</td><td class="num">5.9%</td><td>10 FLEURS clips, 1 per language. Preliminary; a 30-clip-per-language run is next</td></tr>
@@ -286,7 +289,7 @@
       <article><h3>VITS Rasa</h3><p class="who">AI4Bharat, IIT Madras · CC-BY-4.0</p><p>Fast speech for bn, kn, ml, mr, ta, te with 14 emotion styles. 123 MB.</p></article>
       <article><h3>Silero VAD</h3><p class="who">Silero · MIT</p><p>Detects when someone is speaking and when a sentence ends. 0.6 MB.</p></article>
     </div>
-    <div class="tbl"><table>
+    <div class="tbl pairs"><table>
       <thead><tr><th>Layer</th><th>Technology</th></tr></thead>
       <tbody>
         <tr><td>App</td><td>Kotlin 2.4, Jetpack Compose, Material 3, foreground service; Android 8.0+ (API 26), arm64</td></tr>
@@ -439,6 +442,6 @@ adb push vad stt tts /sdcard/Android/data/org.itantra.app/files/models/</code></
   <p class="lb-cap"></p>
 </dialog>
 
-<script src="main.js" defer></script>
+<script src="main.js?v=3" defer></script>
 </body>
 </html>

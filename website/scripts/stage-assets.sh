@@ -23,7 +23,7 @@ cp "$APK_SRC" "$OUT/apk/$APK_NAME"
 SCREENS=(
   "$SHOW/images/01_alert_card.png"
   "$SHOW/images/03_sos_sheet.png"
-  "$SHOW/images/02_sos_sent.png"
+  "$ROOT/docs/brand/screens/onboarding.png"
   "$SHOW/images/07_history.png"
   "$SHOW/images/07_metrics.png"
   "$SHOW/images/08_hindi_ui.png"
@@ -55,6 +55,11 @@ for src in "$SHOW"/clips/*.mp4; do
   cp "$src" "$OUT/media/clips/$name.mp4"
   ffmpeg -v error -y -ss 2 -i "$src" -frames:v 1 -q:v 4 "$OUT/media/clips/$name.jpg"
 done
+# The settings clip opens with a personal app notification over the screen: publish it from 6 s
+# (first clean frame) and use a frame showing the XL text setting as its poster.
+ffmpeg -v error -y -ss 6 -i "$SHOW/clips/06_settings_text_size.mp4" -c:v libx264 -crf 23 -preset slow \
+  -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 96k "$OUT/media/clips/06_settings_text_size.mp4"
+ffmpeg -v error -y -ss 10 -i "$SHOW/clips/06_settings_text_size.mp4" -frames:v 1 -q:v 4 "$OUT/media/clips/06_settings_text_size.jpg"
 
 # --- Model pack ---------------------------------------------------------------
 # Only the files the app loads: F16 codec and Q4 LLM (the app prefers both when present),

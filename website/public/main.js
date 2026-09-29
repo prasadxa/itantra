@@ -3,6 +3,22 @@
 (() => {
   "use strict";
 
+  // Phone/tablet menu: toggles the header nav; closes on link tap, Escape or tap outside.
+  const bar = document.querySelector(".topbar");
+  const menuBtn = document.querySelector(".menu-btn");
+  if (bar && menuBtn) {
+    const setOpen = (open) => {
+      bar.classList.toggle("open", open);
+      menuBtn.setAttribute("aria-expanded", String(open));
+      menuBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    };
+    menuBtn.addEventListener("click", () => setOpen(!bar.classList.contains("open")));
+    bar.querySelectorAll("nav a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
+    document.addEventListener("click", (e) => { if (!bar.contains(e.target)) setOpen(false); });
+    window.matchMedia("(min-width: 861px)").addEventListener("change", (e) => { if (e.matches) setOpen(false); });
+  }
+
   // Copy buttons: data-copy="#id" copies that element's text.
   document.querySelectorAll("[data-copy]").forEach((btn) => {
     btn.addEventListener("click", async () => {
