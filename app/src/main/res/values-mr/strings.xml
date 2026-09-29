@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">iTantra</string>
+
+    <string name="onboarding_skip">वगळा</string>
+    <string name="onboarding_next">पुढे</string>
+    <string name="onboarding_get_started">सुरू करा</string>
+    <string name="onboarding_step1_title">तुमच्या भाषेत बोला</string>
+    <string name="onboarding_step1_body">iTantra १० भारतीय भाषा समजते आणि बोलते, इंटरनेटशिवाय.</string>
+    <string name="onboarding_step2_title">नेटवर्क किंवा इंटरनेटशिवाय चालते</string>
+    <string name="onboarding_step2_body">फोन थेट Wi‑Fi किंवा ब्लूटूथवरून दुसऱ्या फोनशी जोडतो. मजकूर आवाजापेक्षा सुमारे ८०० पट हलका असतो, त्यामुळे कॉल पोहोचत नाही तिथेही तो पोहोचतो.</string>
+    <string name="onboarding_step3_title">भारतीय ओपन AI वर तयार</string>
+    <string name="onboarding_step3_body">वाक् ओळख: ARTPARK, IISc बंगळूरु (SraVaani). आवाज: SPRING Lab, IIT मद्रास (Indic‑Mio) आणि AI4Bharat, IIT मद्रास (Rasa).</string>
+    <string name="onboarding_permissions_title">काही परवानग्या हव्यात</string>
+    <string name="onboarding_permission_mic_title">मायक्रोफोन</string>
+    <string name="onboarding_permission_mic_body">जेणेकरून iTantra तुमचे बोलणे ऐकून त्याचा मजकूर बनवू शकेल — काहीही फोनबाहेर जात नाही.</string>
+    <string name="onboarding_permission_notif_title">सूचना</string>
+    <string name="onboarding_permission_notif_body">जेणेकरून स्क्रीन बंद असतानाही वॉकी-टॉकी चालू राहील आणि स्थिती दाखवेल.</string>
+
+    <string name="language_picker_title">तुमची भाषा निवडा</string>
+    <string name="language_picker_subtitle">तुम्ही ही केव्हाही बदलू शकता.</string>
+    <string name="language_ready">आवाज तयार आहे</string>
+    <string name="language_not_ready">आवाज इंस्टॉल केलेला नाही</string>
+
+    <string name="status_connected">%1$s शी जोडलेले · %2$s</string>
+    <string name="status_searching">जवळपास शोधत आहे…</string>
+    <string name="status_idle">अजून जोडलेले नाही</string>
+    <string name="status_failed">जोडणी अयशस्वी</string>
+    <string name="empty_transcript">बोलण्यासाठी खालील कळ दाबून धरा, किंवा संदेश टाइप करा.</string>
+    <string name="menu_metrics">मेट्रिक्स</string>
+    <string name="menu_models">मॉडेल्स</string>
+    <string name="menu_about">अ‍ॅपबद्दल</string>
+    <string name="menu_change_language">भाषा बदला</string>
+    <string name="cd_back">मागे</string>
+    <string name="cd_more_options">अधिक पर्याय</string>
+    <string name="cd_replay">पुन्हा ऐका</string>
+    <string name="cd_send">पाठवा</string>
+    <string name="cd_type_message">संदेश टाइप करा</string>
+    <string name="cd_close_composer">बंद करा</string>
+    <string name="cd_hang_up">कॉल संपवा</string>
+    <string name="cd_alert_icon">इशारा</string>
+
+    <string name="sos_need_help">मदत हवी</string>
+    <string name="sos_medical">वैद्यकीय आणीबाणी</string>
+    <string name="sos_safe">सुरक्षित आहे</string>
+    <string name="sos_supplies">पाणी/अन्न हवे</string>
+
+    <string name="about_title">iTantra बद्दल</string>
+    <string name="about_version">आवृत्ती %1$s</string>
+    <string name="about_credits_title">भारतीय ओपन AI वर तयार</string>
+    <string name="about_licences_title">ओपन-सोर्स परवाने</string>
+</resources>

@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Optional
 
 ADB_BIN = os.environ.get("ADB_BIN", str(Path.home() / "Library/Android/sdk/platform-tools/adb"))
-SERIAL = os.environ.get("ITANTRA_ADB_SERIAL", "adb-689a084b-N7eCzC._adb-tls-connect._tcp")
+SERIAL = os.environ.get("ITANTRA_ADB_SERIAL", "10BD1C1C7T000HX")
 PACKAGE = "org.itantra.app"
 COMPONENT = f"{PACKAGE}/.DebugCommandReceiver"
 DEVICE_FILES_ROOT = f"/sdcard/Android/data/{PACKAGE}/files"

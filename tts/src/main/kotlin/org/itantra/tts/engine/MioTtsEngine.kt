@@ -26,8 +26,16 @@ class MioTtsEngine(private val paths: ModelPaths, private val numThreads: Int) :
     private val q4Gguf = File(paths.mioDir, "indic-mio-q4.gguf")
     private val q8Gguf = File(paths.mioDir, "indic-mio-q8_0.gguf")
     private val lmGguf = if (q4Gguf.exists()) q4Gguf else q8Gguf
-    private val codecGguf = File(paths.mioDir, "miocodec.gguf")
-    private val wavlmGguf = File(paths.mioDir, "wavlm.gguf")
+
+    // Prefer the F16 MioCodec (half the tensor bytes of the original F32 export, produced by
+    // tools/tts/convert_miocodec_f16.py — see docs/design.md) when present; falls back to the F32
+    // file so devices/builds without it keep working unmodified.
+    private val codecF16Gguf = File(paths.mioDir, "miocodec-f16.gguf")
+    private val codecF32Gguf = File(paths.mioDir, "miocodec.gguf")
+    private val codecGguf = if (codecF16Gguf.exists()) codecF16Gguf else codecF32Gguf
+
+    // wavlm.gguf is intentionally not referenced here: MioNative/native_bridge.cpp never loads it
+    // (see MioNative's class doc) since this app only ever uses precomputed voice embeddings.
 
     private var initialized = false
     private var loadedVoiceLang: Lang? = null
@@ -35,7 +43,7 @@ class MioTtsEngine(private val paths: ModelPaths, private val numThreads: Int) :
     override val sampleRate: Int get() = if (MioNative.isInitialized) MioNative.sampleRate else 24000
 
     override fun supports(lang: Lang): Boolean =
-        lmGguf.exists() && codecGguf.exists() && wavlmGguf.exists() && paths.mioVoice(lang).exists()
+        lmGguf.exists() && codecGguf.exists() && paths.mioVoice(lang).exists()
 
     override fun synthesize(lang: Lang, segment: TtsSegment, onChunk: (FloatArray) -> Unit) {
         require(supports(lang)) { "MioTtsEngine: no voice for $lang (or model files missing)" }
@@ -44,7 +52,10 @@ class MioTtsEngine(private val paths: ModelPaths, private val numThreads: Int) :
         MioNative.synthesize(renderText(segment), onChunk)
     }
 
-    override fun close() {
+    /** Releases native resources if loaded; a later [synthesize] call transparently re-initializes
+     * via [ensureInit]. Safe to call when idle — see `FallbackTtsEngine`'s idle-unload timer
+     * (docs/design.md "lazy, per-need TTS"). */
+    fun unload() {
         if (initialized) {
             MioNative.release()
             initialized = false
@@ -52,9 +63,11 @@ class MioTtsEngine(private val paths: ModelPaths, private val numThreads: Int) :
         }
     }
 
+    override fun close() = unload()
+
     private fun ensureInit() {
         if (!initialized) {
-            MioNative.init(lmGguf.absolutePath, codecGguf.absolutePath, wavlmGguf.absolutePath, numThreads)
+            MioNative.init(lmGguf.absolutePath, codecGguf.absolutePath, numThreads)
             initialized = true
         }
     }

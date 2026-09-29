@@ -2,10 +2,15 @@ package org.itantra.tts.mio
 
 /**
  * Thin JNI bridge to mio-tts-cpp (`tts/src/main/cpp/native_bridge.cpp`, built on llama.cpp).
- * One process-wide native handle: [init] loads the LLM + MioCodec + WavLM GGUF triple,
- * [loadVoice] swaps the active voice embedding, [synthesize] streams PCM chunks for the current
- * voice, [release] frees everything. Not thread-safe — callers (see `MioTtsEngine`) must
- * serialize calls onto one worker thread, matching `TtsEngine`'s documented contract.
+ * One process-wide native handle: [init] loads the LLM + MioCodec pair, [loadVoice] swaps the
+ * active voice embedding, [synthesize] streams PCM chunks for the current voice, [release] frees
+ * everything. Not thread-safe — callers (see `MioTtsEngine`) must serialize calls onto one worker
+ * thread, matching `TtsEngine`'s documented contract.
+ *
+ * WavLM (`wavlm.gguf`) is deliberately never loaded: mio-tts-cpp only uses it to extract a speaker
+ * embedding from raw reference audio at runtime (voice cloning), which this app never does — voice
+ * embeddings are precomputed offline into `<lang>.emb.gguf` (see [loadVoice]) — so skipping it saves
+ * ~90 MB of resident memory for no loss of functionality this app actually uses.
  */
 object MioNative {
     init {
@@ -18,10 +23,12 @@ object MioNative {
     val isInitialized: Boolean get() = handle != 0L
     val sampleRate: Int get() = cachedSampleRate
 
-    /** Loads `indic-mio-q8_0.gguf` (LLM), `miocodec.gguf` + `wavlm.gguf` (vocoder). */
-    fun init(lmGguf: String, codecGguf: String, wavlmGguf: String, threads: Int) {
+    /** Loads `indic-mio-q8_0.gguf` (or the q4 LITE weights) as the LLM and `miocodec.gguf`
+     * (or the f16-shrunk variant) as the vocoder; see the class doc for why `wavlm.gguf` is
+     * never loaded. */
+    fun init(lmGguf: String, codecGguf: String, threads: Int) {
         check(handle == 0L) { "MioNative already initialized; call release() first" }
-        val h = nativeInit(lmGguf, codecGguf, wavlmGguf, threads)
+        val h = nativeInit(lmGguf, codecGguf, threads)
         if (h == 0L) error("mio-tts-cpp init failed: ${nativeLastError(0)}")
         handle = h
         cachedSampleRate = nativeSampleRate(h)
@@ -55,7 +62,7 @@ object MioNative {
         }
     }
 
-    private external fun nativeInit(lmGguf: String, codecGguf: String, wavlmGguf: String, threads: Int): Long
+    private external fun nativeInit(lmGguf: String, codecGguf: String, threads: Int): Long
     private external fun nativeSampleRate(handle: Long): Int
     private external fun nativeLoadVoice(handle: Long, embGguf: String): Boolean
     private external fun nativeSynthesize(handle: Long, text: String, chunkCallback: (FloatArray) -> Unit): Boolean

@@ -1,5 +1,7 @@
 package org.itantra.app.ui
 
+import android.app.Activity
+import android.content.Context
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -15,18 +17,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,17 +47,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.itantra.app.AppRepository
 import org.itantra.app.R
 import org.itantra.app.TalkService
 import org.itantra.app.ui.theme.MonoText
+import org.itantra.app.ui.theme.TricolourHairline
+import org.itantra.app.ui.theme.rememberReducedMotion
 import org.itantra.core.Lang
 import org.itantra.core.LinkKind
 import org.itantra.core.LinkState
 
-private enum class Screen { CHAT, METRICS, MODELS }
+private enum class Screen { CHAT, METRICS, MODELS, ABOUT }
+
+tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is android.content.ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
 
 @Composable
 fun AppRoot() {
@@ -66,57 +79,49 @@ fun AppRoot() {
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
+            TopBar(
+                language = language,
+                onOpenMetrics = { screen = Screen.METRICS },
+                onOpenModels = { screen = Screen.MODELS },
+                onOpenAbout = { screen = Screen.ABOUT },
+                showBack = screen != Screen.CHAT,
+                onBack = { screen = Screen.CHAT },
+                screenTitle = when (screen) {
+                    Screen.METRICS -> stringResource(R.string.menu_metrics)
+                    Screen.MODELS -> stringResource(R.string.menu_models)
+                    Screen.ABOUT -> stringResource(R.string.menu_about)
+                    Screen.CHAT -> null
+                },
+            )
             if (screen == Screen.CHAT) {
-                StatusStrip(
-                    linkState = linkState,
-                    rttMs = rttMs,
-                    language = language,
-                    onOpenMetrics = { screen = Screen.METRICS },
-                    onOpenModels = { screen = Screen.MODELS },
-                )
-            } else {
-                ScreenHeader(
-                    title = if (screen == Screen.METRICS) "Metrics" else "Models",
-                    onBack = { screen = Screen.CHAT },
-                )
+                StatusCard(linkState = linkState, rttMs = rttMs)
             }
             Box(Modifier.weight(1f)) {
                 when (screen) {
                     Screen.CHAT -> ChatScreen(onOpenModels = { screen = Screen.MODELS })
                     Screen.METRICS -> MetricsScreen()
                     Screen.MODELS -> ModelsScreen()
+                    Screen.ABOUT -> AboutScreen()
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun ScreenHeader(title: String, onBack: () -> Unit) {
-    Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
-        Column {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onSurface)
-                }
-                MonoText(title.uppercase(), fontWeight = androidx.compose.ui.text.font.FontWeight.Medium, modifier = Modifier.padding(start = 4.dp))
-            }
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StatusStrip(
-    linkState: LinkState,
-    rttMs: Long?,
+private fun TopBar(
     language: Lang,
     onOpenMetrics: () -> Unit,
     onOpenModels: () -> Unit,
+    onOpenAbout: () -> Unit,
+    showBack: Boolean,
+    onBack: () -> Unit,
+    screenTitle: String?,
 ) {
     var overflowExpanded by remember { mutableStateOf(false) }
     var langSheetOpen by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
         Column {
@@ -124,27 +129,43 @@ private fun StatusStrip(
                 Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Image(
-                    painter = painterResource(R.drawable.brand_logo),
-                    contentDescription = "iTantra",
-                    modifier = Modifier.size(22.dp).clip(RoundedCornerShape(5.dp)),
-                )
-                Spacer(Modifier.width(10.dp))
-                StatusDot(linkState)
-                Spacer(Modifier.width(8.dp))
-                MonoText(statusLine(linkState, rttMs), modifier = Modifier.weight(1f))
-                LangButton(language) { langSheetOpen = true }
+                if (showBack) {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = MaterialTheme.colorScheme.onSurface)
+                    }
+                    Text(screenTitle ?: "", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium, modifier = Modifier.padding(start = 4.dp).weight(1f))
+                } else {
+                    Image(
+                        painter = painterResource(R.drawable.brand_logo),
+                        contentDescription = stringResource(R.string.app_name),
+                        modifier = Modifier.size(28.dp).clip(RoundedCornerShape(6.dp)),
+                    )
+                    Text(
+                        stringResource(R.string.app_name),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(start = 10.dp).weight(1f),
+                    )
+                    LangButton(language) { langSheetOpen = true }
+                }
                 Box {
-                    IconButton(onClick = { overflowExpanded = true }) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = "More", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    IconButton(onClick = { overflowExpanded = true }, modifier = Modifier.size(48.dp)) {
+                        Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.cd_more_options), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     DropdownMenu(expanded = overflowExpanded, onDismissRequest = { overflowExpanded = false }) {
-                        DropdownMenuItem(text = { Text("Metrics") }, onClick = { overflowExpanded = false; onOpenMetrics() })
-                        DropdownMenuItem(text = { Text("Models") }, onClick = { overflowExpanded = false; onOpenModels() })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.menu_change_language)) }, onClick = { overflowExpanded = false; langSheetOpen = true })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.menu_metrics)) }, onClick = { overflowExpanded = false; onOpenMetrics() })
+                        DropdownMenuItem(text = { Text(stringResource(R.string.menu_models)) }, onClick = { overflowExpanded = false; onOpenModels() })
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.menu_about)) },
+                            leadingIcon = { Icon(Icons.Filled.Info, contentDescription = null) },
+                            onClick = { overflowExpanded = false; onOpenAbout() },
+                        )
                     }
                 }
             }
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
+            TricolourHairline()
         }
     }
 
@@ -155,55 +176,32 @@ private fun StatusStrip(
             sheetState = sheetState,
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
         ) {
-            Column(Modifier.padding(bottom = 24.dp)) {
-                Lang.entries.forEach { lang ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                TalkService.instance?.onLanguageChanged(lang)
-                                langSheetOpen = false
-                            }
-                            .padding(horizontal = 20.dp, vertical = 14.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(lang.label, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
-                        MonoText(lang.code.uppercase(), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
+            Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
+                Text(
+                    stringResource(R.string.language_picker_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp),
+                )
+                Text(
+                    stringResource(R.string.language_picker_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 14.dp),
+                )
+                LanguagePickerGrid(
+                    selected = language,
+                    onSelect = { lang ->
+                        TalkService.instance?.onLanguageChanged(lang)
+                        AppRepository.language.value = lang
+                        langSheetOpen = false
+                        val activity = context.findActivity()
+                        if (activity != null) LocaleManager.applyAndRecreate(activity, lang.code)
+                    },
+                )
             }
         }
     }
-}
-
-@Composable
-private fun StatusDot(state: LinkState) {
-    val linked = state is LinkState.Connected
-    val searching = state is LinkState.Searching
-    val infinite = rememberInfiniteTransition(label = "dot")
-    val pulse by infinite.animateFloat(0.3f, 1f, infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "pulse")
-    val color = if (linked) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant
-    Box(
-        Modifier
-            .size(8.dp)
-            .alpha(if (searching) pulse else 1f)
-            .clip(CircleShape)
-            .background(color),
-    )
-}
-
-private fun statusLine(state: LinkState, rttMs: Long?): String = when (state) {
-    is LinkState.Idle -> "IDLE"
-    is LinkState.Searching -> "SEARCHING…"
-    is LinkState.Connected -> buildString {
-        append("LINKED  ")
-        append(if (state.kind == LinkKind.WIFI) "WI-FI" else "BLE")
-        append("  ")
-        append(state.peerName)
-        rttMs?.let { append("  RTT ${it}ms") }
-    }
-    is LinkState.Failed -> "LINK FAILED"
 }
 
 @Composable
@@ -212,12 +210,73 @@ private fun LangButton(language: Lang, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .padding(end = 4.dp)
-            .clip(RoundedCornerShape(6.dp))
+            .heightIn(min = 48.dp)
+            .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 6.dp),
+            .clickable(onClickLabel = stringResource(R.string.menu_change_language), onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
-        MonoText(language.code.uppercase(), fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
+        Text(language.label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
         MonoText(" ▾", color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
+}
+
+/**
+ * Big, friendly connection-status card — the "is this thing on" answer at a glance, replacing the
+ * old instrument-style mono status line. Uses tertiary (India-green) only when actually connected,
+ * per the design spec's "ready/connected only" rule for that colour.
+ */
+@Composable
+private fun StatusCard(linkState: LinkState, rttMs: Long?) {
+    val connected = linkState is LinkState.Connected
+    val searching = linkState is LinkState.Searching
+    val failed = linkState is LinkState.Failed
+    val reducedMotion = rememberReducedMotion()
+
+    val (title, subtitle) = when (linkState) {
+        is LinkState.Connected -> {
+            val kind = if (linkState.kind == LinkKind.WIFI) "Wi‑Fi Direct" else "Bluetooth"
+            stringResource(R.string.status_connected, linkState.peerName, kind) to rttMs?.let { "RTT ${it}ms" }
+        }
+        is LinkState.Searching -> stringResource(R.string.status_searching) to null
+        is LinkState.Idle -> stringResource(R.string.status_idle) to null
+        is LinkState.Failed -> stringResource(R.string.status_failed) to null
+    }
+
+    val dotColor = when {
+        connected -> MaterialTheme.colorScheme.tertiary
+        failed -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 10.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PulsingDot(color = dotColor, animate = (searching || connected) && !reducedMotion)
+        Column(Modifier.padding(start = 12.dp).weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+            if (subtitle != null) {
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+@Composable
+private fun PulsingDot(color: androidx.compose.ui.graphics.Color, animate: Boolean) {
+    val infinite = rememberInfiniteTransition(label = "dot")
+    val pulse by infinite.animateFloat(0.35f, 1f, infiniteRepeatable(tween(750), RepeatMode.Reverse), label = "pulse")
+    Box(
+        Modifier
+            .size(14.dp)
+            .alpha(if (animate) pulse else 1f)
+            .clip(CircleShape)
+            .background(color),
+    )
 }

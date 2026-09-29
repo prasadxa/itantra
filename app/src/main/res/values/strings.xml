@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">iTantra</string>
+
+    <!-- Onboarding (shown once; see LocaleManager.isOnboardingDone) -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_get_started">Get started</string>
+    <string name="onboarding_step1_title">Speak your language</string>
+    <string name="onboarding_step1_body">iTantra understands and speaks 10 Indian languages, offline.</string>
+    <string name="onboarding_step2_title">Works without network or internet</string>
+    <string name="onboarding_step2_body">Phone talks to phone directly over Wi‑Fi or Bluetooth. Text is about 800× lighter than voice, so a message gets through where a call can’t.</string>
+    <string name="onboarding_step3_title">Built on Indian open AI</string>
+    <string name="onboarding_step3_body">Speech recognition by ARTPARK @ IISc Bengaluru (SraVaani). Voices by SPRING Lab @ IIT Madras (Indic‑Mio) and AI4Bharat @ IIT Madras (Rasa).</string>
+    <string name="onboarding_permissions_title">A couple of permissions</string>
+    <string name="onboarding_permission_mic_title">Microphone</string>
+    <string name="onboarding_permission_mic_body">So iTantra can hear you and turn your speech into text — nothing leaves the phone.</string>
+    <string name="onboarding_permission_notif_title">Notifications</string>
+    <string name="onboarding_permission_notif_body">So the walkie‑talkie keeps running and shows its status while your screen is off.</string>
+
+    <!-- Language picker -->
+    <string name="language_picker_title">Choose your language</string>
+    <string name="language_picker_subtitle">You can change this any time.</string>
+    <string name="language_ready">Voice ready</string>
+    <string name="language_not_ready">Voice not installed</string>
+
+    <!-- Main screen -->
+    <string name="status_connected">Connected to %1$s · %2$s</string>
+    <string name="status_searching">Searching nearby…</string>
+    <string name="status_idle">Not connected yet</string>
+    <string name="status_failed">Connection failed</string>
+    <string name="empty_transcript">Hold the key below to talk, or type a message.</string>
+    <string name="menu_metrics">Metrics</string>
+    <string name="menu_models">Models</string>
+    <string name="menu_about">About</string>
+    <string name="menu_change_language">Change language</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_more_options">More options</string>
+    <string name="cd_replay">Replay</string>
+    <string name="cd_send">Send</string>
+    <string name="cd_type_message">Type a message</string>
+    <string name="cd_close_composer">Close composer</string>
+    <string name="cd_hang_up">Hang up</string>
+    <string name="cd_alert_icon">Alert</string>
+
+    <!-- Quick-reply SOS chips -->
+    <string name="sos_need_help">Need help</string>
+    <string name="sos_medical">Medical emergency</string>
+    <string name="sos_safe">Safe</string>
+    <string name="sos_supplies">Water/food needed</string>
+
+    <!-- About -->
+    <string name="about_title">About iTantra</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_credits_title">Built on Indian open AI</string>
+    <string name="about_licences_title">Open‑source licences</string>
+</resources>

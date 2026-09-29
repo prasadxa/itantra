@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- LOW-CONFIDENCE machine-assisted Odia translation (author has the least confidence in this
+     language of the ten) — please prioritise a native-speaker review of this file before
+     shipping; strings here are more likely to contain errors than the other values-<lang> files. -->
+<resources>
+    <string name="app_name">iTantra</string>
+
+    <string name="onboarding_skip">ଏଡ଼ାନ୍ତୁ</string>
+    <string name="onboarding_next">ପରବର୍ତ୍ତୀ</string>
+    <string name="onboarding_get_started">ଆରମ୍ଭ କରନ୍ତୁ</string>
+    <string name="onboarding_step1_title">ଆପଣଙ୍କ ଭାଷାରେ କୁହନ୍ତୁ</string>
+    <string name="onboarding_step1_body">ଇଣ୍ଟରନେଟ୍ ବିନା iTantra 10ଟି ଭାରତୀୟ ଭାଷା ବୁଝେ ଏବଂ କୁହେ।</string>
+    <string name="onboarding_step2_title">ନେଟୱାର୍କ କିମ୍ବା ଇଣ୍ଟରନେଟ୍ ବିନା କାମ କରେ</string>
+    <string name="onboarding_step2_body">ଫୋନ୍ ସିଧାସଳଖ Wi‑Fi କିମ୍ବା ବ୍ଲୁଟୁଥ୍ ମାଧ୍ୟମରେ ଅନ୍ୟ ଫୋନ୍ ସହିତ କଥା ହୁଏ। ଟେକ୍ସଟ୍, ସ୍ୱର ଅପେକ୍ଷା ପ୍ରାୟ 800 ଗୁଣ ହାଲୁକା, ତେଣୁ କଲ୍ ପହଞ୍ଚୁ ନଥିବା ସ୍ଥାନରେ ମଧ୍ୟ ଏହା ପହଞ୍ଚେ।</string>
+    <string name="onboarding_step3_title">ଭାରତୀୟ ଓପନ୍ AI ଉପରେ ତିଆରି</string>
+    <string name="onboarding_step3_body">ସ୍ପିଚ୍ ରିକଗନିସନ୍: ARTPARK, IISc ବେଙ୍ଗାଲୁରୁ (SraVaani)। ସ୍ୱର: SPRING Lab, IIT ମାଦ୍ରାଜ (Indic‑Mio) ଏବଂ AI4Bharat, IIT ମାଦ୍ରାଜ (Rasa)।</string>
+    <string name="onboarding_permissions_title">କିଛି ଅନୁମତି ଦରକାର</string>
+    <string name="onboarding_permission_mic_title">ମାଇକ୍ରୋଫୋନ୍</string>
+    <string name="onboarding_permission_mic_body">ଯାହା ଦ୍ୱାରା iTantra ଆପଣଙ୍କୁ ଶୁଣି ଟେକ୍ସଟ୍‌ରେ ବଦଳାଇପାରିବ — କିଛି ବି ଫୋନ୍ ବାହାରକୁ ଯାଏ ନାହିଁ।</string>
+    <string name="onboarding_permission_notif_title">ବିଜ୍ଞପ୍ତି</string>
+    <string name="onboarding_permission_notif_body">ଯାହା ଦ୍ୱାରା ସ୍କ୍ରିନ୍ ବନ୍ଦ ଥିଲେ ମଧ୍ୟ ୱାକି-ଟକି ଚାଲୁ ରହି ତାର ସ୍ଥିତି ଦେଖାଏ।</string>
+
+    <string name="language_picker_title">ଆପଣଙ୍କ ଭାଷା ବାଛନ୍ତୁ</string>
+    <string name="language_picker_subtitle">ଆପଣ ଏହାକୁ ଯେକୌଣସି ସମୟରେ ବଦଳାଇ ପାରିବେ।</string>
+    <string name="language_ready">ସ୍ୱର ପ୍ରସ୍ତୁତ</string>
+    <string name="language_not_ready">ସ୍ୱର ଇନଷ୍ଟଲ୍ ହୋଇନାହିଁ</string>
+
+    <string name="status_connected">%1$s ସହିତ ସଂଯୁକ୍ତ · %2$s</string>
+    <string name="status_searching">ନିକଟରେ ଖୋଜୁଛି…</string>
+    <string name="status_idle">ଏପର୍ଯ୍ୟନ୍ତ ସଂଯୁକ୍ତ ନାହିଁ</string>
+    <string name="status_failed">ସଂଯୋଗ ବିଫଳ</string>
+    <string name="empty_transcript">କଥା କହିବାକୁ ତଳର କୀ ଦବାଇ ଧରନ୍ତୁ, କିମ୍ବା ଏକ ସନ୍ଦେଶ ଟାଇପ୍ କରନ୍ତୁ।</string>
+    <string name="menu_metrics">ମେଟ୍ରିକ୍ସ</string>
+    <string name="menu_models">ମଡେଲ</string>
+    <string name="menu_about">ଆପ୍ ବିଷୟରେ</string>
+    <string name="menu_change_language">ଭାଷା ବଦଳାନ୍ତୁ</string>
+    <string name="cd_back">ପଛକୁ</string>
+    <string name="cd_more_options">ଅଧିକ ବିକଳ୍ପ</string>
+    <string name="cd_replay">ପୁଣି ଶୁଣନ୍ତୁ</string>
+    <string name="cd_send">ପଠାନ୍ତୁ</string>
+    <string name="cd_type_message">ସନ୍ଦେଶ ଟାଇପ୍ କରନ୍ତୁ</string>
+    <string name="cd_close_composer">ବନ୍ଦ କରନ୍ତୁ</string>
+    <string name="cd_hang_up">କଲ୍ ସମାପ୍ତ କରନ୍ତୁ</string>
+    <string name="cd_alert_icon">ସତର୍କତା</string>
+
+    <string name="sos_need_help">ସାହାଯ୍ୟ ଦରକାର</string>
+    <string name="sos_medical">ଚିକିତ୍ସା ଜରୁରୀ</string>
+    <string name="sos_safe">ସୁରକ୍ଷିତ</string>
+    <string name="sos_supplies">ପାଣି/ଖାଦ୍ୟ ଦରକାର</string>
+
+    <string name="about_title">iTantra ବିଷୟରେ</string>
+    <string name="about_version">ସଂସ୍କରଣ %1$s</string>
+    <string name="about_credits_title">ଭାରତୀୟ ଓପନ୍ AI ଉପରେ ତିଆରି</string>
+    <string name="about_licences_title">ଓପନ୍-ସୋର୍ସ ଲାଇସେନ୍ସ</string>
+</resources>

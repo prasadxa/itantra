@@ -57,7 +57,7 @@ MAX_FRAME_BYTES = 64 * 1024
 
 # ---- --bench: adb-driven end-to-end latency bench (Mac plays the second phone) ----
 ADB_BIN = os.environ.get("ADB_BIN", str(Path.home() / "Library/Android/sdk/platform-tools/adb"))
-ADB_SERIAL = os.environ.get("ITANTRA_ADB_SERIAL", "adb-689a084b-N7eCzC._adb-tls-connect._tcp")
+ADB_SERIAL = os.environ.get("ITANTRA_ADB_SERIAL", "10BD1C1C7T000HX")
 DEVICE_FILES_ROOT = "/sdcard/Android/data/org.itantra.app/files"
 DEBUG_COMPONENT = "org.itantra.app/.DebugCommandReceiver"
 

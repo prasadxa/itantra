@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>iTantra Control Room</title>
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<header>
+  <h1><span class="dot">&#9679;</span> iTantra Control-Room Gateway</h1>
+  <div id="connStatus">connecting…</div>
+</header>
+
+<main>
+  <div class="col">
+    <section class="panel">
+      <h2>Live feed</h2>
+      <div id="feed"></div>
+    </section>
+  </div>
+
+  <div class="col">
+    <section class="panel">
+      <h2>Status</h2>
+      <div class="stats-row" id="statsRow"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Connected peers</h2>
+      <div id="peerList"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Per-language counts</h2>
+      <div id="langCounts"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Locations (map placeholder)</h2>
+      <canvas id="mapCanvas" width="400" height="220"></canvas>
+      <div id="mapNote">no location data yet</div>
+    </section>
+
+    <section class="panel">
+      <h2>Broadcast</h2>
+      <form class="broadcast" id="broadcastForm">
+        <textarea id="bText" placeholder="Message text to speak on all connected phones…" required></textarea>
+        <div class="row wrap">
+          <select id="bLang"></select>
+          <label><input type="checkbox" id="bAlert" /> ALERT priority</label>
+          <button type="submit">Send to all</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>CAP 1.2 ingestion</h2>
+      <form class="cap" id="capForm">
+        <div class="row wrap">
+          <select id="capFile"></select>
+          <select id="capLang"></select>
+          <button type="submit" class="secondary">Ingest &amp; broadcast as ALERT</button>
+        </div>
+      </form>
+    </section>
+
+    <div id="formStatus"></div>
+  </div>
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

@@ -37,9 +37,46 @@ mr ta te, unchanged from FULL) and Mio for hi/gu/or/en, preferring `ModelPaths.m
 (`tts/mio/indic-mio-q4.gguf`) when present, else the q8 file; live STT partials off entirely
 (`SttEngine.partialListener` left `null`, so `SherpaSttEngine` skips the decode, not just the
 callback). FULL: current behaviour (numThreads 4, live partials every 500ms).
-Open item: the LITE-only Mio model-path selection and a 60s-idle Mio-unload hook need a small API
-addition in `tts/.../engine/` (owned by the TTS-engine agent) — `EngineFactory` already computes
-and passes `numThreads`/the profile so wiring the rest is a small follow-up there.
+
+### Lazy, per-need TTS + memory
+`EngineFactory.create` no longer warms both TTS sub-engines unconditionally: `FallbackTtsEngine.warmUp(langs)`
+only initializes the engine (Mio or VITS) that actually supports the given language(s), defaulting
+to the user's currently-selected language (`AppRepository.language`, HI at cold start) — Mio's
+LLM+MioCodec is never loaded unless a hi/gu/or/en message is actually sent or received. Both
+sub-engines are unloadable and transparently re-init on next use: `FallbackTtsEngine` runs a
+single daemon-thread idle-check (every `idleUnloadMs/4`, clamped 5-30s) that unloads a sub-engine
+after `idleUnloadMs` of disuse — 60s on LITE, 5 min on FULL, wired from `EngineFactory`.
+
+`MioNative`/`native_bridge.cpp` never load `wavlm.gguf` (~90 MB): mio-tts-cpp only uses WavLM to
+*extract* a speaker embedding from raw reference audio at runtime (voice cloning), which this app
+never does since voice embeddings are precomputed offline into `<lang>.emb.gguf`; `mio_tts_synthesize`
+itself never touches WavLM. `mio_tts_init_from_file` is called with a null wavlm path, matching its
+documented "no WavLM" mode.
+
+`tools/tts/convert_miocodec_f16.py` downcasts `miocodec.gguf`'s 247 F32 tensors to F16 (all-F32 in
+the current export), halving its size (370 MB -> ~185 MB, `models/tts/mio/miocodec-f16.gguf`) with
+no architecture-recognition problems (unlike `llama-quantize`, which refuses the custom
+`miocodec-dec` GGUF architecture for block quantization). Verified byte-for-byte-matching tensor
+names/shapes and, with the same LM sampler seed, F32 vs F16 MioCodec output correlate at 0.99998
+(MAE 0.0004) on a host build of `llama-tts-mio` — see `models/tts/samples/miocodec_f16_hi.wav`.
+`MioTtsEngine` prefers `miocodec-f16.gguf` when present, else falls back to `miocodec.gguf`.
+
+### Faster first audio (VITS)
+sherpa-onnx's offline VITS renders (and only invokes its callback for) one whole utterance per
+`generateWithConfigAndCallback` call — no internal streaming — which is why first-audio latency
+tracked the whole sentence's synthesis time (~1.1s). `tts/.../text/ClauseSplitter.kt` splits a
+segment's text at clause-boundary punctuation (falling back to ~60-char word-boundary chunks) and
+`VitsTtsEngine.synthesize` calls the engine once per clause, so playback of the first clause starts
+without waiting for the rest of the sentence to render.
+
+### Not changed: STT (sherpa-onnx) memory
+Checked for ORT `SessionOptions` knobs (disable memory arena / mem pattern, mmap) exposed by the
+pinned `sherpa-onnx` v1.13.8 Kotlin JNI bindings (`OfflineModelConfig`/`OfflineRecognizerConfig`,
+verified via `javap` on the prebuilt API jar) — none are exposed; sherpa-onnx is consumed here as a
+prebuilt AAR (no vendored source, unlike `:tts`'s mio-tts-cpp), so there is no way to change these
+from app code. `SherpaSttEngine` already avoids the extra memory of a second (beam-search) model
+instance unless hotwords are actually set (`beamRecognizerOrBuild()` is only ever called from the
+hotwords branch of `decodeSegment`).
 
 ## Metrics (judging)
 Per message: speechEnd→sttDone (STT latency), RTF, sent→received, received→playStarted (TTS latency), speechEnd→playStarted (end-to-end, clock-offset corrected). Metrics screen adds: PSS, Java heap, native heap, CPU% over the last 10s (idle), model bytes on disk, APK size — all exported in the CSV (a `# resource_snapshot` header row above the per-message table). A debug-free `ITANTRA_METRIC` logcat line (`event: resource`) fires every 30s with idle CPU% + PSS, for `adb logcat` on a release build.

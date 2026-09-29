@@ -17,7 +17,7 @@ cd "$ROOT"
 PY="$ROOT/tools/.venv/bin/python"
 PEER_PY="$ROOT/tools/peer/.venv/bin/python"
 ADB="$HOME/Library/Android/sdk/platform-tools/adb"
-SERIAL="${ITANTRA_ADB_SERIAL:-adb-689a084b-N7eCzC._adb-tls-connect._tcp}"
+SERIAL="${ITANTRA_ADB_SERIAL:-10BD1C1C7T000HX}"
 LOCK=/tmp/itantra-device.lock
 RESULTS_DIR="$ROOT/models/eval/results"
 mkdir -p "$RESULTS_DIR"

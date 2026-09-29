@@ -35,6 +35,9 @@ import org.itantra.core.Frame
 import org.itantra.core.LinkKind
 import org.itantra.core.LinkState
 import org.itantra.core.Transport
+import org.itantra.transport.crypto.AlertTrustStore
+import org.itantra.transport.crypto.DeviceIdentity
+import org.itantra.transport.crypto.SecureSession
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -99,10 +102,18 @@ class BleTransport(
 
     @Volatile private var connected = false
 
+    // Binary-frame negotiation (see Negotiation.kt) and end-to-end security state for the active
+    // link, mirroring WifiTransport. All off/unset by default.
+    @Volatile private var binaryNegotiated = false
+    var secureSession: SecureSession? = null
+    var alertSigner: DeviceIdentity? = null
+    var alertTrustStore: AlertTrustStore? = null
+
     override suspend fun start() {
         if (running) return
         running = true
         connected = false
+        binaryNegotiated = false
         _state.value = LinkState.Searching
         startGattServer()
         startAdvertising()
@@ -112,6 +123,7 @@ class BleTransport(
     override suspend fun stop() {
         running = false
         connected = false
+        binaryNegotiated = false
         runCatching { scanner?.stopScan(scanCallback) }
         runCatching { advertiser?.stopAdvertising(advertiseCallback) }
         runCatching { clientGatt?.disconnect() }
@@ -129,7 +141,8 @@ class BleTransport(
         if (!connected) return false
         val seq = seqCounter.getAndIncrement()
         val chunks = try {
-            FrameCodec.chunkForBle(frame, seq, mtu)
+            val bytes = WireCodec.encode(frame, binary = binaryNegotiated, session = secureSession, signWith = alertSigner)
+            FrameCodec.chunkBytesForBle(bytes, seq, mtu)
         } catch (e: Exception) {
             Log.w(TAG, "chunking failed: ${e.message}")
             return false
@@ -198,7 +211,7 @@ class BleTransport(
         ) {
             if (characteristic.uuid == BLE_RX_CHAR_UUID) {
                 if (!connected) onLinkEstablished(device.name ?: "ble-peer")
-                reassembler.accept(value)?.let { frame -> scope.launch { _incoming.emit(frame) } }
+                reassembler.accept(value, secureSession, alertTrustStore)?.let { handleIncoming(it) }
             }
             if (responseNeeded) {
                 gattServer?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, null)
@@ -327,7 +340,7 @@ class BleTransport(
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
             if (characteristic.uuid == BLE_TX_CHAR_UUID) {
                 @Suppress("DEPRECATION")
-                reassembler.accept(characteristic.value)?.let { frame -> scope.launch { _incoming.emit(frame) } }
+                reassembler.accept(characteristic.value, secureSession, alertTrustStore)?.let { handleIncoming(it) }
             }
         }
     }
@@ -343,6 +356,12 @@ class BleTransport(
 
     // ---- shared connect/disconnect bookkeeping ----
 
+    /** Peeks at [Frame.Hello] for binary-capability negotiation (see Negotiation.kt), then forwards. */
+    private fun handleIncoming(frame: Frame) {
+        if (frame is Frame.Hello && peerSupportsBinary(frame.protocol)) binaryNegotiated = true
+        scope.launch { _incoming.emit(frame) }
+    }
+
     private fun onLinkEstablished(peerName: String) {
         connected = true
         runCatching { scanner?.stopScan(scanCallback) }
@@ -351,6 +370,7 @@ class BleTransport(
 
     private fun onLinkLost() {
         connected = false
+        binaryNegotiated = false
         if (running) {
             _state.value = LinkState.Searching
             startScanning()

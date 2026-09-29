@@ -1,6 +1,8 @@
 package org.itantra.transport
 
 import org.itantra.core.Frame
+import org.itantra.transport.crypto.AlertTrustStore
+import org.itantra.transport.crypto.SecureSession
 import java.io.ByteArrayOutputStream
 
 /**
@@ -16,8 +18,13 @@ class BleReassembler {
     private var received: Int = 0
     private var parts: Array<ByteArray?> = arrayOf()
 
-    /** Feed one BLE packet. Returns the decoded [Frame] once all its chunks have arrived. */
-    fun accept(packet: ByteArray): Frame? {
+    /**
+     * Feed one BLE packet. Returns the decoded [Frame] once all its chunks have arrived, or null
+     * while still reassembling. A frame whose reassembled bytes fail to decode (JSON or binary,
+     * see [WireCodec]) is also reported as null rather than throwing, so one corrupt/tampered frame
+     * can't take down the reader loop.
+     */
+    fun accept(packet: ByteArray, session: SecureSession? = null, trustStore: AlertTrustStore? = null): Frame? {
         if (packet.size < 3) return null
         val pSeq = packet[0].toInt() and 0xFF
         val pIndex = packet[1].toInt() and 0xFF
@@ -41,6 +48,6 @@ class BleReassembler {
             buf.write(part)
         }
         seq = -1 // reset so a repeated/wrapped seq is treated as a fresh frame
-        return FrameCodec.decode(buf.toByteArray())
+        return WireCodec.decode(buf.toByteArray(), session, trustStore)
     }
 }

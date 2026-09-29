@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Best-effort translation (author is not a native Tamil speaker) — please get a native
+     speaker to review before shipping. -->
+<resources>
+    <string name="app_name">iTantra</string>
+
+    <string name="onboarding_skip">தவிர்</string>
+    <string name="onboarding_next">அடுத்து</string>
+    <string name="onboarding_get_started">தொடங்குங்கள்</string>
+    <string name="onboarding_step1_title">உங்கள் மொழியில் பேசுங்கள்</string>
+    <string name="onboarding_step1_body">இணையம் இல்லாமலேயே iTantra 10 இந்திய மொழிகளைப் புரிந்து பேசுகிறது.</string>
+    <string name="onboarding_step2_title">நெட்வொர்க் அல்லது இணையம் இல்லாமல் இயங்கும்</string>
+    <string name="onboarding_step2_body">ஃபோன், Wi‑Fi அல்லது புளூடூத் வழியாக நேரடியாக மற்றொரு ஃபோனுடன் பேசுகிறது. எழுத்து, குரலை விட சுமார் 800 மடங்கு இலகுவானது, எனவே கால் சேராத இடத்திலும் இது சேரும்.</string>
+    <string name="onboarding_step3_title">இந்திய ஓப்பன் AI-இல் கட்டப்பட்டது</string>
+    <string name="onboarding_step3_body">பேச்சு அடையாளம்: ARTPARK, IISc பெங்களூரு (SraVaani). குரல்கள்: SPRING Lab, IIT மெட்ராஸ் (Indic‑Mio) மற்றும் AI4Bharat, IIT மெட்ராஸ் (Rasa).</string>
+    <string name="onboarding_permissions_title">சில அனுமதிகள் தேவை</string>
+    <string name="onboarding_permission_mic_title">மைக்ரோஃபோன்</string>
+    <string name="onboarding_permission_mic_body">iTantra உங்களைக் கேட்டு எழுத்தாக மாற்ற — எதுவும் ஃபோனுக்கு வெளியே செல்லாது.</string>
+    <string name="onboarding_permission_notif_title">அறிவிப்புகள்</string>
+    <string name="onboarding_permission_notif_body">திரை ஆஃப் ஆக இருந்தாலும் வாக்கி-டாக்கி இயங்கி அதன் நிலையைக் காட்ட.</string>
+
+    <string name="language_picker_title">உங்கள் மொழியைத் தேர்வு செய்யவும்</string>
+    <string name="language_picker_subtitle">இதை எப்போது வேண்டுமானாலும் மாற்றலாம்.</string>
+    <string name="language_ready">குரல் தயார்</string>
+    <string name="language_not_ready">குரல் நிறுவப்படவில்லை</string>
+
+    <string name="status_connected">%1$s உடன் இணைக்கப்பட்டது · %2$s</string>
+    <string name="status_searching">அருகில் தேடுகிறது…</string>
+    <string name="status_idle">இன்னும் இணைக்கப்படவில்லை</string>
+    <string name="status_failed">இணைப்பு தோல்வியடைந்தது</string>
+    <string name="empty_transcript">பேச கீழே உள்ள விசையை அழுத்திப் பிடிக்கவும், அல்லது ஒரு செய்தியைத் தட்டச்சு செய்யவும்.</string>
+    <string name="menu_metrics">மெட்ரிக்ஸ்</string>
+    <string name="menu_models">மாடல்கள்</string>
+    <string name="menu_about">ஆப் பற்றி</string>
+    <string name="menu_change_language">மொழியை மாற்று</string>
+    <string name="cd_back">பின்</string>
+    <string name="cd_more_options">மேலும் விருப்பங்கள்</string>
+    <string name="cd_replay">மீண்டும் கேட்க</string>
+    <string name="cd_send">அனுப்பு</string>
+    <string name="cd_type_message">செய்தியைத் தட்டச்சு செய்யவும்</string>
+    <string name="cd_close_composer">மூடு</string>
+    <string name="cd_hang_up">அழைப்பை முடி</string>
+    <string name="cd_alert_icon">எச்சரிக்கை</string>
+
+    <string name="sos_need_help">உதவி தேவை</string>
+    <string name="sos_medical">மருத்துவ அவசரநிலை</string>
+    <string name="sos_safe">பாதுகாப்பாக உள்ளேன்</string>
+    <string name="sos_supplies">தண்ணீர்/உணவு தேவை</string>
+
+    <string name="about_title">iTantra பற்றி</string>
+    <string name="about_version">பதிப்பு %1$s</string>
+    <string name="about_credits_title">இந்திய ஓப்பன் AI-இல் கட்டப்பட்டது</string>
+    <string name="about_licences_title">ஓப்பன்-சோர்ஸ் உரிமங்கள்</string>
+</resources>

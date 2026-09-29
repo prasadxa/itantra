@@ -199,12 +199,11 @@ bool synthesize_and_emit_chunk(
 extern "C" JNIEXPORT jlong JNICALL
 Java_org_itantra_tts_mio_MioNative_nativeInit(
         JNIEnv *env, jobject /*thiz*/,
-        jstring jLmGguf, jstring jCodecGguf, jstring jWavlmGguf, jint jThreads) {
+        jstring jLmGguf, jstring jCodecGguf, jint jThreads) {
     std::call_once(g_backend_init_once, [] { llama_backend_init(); });
 
     const std::string lm_path = jstring_to_std(env, jLmGguf);
     const std::string codec_path = jstring_to_std(env, jCodecGguf);
-    const std::string wavlm_path = jstring_to_std(env, jWavlmGguf);
 
     auto *h = new (std::nothrow) MioHandle();
     if (h == nullptr) return 0;
@@ -228,7 +227,14 @@ Java_org_itantra_tts_mio_MioNative_nativeInit(
         return 0;
     }
 
-    h->mio = mio_tts_init_from_file(codec_path.c_str(), wavlm_path.c_str(), c_err, sizeof(c_err));
+    // WavLM is only used by mio-tts-cpp to *extract* a speaker embedding from raw reference audio
+    // at runtime (voice cloning); this app never does that - voice embeddings are precomputed
+    // offline into <lang>.emb.gguf and loaded directly via nativeLoadVoice/mio_tts_embedding_load_gguf,
+    // and mio_tts_synthesize() never touches WavLM (see mio-tts-lib.cpp). Passing nullptr here skips
+    // loading wavlm.gguf entirely (mio_tts_init_from_file treats a null/empty wavlm_model as
+    // "no WavLM"), saving that GGUF's resident memory (~90 MB) for no loss of functionality actually
+    // used by this app.
+    h->mio = mio_tts_init_from_file(codec_path.c_str(), nullptr, c_err, sizeof(c_err));
     if (h->mio == nullptr) {
         log_error(h, std::string("mio_tts_init_from_file failed: ") + c_err);
         delete h;

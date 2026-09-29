@@ -11,6 +11,7 @@ import org.itantra.core.Lang
 import org.itantra.core.ModelPaths
 import org.itantra.core.TtsEngine
 import org.itantra.core.TtsSegment
+import org.itantra.tts.text.ClauseSplitter
 
 /**
  * sherpa-onnx offline VITS [TtsEngine] over HF `MatiasLin/sherpa-onnx-vits-rasa-13`
@@ -29,30 +30,42 @@ class VitsTtsEngine(private val paths: ModelPaths, private val numThreads: Int) 
     private val modelOnnx = File(paths.vitsDir, "model.onnx")
     private val tokensTxt = File(paths.vitsDir, "tokens.txt")
 
-    private val tts: OfflineTts? by lazy {
-        if (!modelOnnx.exists() || !tokensTxt.exists()) return@lazy null
-        OfflineTts(
-            null,
-            OfflineTtsConfig(
-                model = OfflineTtsModelConfig(
-                    vits = OfflineTtsVitsModelConfig(
-                        model = modelOnnx.absolutePath,
-                        tokens = tokensTxt.absolutePath,
+    // Manual (not `by lazy`) so the engine can be [unload]ed on idle and transparently
+    // re-instantiated on the next [synthesize] call — Kotlin's `by lazy` caches forever, which
+    // would defeat FallbackTtsEngine's idle-unload timer (docs/design.md "lazy, per-need TTS").
+    @Volatile private var ttsInstance: OfflineTts? = null
+    private val ttsLock = Any()
+
+    private fun ttsOrNull(): OfflineTts? {
+        ttsInstance?.let { return it }
+        if (!modelOnnx.exists() || !tokensTxt.exists()) return null
+        synchronized(ttsLock) {
+            ttsInstance?.let { return it }
+            val created = OfflineTts(
+                null,
+                OfflineTtsConfig(
+                    model = OfflineTtsModelConfig(
+                        vits = OfflineTtsVitsModelConfig(
+                            model = modelOnnx.absolutePath,
+                            tokens = tokensTxt.absolutePath,
+                        ),
+                        numThreads = numThreads,
+                        provider = "cpu",
                     ),
-                    numThreads = numThreads,
-                    provider = "cpu",
+                    maxNumSentences = 1,
                 ),
-                maxNumSentences = 1,
-            ),
-        )
+            )
+            ttsInstance = created
+            return created
+        }
     }
 
-    override val sampleRate: Int get() = tts?.sampleRate() ?: SAMPLE_RATE
+    override val sampleRate: Int get() = ttsOrNull()?.sampleRate() ?: SAMPLE_RATE
 
-    override fun supports(lang: Lang): Boolean = lang in SPEAKER_ID_BY_LANG && tts != null
+    override fun supports(lang: Lang): Boolean = lang in SPEAKER_ID_BY_LANG && ttsOrNull() != null
 
     override fun synthesize(lang: Lang, segment: TtsSegment, onChunk: (FloatArray) -> Unit) {
-        val engine = tts
+        val engine = ttsOrNull()
         require(engine != null && lang in SPEAKER_ID_BY_LANG) { "VitsTtsEngine: unsupported lang $lang" }
 
         // speed left at the GenerationConfig default (1.0): rate is applied uniformly to every
@@ -70,12 +83,29 @@ class VitsTtsEngine(private val paths: ModelPaths, private val numThreads: Int) 
                 return 1 // non-zero = keep generating
             }
         }
-        engine.generateWithConfigAndCallback(segment.text, config, callback)
+        // sherpa's VITS renders (and only invokes the callback for) one whole utterance per
+        // generateWithConfigAndCallback call - no internal streaming - which measured as ~1.1s of
+        // first-audio latency for a full sentence. Splitting into clauses and calling once per
+        // clause gets audio out after just the first clause renders; see ClauseSplitter's doc.
+        val clauses = ClauseSplitter.split(segment.text)
+        if (clauses.size <= 1) {
+            engine.generateWithConfigAndCallback(segment.text, config, callback)
+        } else {
+            for (clause in clauses) engine.generateWithConfigAndCallback(clause, config, callback)
+        }
     }
 
-    override fun close() {
-        tts?.free()
+    /** Releases native resources if loaded; a later [synthesize]/[supports] call transparently
+     * re-instantiates via [ttsOrNull]. Safe to call when idle — see `FallbackTtsEngine`'s
+     * idle-unload timer. */
+    fun unload() {
+        synchronized(ttsLock) {
+            ttsInstance?.free()
+            ttsInstance = null
+        }
     }
+
+    override fun close() = unload()
 
     companion object {
         const val SAMPLE_RATE = 22050

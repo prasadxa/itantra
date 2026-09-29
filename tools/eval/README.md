@@ -19,9 +19,11 @@ not meant to be committed).
 
 ## Shared device protocol
 
-One OnePlus 12 over wireless adb, serial `adb-689a084b-N7eCzC._adb-tls-connect._tcp`
-(`ITANTRA_ADB_SERIAL` env var to override), shared with other agents. Every script here that
-touches the phone refuses to run unless `/tmp/itantra-device.lock` exists:
+One vivo I2202 over USB, serial `10BD1C1C7T000HX` (`ITANTRA_ADB_SERIAL` env var to override),
+shared with other agents. (An earlier run used a OnePlus 12 over wireless adb; that device is no
+longer available - the default serial in `_adb.py`/`peer_sim.py`/`make_report.py`/`run_all.sh` was
+switched to the vivo.) Every script here that touches the phone refuses to run unless
+`/tmp/itantra-device.lock` exists:
 
 ```bash
 until mkdir /tmp/itantra-device.lock 2>/dev/null; do sleep 10; done
@@ -95,7 +97,7 @@ the phone runs hot under sustained synth/decode load.
 
 ```bash
 export PATH="$HOME/Library/Android/sdk/platform-tools:$PATH"
-S=adb-689a084b-N7eCzC._adb-tls-connect._tcp
+S=10BD1C1C7T000HX
 
 # DEBUG_TTS_SAVE - note the *single pre-quoted remote command string*: `adb shell` re-parses its
 # argv as one string on the device side, so multi-word/Unicode text must be shell-quoted for the

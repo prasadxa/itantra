@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">iTantra</string>
+
+    <string name="onboarding_skip">এড়িয়ে যান</string>
+    <string name="onboarding_next">পরবর্তী</string>
+    <string name="onboarding_get_started">শুরু করুন</string>
+    <string name="onboarding_step1_title">নিজের ভাষায় কথা বলুন</string>
+    <string name="onboarding_step1_body">iTantra ১০টি ভারতীয় ভাষা বোঝে ও বলে, ইন্টারনেট ছাড়াই।</string>
+    <string name="onboarding_step2_title">নেটওয়ার্ক বা ইন্টারনেট ছাড়াই কাজ করে</string>
+    <string name="onboarding_step2_body">ফোন সরাসরি Wi‑Fi বা ব্লুটুথে অন্য ফোনের সঙ্গে কথা বলে। টেক্সট, ভয়েসের চেয়ে প্রায় ৮০০ গুণ হালকা, তাই কল না পৌঁছালেও এটি পৌঁছায়।</string>
+    <string name="onboarding_step3_title">ভারতীয় ওপেন AI-এর উপর তৈরি</string>
+    <string name="onboarding_step3_body">স্পিচ রিকগনিশন: ARTPARK, IISc বেঙ্গালুরু (SraVaani)। কণ্ঠস্বর: SPRING Lab, IIT মাদ্রাজ (Indic‑Mio) ও AI4Bharat, IIT মাদ্রাজ (Rasa)।</string>
+    <string name="onboarding_permissions_title">কয়েকটি অনুমতি দরকার</string>
+    <string name="onboarding_permission_mic_title">মাইক্রোফোন</string>
+    <string name="onboarding_permission_mic_body">যাতে iTantra আপনার কথা শুনে টেক্সটে রূপান্তর করতে পারে — কিছুই ফোনের বাইরে যায় না।</string>
+    <string name="onboarding_permission_notif_title">নোটিফিকেশন</string>
+    <string name="onboarding_permission_notif_body">যাতে স্ক্রিন বন্ধ থাকলেও ওয়াকি-টকি চালু থাকে ও তার অবস্থা দেখায়।</string>
+
+    <string name="language_picker_title">আপনার ভাষা বেছে নিন</string>
+    <string name="language_picker_subtitle">আপনি যেকোনো সময় এটি বদলাতে পারেন।</string>
+    <string name="language_ready">ভয়েস প্রস্তুত</string>
+    <string name="language_not_ready">ভয়েস ইনস্টল করা নেই</string>
+
+    <string name="status_connected">%1$s-এর সাথে সংযুক্ত · %2$s</string>
+    <string name="status_searching">কাছাকাছি খোঁজা হচ্ছে…</string>
+    <string name="status_idle">এখনও সংযুক্ত নয়</string>
+    <string name="status_failed">সংযোগ ব্যর্থ হয়েছে</string>
+    <string name="empty_transcript">কথা বলতে নিচের কী চেপে ধরুন, অথবা একটি বার্তা টাইপ করুন।</string>
+    <string name="menu_metrics">মেট্রিক্স</string>
+    <string name="menu_models">মডেল</string>
+    <string name="menu_about">অ্যাপ সম্পর্কে</string>
+    <string name="menu_change_language">ভাষা পরিবর্তন করুন</string>
+    <string name="cd_back">ফিরে যান</string>
+    <string name="cd_more_options">আরও অপশন</string>
+    <string name="cd_replay">আবার শুনুন</string>
+    <string name="cd_send">পাঠান</string>
+    <string name="cd_type_message">বার্তা টাইপ করুন</string>
+    <string name="cd_close_composer">বন্ধ করুন</string>
+    <string name="cd_hang_up">কল শেষ করুন</string>
+    <string name="cd_alert_icon">সতর্কতা</string>
+
+    <string name="sos_need_help">সাহায্য দরকার</string>
+    <string name="sos_medical">চিকিৎসা জরুরি</string>
+    <string name="sos_safe">নিরাপদ আছি</string>
+    <string name="sos_supplies">পানি/খাবার দরকার</string>
+
+    <string name="about_title">iTantra সম্পর্কে</string>
+    <string name="about_version">সংস্করণ %1$s</string>
+    <string name="about_credits_title">ভারতীয় ওপেন AI-এর উপর তৈরি</string>
+    <string name="about_licences_title">ওপেন-সোর্স লাইসেন্স</string>
+</resources>

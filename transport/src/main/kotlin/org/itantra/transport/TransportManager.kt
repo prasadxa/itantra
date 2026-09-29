@@ -15,6 +15,9 @@ import org.itantra.core.Frame
 import org.itantra.core.LinkKind
 import org.itantra.core.LinkState
 import org.itantra.core.Transport
+import org.itantra.transport.crypto.AlertTrustStore
+import org.itantra.transport.crypto.DeviceIdentity
+import org.itantra.transport.crypto.SecureSession
 
 private const val WIFI_DIRECT_FALLBACK_DELAY_MS = 4_000L
 private const val BLE_FALLBACK_DELAY_MS = 8_000L
@@ -101,6 +104,23 @@ class TransportManager(
         return ble.send(frame)
     }
 
+    /**
+     * Wires end-to-end security into both links after pairing with the current peer (see
+     * `org.itantra.transport.crypto.PairingInfo`/`DeviceIdentity`; the QR/pairing UI itself is the
+     * app layer's job). [session] enables binary-mode AEAD encryption for `Msg` frames; [signWith]
+     * signs the ALERT frames this device sends; [trustStore] is checked against the signature on a
+     * received ALERT (see [BinaryFrameCodec.decodeDetailed]) — an unsigned/untrusted ALERT is
+     * downgraded to NORMAL rather than dropped. Pass nulls to go back to "off until paired".
+     */
+    fun configureSecurity(session: SecureSession?, signWith: DeviceIdentity? = null, trustStore: AlertTrustStore? = null) {
+        wifi.secureSession = session
+        wifi.alertSigner = signWith
+        wifi.alertTrustStore = trustStore
+        ble.secureSession = session
+        ble.alertSigner = signWith
+        ble.alertTrustStore = trustStore
+    }
+
     override fun close() {
         scope.launch { stop() }
     }
@@ -111,7 +131,7 @@ class TransportManager(
             if (activeKind == null || source == LinkKind.WIFI) {
                 activeKind = source
                 _state.value = newState
-                send(Frame.Hello(deviceId, deviceName))
+                send(Frame.Hello(deviceId, deviceName, protocol = PROTOCOL_BINARY_CAPABLE))
                 // A LAN/NSD (or already-attached Wi-Fi Direct) socket is now the active link;
                 // no need to keep hunting for a second Wi-Fi Direct peer.
                 if (source == LinkKind.WIFI && wifiDirectStarted) {

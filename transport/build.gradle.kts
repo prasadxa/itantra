@@ -16,6 +16,9 @@ android {
 dependencies {
     api(project(":core"))
     implementation(libs.coroutines.android)
+    // X25519 / Ed25519 / ChaCha20-Poly1305 primitives for the binary frame's optional encryption
+    // and ALERT signing (see crypto/ and transport/README.md "Crypto choices" for the size trade-off).
+    implementation(libs.bouncycastle.prov)
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
 }

@@ -1,0 +1,5 @@
+# tools/gateway - offline control-room gateway + dashboard.
+# Dashboard itself is stdlib-only (http.server + Server-Sent Events); zeroconf is needed
+# for mDNS `_itantra._tcp.` discovery, matching tools/peer_sim.py and WifiTransport.kt.
+zeroconf>=0.130
+pytest>=8.0

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  FICTIONAL SAMPLE - for iTantra gateway CAP-ingestion testing/demo only.
+  Not a real alert from any government agency. Modeled on OASIS CAP 1.2 structure,
+  in the shape SACHET (India's common alerting platform) publishes.
+-->
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
+  <identifier>IN-SACHET-DEMO-CYCLONE-0002</identifier>
+  <sender>demo@sachet.example.gov.in</sender>
+  <sent>2026-09-29T18:30:00+05:30</sent>
+  <status>Actual</status>
+  <msgType>Alert</msgType>
+  <scope>Public</scope>
+  <info>
+    <language>en-US</language>
+    <event>Cyclone Warning</event>
+    <urgency>Expected</urgency>
+    <severity>Extreme</severity>
+    <certainty>Observed</certainty>
+    <effective>2026-09-29T18:30:00+05:30</effective>
+    <expires>2026-10-01T18:30:00+05:30</expires>
+    <headline>Severe cyclonic storm expected to make landfall within 24 hours</headline>
+    <description>A severe cyclonic storm is tracking toward the coast and is expected to make landfall within the next 24 hours, bringing sustained winds up to 120 km/h and a storm surge of up to 2 metres in low-lying coastal areas.</description>
+    <instruction>Evacuate coastal and low-lying areas immediately and move to the nearest designated cyclone shelter. Secure loose objects, stock drinking water, and avoid the coastline until the all-clear is announced.</instruction>
+    <area>
+      <areaDesc>Fictional demo coastal district</areaDesc>
+    </area>
+  </info>
+  <info>
+    <language>ta-IN</language>
+    <event>புயல் எச்சரிக்கை</event>
+    <urgency>Expected</urgency>
+    <severity>Extreme</severity>
+    <certainty>Observed</certainty>
+    <effective>2026-09-29T18:30:00+05:30</effective>
+    <expires>2026-10-01T18:30:00+05:30</expires>
+    <headline>அடுத்த 24 மணி நேரத்தில் கடுமையான புயல் கரையை தாக்கும் என எச்சரிக்கை</headline>
+    <description>கடுமையான சூறாவளிப் புயல் கரையை நோக்கி நகர்ந்து வருகிறது, அடுத்த 24 மணி நேரத்தில் கரையைத் தாக்கும் என எதிர்பார்க்கப்படுகிறது. மணிக்கு 120 கிமீ வேகம் கொண்ட காற்றும், தாழ்வான கடலோர பகுதிகளில் 2 மீட்டர் வரை கடல் அலை உயர்வும் ஏற்படக்கூடும்.</description>
+    <instruction>கரையோர மற்றும் தாழ்வான பகுதிகளில் உள்ளவர்கள் உடனடியாக அருகிலுள்ள புயல் தங்குமிடத்திற்கு செல்லவும். தளர்வான பொருட்களை பாதுகாப்பாக வைக்கவும், குடிநீரை சேமிக்கவும்.</instruction>
+    <area>
+      <areaDesc>கற்பனையான கடலோர மாவட்டம்</areaDesc>
+    </area>
+  </info>
+  <info>
+    <language>te-IN</language>
+    <event>తుఫాను హెచ్చరిక</event>
+    <urgency>Expected</urgency>
+    <severity>Extreme</severity>
+    <certainty>Observed</certainty>
+    <effective>2026-09-29T18:30:00+05:30</effective>
+    <expires>2026-10-01T18:30:00+05:30</expires>
+    <headline>రాబోయే 24 గంటల్లో తీవ్ర తుఫాను తీరం దాటే అవకాశం</headline>
+    <description>తీవ్రమైన తుఫాను తీరం వైపు కదులుతోంది, రాబోయే 24 గంటల్లో తీరం దాటే అవకాశం ఉంది. గంటకు 120 కి.మీ వేగంతో గాలులు, తీర ప్రాంతాల్లో 2 మీటర్ల వరకు అలల ఉప్పెన సంభవించవచ్చు.</description>
+    <instruction>తీర, లోతట్టు ప్రాంతాల ప్రజలు వెంటనే సమీప తుఫాను షెల్టర్‌కు తరలివెళ్లాలి. వదులుగా ఉన్న వస్తువులను భద్రపరచుకోండి, తాగునీరు నిల్వ చేసుకోండి.</instruction>
+    <area>
+      <areaDesc>కల్పిత తీర జిల్లా</areaDesc>
+    </area>
+  </info>
+</alert>

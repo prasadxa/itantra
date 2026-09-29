@@ -38,7 +38,7 @@ def device_model() -> str:
     import os
 
     adb_bin = os.environ.get("ADB_BIN", str(Path.home() / "Library/Android/sdk/platform-tools/adb"))
-    serial = os.environ.get("ITANTRA_ADB_SERIAL", "adb-689a084b-N7eCzC._adb-tls-connect._tcp")
+    serial = os.environ.get("ITANTRA_ADB_SERIAL", "10BD1C1C7T000HX")
     try:
         r = subprocess.run(
             [adb_bin, "-s", serial, "shell", "getprop", "ro.product.model"],

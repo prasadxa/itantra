@@ -7,7 +7,11 @@ import java.io.File
  * ```
  * vad/silero_vad.onnx
  * stt/sravaani/{encoder.int8.onnx, decoder.int8.onnx, joiner.int8.onnx, tokens.txt, bpe.vocab}
- * tts/mio/{indic-mio-q8_0.gguf, indic-mio-q4.gguf (optional, LITE profile), miocodec.gguf, wavlm.gguf, voices/<lang>.emb.gguf}
+ * tts/mio/{indic-mio-q8_0.gguf, indic-mio-q4.gguf (optional, LITE profile), miocodec.gguf,
+ *          miocodec-f16.gguf (optional, preferred when present — half the size), voices/<lang>.emb.gguf}
+ * (wavlm.gguf may still be present on device from an older push but is no longer loaded — see
+ * tts/.../mio/MioNative.kt's class doc: voice embeddings are precomputed, so WavLM's runtime
+ * reference-audio embedding extraction is never used by this app.)
  * tts/vits-rasa/{model.onnx, tokens.txt}
  * ```
  */

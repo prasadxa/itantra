@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Best-effort translation (author is not a native Malayalam speaker) — please get a native
+     speaker to review before shipping. -->
+<resources>
+    <string name="app_name">iTantra</string>
+
+    <string name="onboarding_skip">ഒഴിവാക്കുക</string>
+    <string name="onboarding_next">അടുത്തത്</string>
+    <string name="onboarding_get_started">തുടങ്ങാം</string>
+    <string name="onboarding_step1_title">നിങ്ങളുടെ ഭാഷയിൽ സംസാരിക്കൂ</string>
+    <string name="onboarding_step1_body">ഇന്റർനെറ്റ് ഇല്ലാതെ തന്നെ iTantra 10 ഇന്ത്യൻ ഭാഷകൾ മനസ്സിലാക്കുകയും സംസാരിക്കുകയും ചെയ്യുന്നു.</string>
+    <string name="onboarding_step2_title">നെറ്റ്‌വർക്കോ ഇന്റർനെറ്റോ ഇല്ലാതെ പ്രവർത്തിക്കുന്നു</string>
+    <string name="onboarding_step2_body">ഫോൺ നേരിട്ട് Wi‑Fi അല്ലെങ്കിൽ ബ്ലൂടൂത്ത് വഴി മറ്റൊരു ഫോണുമായി സംസാരിക്കുന്നു. ടെക്സ്റ്റ്, ശബ്ദത്തേക്കാൾ ഏകദേശം 800 മടങ്ങ് ലഘുവായതിനാൽ, കോൾ എത്താത്തിടത്തും ഇത് എത്തുന്നു.</string>
+    <string name="onboarding_step3_title">ഇന്ത്യൻ ഓപ്പൺ AI-യിൽ നിർമ്മിച്ചത്</string>
+    <string name="onboarding_step3_body">സ്പീച്ച് റെക്കഗ്നിഷൻ: ARTPARK, IISc ബെംഗളൂരു (SraVaani). ശബ്ദങ്ങൾ: SPRING Lab, IIT മദ്രാസ് (Indic‑Mio), AI4Bharat, IIT മദ്രാസ് (Rasa).</string>
+    <string name="onboarding_permissions_title">കുറച്ച് അനുമതികൾ വേണം</string>
+    <string name="onboarding_permission_mic_title">മൈക്രോഫോൺ</string>
+    <string name="onboarding_permission_mic_body">iTantra നിങ്ങളെ കേട്ട് ടെക്സ്റ്റാക്കി മാറ്റാൻ — ഒന്നും ഫോണിന് പുറത്ത് പോകുന്നില്ല.</string>
+    <string name="onboarding_permission_notif_title">അറിയിപ്പുകൾ</string>
+    <string name="onboarding_permission_notif_body">സ്ക്രീൻ ഓഫ് ആയിരിക്കുമ്പോഴും വാക്കി-ടോക്കി പ്രവർത്തിച്ച് അതിന്റെ നില കാണിക്കാൻ.</string>
+
+    <string name="language_picker_title">നിങ്ങളുടെ ഭാഷ തിരഞ്ഞെടുക്കുക</string>
+    <string name="language_picker_subtitle">ഇത് എപ്പോൾ വേണമെങ്കിലും മാറ്റാം.</string>
+    <string name="language_ready">ശബ്ദം തയ്യാറാണ്</string>
+    <string name="language_not_ready">ശബ്ദം ഇൻസ്റ്റാൾ ചെയ്തിട്ടില്ല</string>
+
+    <string name="status_connected">%1$s-മായി ബന്ധിപ്പിച്ചു · %2$s</string>
+    <string name="status_searching">സമീപം തിരയുന്നു…</string>
+    <string name="status_idle">ഇതുവരെ ബന്ധിപ്പിച്ചിട്ടില്ല</string>
+    <string name="status_failed">ബന്ധിപ്പിക്കൽ പരാജയപ്പെട്ടു</string>
+    <string name="empty_transcript">സംസാരിക്കാൻ താഴെയുള്ള കീ അമർത്തിപ്പിടിക്കുക, അല്ലെങ്കിൽ സന്ദേശം ടൈപ്പ് ചെയ്യുക.</string>
+    <string name="menu_metrics">മെട്രിക്സ്</string>
+    <string name="menu_models">മോഡലുകൾ</string>
+    <string name="menu_about">ആപ്പിനെക്കുറിച്ച്</string>
+    <string name="menu_change_language">ഭാഷ മാറ്റുക</string>
+    <string name="cd_back">തിരികെ</string>
+    <string name="cd_more_options">കൂടുതൽ ഓപ്ഷനുകൾ</string>
+    <string name="cd_replay">വീണ്ടും കേൾക്കുക</string>
+    <string name="cd_send">അയയ്ക്കുക</string>
+    <string name="cd_type_message">സന്ദേശം ടൈപ്പ് ചെയ്യുക</string>
+    <string name="cd_close_composer">അടയ്ക്കുക</string>
+    <string name="cd_hang_up">കോൾ അവസാനിപ്പിക്കുക</string>
+    <string name="cd_alert_icon">മുന്നറിയിപ്പ്</string>
+
+    <string name="sos_need_help">സഹായം വേണം</string>
+    <string name="sos_medical">മെഡിക്കൽ എമർജൻസി</string>
+    <string name="sos_safe">സുരക്ഷിതം</string>
+    <string name="sos_supplies">വെള്ളം/ഭക്ഷണം വേണം</string>
+
+    <string name="about_title">iTantra-യെക്കുറിച്ച്</string>
+    <string name="about_version">പതിപ്പ് %1$s</string>
+    <string name="about_credits_title">ഇന്ത്യൻ ഓപ്പൺ AI-യിൽ നിർമ്മിച്ചത്</string>
+    <string name="about_licences_title">ഓപ്പൺ-സോഴ്സ് ലൈസൻസുകൾ</string>
+</resources>

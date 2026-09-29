@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  FICTIONAL SAMPLE - for iTantra gateway CAP-ingestion testing/demo only.
+  Not a real alert from any government agency. Modeled on OASIS CAP 1.2 structure,
+  in the shape SACHET (India's common alerting platform) publishes.
+-->
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
+  <identifier>IN-SACHET-DEMO-FLOOD-0001</identifier>
+  <sender>demo@sachet.example.gov.in</sender>
+  <sent>2026-09-29T06:00:00+05:30</sent>
+  <status>Actual</status>
+  <msgType>Alert</msgType>
+  <scope>Public</scope>
+  <info>
+    <language>en-US</language>
+    <event>Flood Warning</event>
+    <urgency>Immediate</urgency>
+    <severity>Severe</severity>
+    <certainty>Likely</certainty>
+    <effective>2026-09-29T06:00:00+05:30</effective>
+    <expires>2026-09-30T06:00:00+05:30</expires>
+    <headline>Flood warning for low-lying areas near the Koshi river</headline>
+    <description>Heavy rainfall upstream has raised the Koshi river above the danger mark. Residents of low-lying villages within two kilometres of the riverbank should move to higher ground immediately.</description>
+    <instruction>Move to higher ground now. Do not attempt to cross flooded roads or rivers on foot or by vehicle. Keep emergency supplies ready.</instruction>
+    <area>
+      <areaDesc>Koshi river basin, fictional demo district</areaDesc>
+    </area>
+  </info>
+  <info>
+    <language>hi-IN</language>
+    <event>बाढ़ की चेतावनी</event>
+    <urgency>Immediate</urgency>
+    <severity>Severe</severity>
+    <certainty>Likely</certainty>
+    <effective>2026-09-29T06:00:00+05:30</effective>
+    <expires>2026-09-30T06:00:00+05:30</expires>
+    <headline>कोशी नदी के निकट निचले इलाकों के लिए बाढ़ की चेतावनी</headline>
+    <description>ऊपरी क्षेत्रों में भारी बारिश के कारण कोशी नदी खतरे के निशान से ऊपर बह रही है। नदी के दो किलोमीटर के दायरे में बसे निचले गांवों के निवासी तुरंत ऊंचे स्थान पर चले जाएं।</description>
+    <instruction>अभी ऊंचे स्थान पर चले जाएं। बाढ़ की सड़कों या नदियों को पैदल या वाहन से पार करने का प्रयास न करें। आपातकालीन सामग्री तैयार रखें।</instruction>
+    <area>
+      <areaDesc>कोशी नदी बेसिन, काल्पनिक प्रदर्शन जिला</areaDesc>
+    </area>
+  </info>
+  <info>
+    <language>bn-IN</language>
+    <event>বন্যা সতর্কতা</event>
+    <urgency>Immediate</urgency>
+    <severity>Severe</severity>
+    <certainty>Likely</certainty>
+    <effective>2026-09-29T06:00:00+05:30</effective>
+    <expires>2026-09-30T06:00:00+05:30</expires>
+    <headline>কোশী নদীর নিকটবর্তী নিচু এলাকার জন্য বন্যা সতর্কতা</headline>
+    <description>উজানে ভারী বৃষ্টিপাতের কারণে কোশী নদীর জল বিপদসীমার উপরে উঠেছে। নদীর তীর থেকে দুই কিলোমিটারের মধ্যে বসবাসকারী বাসিন্দাদের অবিলম্বে উঁচু স্থানে সরে যেতে হবে।</description>
+    <instruction>এখনই উঁচু স্থানে চলে যান। বন্যার জলে ডুবে থাকা রাস্তা বা নদী হেঁটে বা গাড়িতে পার হওয়ার চেষ্টা করবেন না।</instruction>
+    <area>
+      <areaDesc>কোশী নদী অববাহিকা, কাল্পনিক প্রদর্শন জেলা</areaDesc>
+    </area>
+  </info>
+</alert>

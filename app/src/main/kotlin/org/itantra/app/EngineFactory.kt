@@ -40,12 +40,17 @@ object EngineFactory {
 
         var ttsError: String? = null
         val ttsLoadStart = System.currentTimeMillis()
+        // Idle-unload timeout for FallbackTtsEngine's per-sub-engine (Mio / VITS) unload timer:
+        // 60s on LITE, 5 min on FULL (see docs/design.md "Profiles").
+        val idleUnloadMs = if (profile == Profile.LITE) 60_000L else 300_000L
         val ttsEngine = try {
             // preferFast (VITS-first where it has a voice) already matches both profiles; LITE
-            // additionally halves numThreads. The LITE-only lite/q4 Mio GGUF and the 60s Mio
-            // unload-after-idle hook need a model-path + unload API in :tts `engine/` (owned by
-            // another agent) — see docs/design.md "Profiles" and the handoff note in the report.
-            FallbackTtsEngine(context, paths, numThreads = numThreads, preferFast = true).also { it.warmUp() }
+            // additionally halves numThreads and prefers the q4/f16 model files (see
+            // MioTtsEngine/VitsTtsEngine). warmUp() only initializes the engine actually needed for
+            // the user's currently-selected language (AppRepository.language, default HI) instead
+            // of unconditionally warming both Mio and VITS — see docs/design.md "lazy, per-need TTS".
+            FallbackTtsEngine(context, paths, numThreads = numThreads, preferFast = true, idleUnloadMs = idleUnloadMs)
+                .also { it.warmUp(listOf(AppRepository.language.value)) }
         } catch (t: Throwable) {
             ttsError = t.message ?: t.toString(); null
         }

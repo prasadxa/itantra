@@ -36,8 +36,11 @@ object FrameCodec {
     // ---- TCP framing: 4-byte big-endian length + UTF-8 JSON ----
 
     @Throws(IOException::class)
-    fun writeTcpFrame(out: OutputStream, frame: Frame) {
-        val bytes = encode(frame)
+    fun writeTcpFrame(out: OutputStream, frame: Frame) = writeTcpFrameBytes(out, encode(frame))
+
+    /** Same framing as [writeTcpFrame] but for pre-encoded bytes (e.g. from [BinaryFrameCodec] via [WireCodec]). */
+    @Throws(IOException::class)
+    fun writeTcpFrameBytes(out: OutputStream, bytes: ByteArray) {
         if (bytes.size > MAX_FRAME_BYTES) throw IOException("frame too large: ${bytes.size} bytes")
         val dout = out as? DataOutputStream ?: DataOutputStream(out)
         dout.writeInt(bytes.size)
@@ -47,7 +50,11 @@ object FrameCodec {
 
     /** Blocks for one full frame. Returns null on clean EOF before a new frame starts. */
     @Throws(IOException::class)
-    fun readTcpFrame(input: InputStream): Frame? {
+    fun readTcpFrame(input: InputStream): Frame? = readTcpFrameBytes(input)?.let { decode(it) }
+
+    /** Same framing as [readTcpFrame] but returns the raw payload undecoded (see [WireCodec.decode]). */
+    @Throws(IOException::class)
+    fun readTcpFrameBytes(input: InputStream): ByteArray? {
         val din = input as? DataInputStream ?: DataInputStream(input)
         val len = try {
             din.readInt()
@@ -57,7 +64,7 @@ object FrameCodec {
         if (len < 0 || len > MAX_FRAME_BYTES) throw IOException("invalid/oversize frame length: $len")
         val buf = ByteArray(len)
         din.readFully(buf)
-        return decode(buf)
+        return buf
     }
 
     // ---- BLE chunking: 3-byte header [seq, index, count] + up to (mtu-5) payload bytes ----
@@ -67,8 +74,10 @@ object FrameCodec {
      * wrapping at 256) followed by up to `mtu - 5` bytes of payload. [seq] identifies this frame
      * among interleaved chunks; callers should increment it per frame sent.
      */
-    fun chunkForBle(frame: Frame, seq: Int, mtu: Int): List<ByteArray> {
-        val payload = encode(frame)
+    fun chunkForBle(frame: Frame, seq: Int, mtu: Int): List<ByteArray> = chunkBytesForBle(encode(frame), seq, mtu)
+
+    /** Same chunking as [chunkForBle] but for pre-encoded bytes (e.g. from [BinaryFrameCodec] via [WireCodec]). */
+    fun chunkBytesForBle(payload: ByteArray, seq: Int, mtu: Int): List<ByteArray> {
         val chunkSize = (mtu - 5).coerceAtLeast(1)
         val count = ((payload.size + chunkSize - 1) / chunkSize).coerceAtLeast(1)
         require(count <= 255) { "frame too large to chunk for BLE mtu=$mtu (${payload.size} bytes)" }

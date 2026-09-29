@@ -19,6 +19,9 @@ import org.itantra.core.Frame
 import org.itantra.core.LinkKind
 import org.itantra.core.LinkState
 import org.itantra.core.Transport
+import org.itantra.transport.crypto.AlertTrustStore
+import org.itantra.transport.crypto.DeviceIdentity
+import org.itantra.transport.crypto.SecureSession
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
@@ -56,6 +59,14 @@ class WifiTransport(
     private var discoveryListener: NsdManager.DiscoveryListener? = null
     private val running = AtomicBoolean(false)
     private val connecting = AtomicBoolean(false)
+
+    // Binary-frame negotiation (see Negotiation.kt) and end-to-end security state for the active
+    // link. All off/unset by default ("encryption optional, off until paired"); the app layer sets
+    // [secureSession]/[alertSigner]/[alertTrustStore] once the user has paired with this peer.
+    @Volatile private var binaryNegotiated = false
+    var secureSession: SecureSession? = null
+    var alertSigner: DeviceIdentity? = null
+    var alertTrustStore: AlertTrustStore? = null
 
     override suspend fun start() {
         if (!running.compareAndSet(false, true)) return
@@ -96,12 +107,21 @@ class WifiTransport(
     /** Attaches an already-connected socket (e.g. from [WifiDirectHelper]) as the active link. */
     fun attach(socket: Socket, peerName: String) {
         link?.close()
+        binaryNegotiated = false
         link = TcpLink(
             socket = socket,
             scope = scope,
-            onFrame = { frame -> scope.launch { _incoming.emit(frame) } },
+            useBinary = { binaryNegotiated },
+            session = { secureSession },
+            signWith = { alertSigner },
+            trustStore = { alertTrustStore },
+            onFrame = { frame ->
+                if (frame is Frame.Hello && peerSupportsBinary(frame.protocol)) binaryNegotiated = true
+                scope.launch { _incoming.emit(frame) }
+            },
             onClosed = {
                 link = null
+                binaryNegotiated = false
                 if (running.get()) {
                     _state.value = LinkState.Searching
                     startDiscovery()
