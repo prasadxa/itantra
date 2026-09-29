@@ -276,12 +276,12 @@ for i, (t, fg, bg, d) in enumerate(status):
 # SLIDE 4 — FEASIBILITY: measured stat tiles, risk -> strategy rows, viability chips
 s = S[3]; set_team(s); remove(pointer_box(s))
 label(s, 0.45, 1.3, 8, "Analysis of the feasibility of the idea", size=14)
-text(s, 5.1, 1.34, 7.8, 0.25, [[("Measured in the running prototype (in-app logging)", {"size": 10.5, "color": MUTED, "italic": True})]], align=PP_ALIGN.RIGHT)
-tiles = [("zap", "20×", "faster than speech", "STT real-time factor 0.05"),
-         ("clock", "0.4–0.9 s", "speech end → text ready", "Snapdragon 870"),
-         ("memory", "688 MB", "app RAM, LITE profile", "≈17% of a 4 GB phone"),
-         ("cpu", "0.3%", "idle CPU, LITE profile", "1.6% in FULL"),
-         ("flask", "5.9%", "word error rate", "preliminary: 10 clips")]
+text(s, 5.1, 1.34, 7.8, 0.25, [[("Measured in a 4 GB-class memory test (in-app logging)", {"size": 10.5, "color": MUTED, "italic": True})]], align=PP_ALIGN.RIGHT)
+tiles = [("zap", "14×", "faster than speech", "STT real-time factor 0.07"),
+         ("clock", "0.6 s", "speech end → text ready", "median, 10 languages"),
+         ("memory", "765 MB", "app RAM when idle", "1.8 GB peak while speaking"),
+         ("cpu", "0.3%", "idle CPU", "of one core"),
+         ("shield", "Alive", "app not killed", "115 other apps closed")]
 tw, tg = 2.35, 0.17
 for i, (ic, big, l1, l2) in enumerate(tiles):
     x = 0.45 + i * (tw + tg)
@@ -290,11 +290,11 @@ for i, (ic, big, l1, l2) in enumerate(tiles):
     text(s, x + 0.18, 2.2, tw - 0.3, 0.5, [[(big, {"bold": True, "size": 26, "color": TE})]])
     text(s, x + 0.18, 2.68, tw - 0.3, 0.22, [[(l1, {"bold": True, "size": 10})]])
     text(s, x + 0.18, 2.9, tw - 0.3, 0.2, [[(l2, {"size": 9, "color": MUTED})]])
-footnote(s, 3.2, "Test phone: Snapdragon 870, 12 GB RAM, LITE profile forced. On 4–6 GB phones LITE switches on by itself; its 688 MB footprint does not depend on the phone's RAM. Speed on budget chips and end-to-end latency: measurement in progress.", h=0.36)
+footnote(s, 3.2, "4 GB-class test: 12 GB Snapdragon 870 phone with RAM locked so only ~1.7 GB was free, LITE profile. The chip was not slowed — a budget phone will be slower. Word error rate 5.9% (preliminary, 10 clips) unchanged.", h=0.36)
 
 label(s, 0.45, 3.63, 5.6, "Potential challenges and risks", size=12.5)
 label(s, 6.35, 3.63, 6.5, "Strategies for overcoming these challenges", size=12.5)
-risks = [("memory", "Phones with 3–6 GB RAM", "LITE profile auto-selects below 6 GB: 2 threads, no live captions, engines unload after 60 s"),
+risks = [("speaker", "Voice starts 3–6 s after arrival in LITE", "Keep the listener's language loaded; smaller fast voices for hi/gu/or/en (planned)"),
          ("database", "1.14 GB of model files", "Per-language on-demand download and smaller voices for hi/gu/or/en (planned)"),
          ("bt", "Wi-Fi Direct / Bluetooth not yet tested phone-to-phone", "Two-phone tests on real devices; normal Wi-Fi stays the primary link"),
          ("ear", "Noise, accents, code-mixing raise errors", "Keyword boosting for alert words; 30-clip-per-language evaluation; typed text as fallback")]

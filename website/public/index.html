@@ -269,7 +269,7 @@
       <tbody>
         <tr><td>Speech-recognition word error rate</td><td class="num">5.9%</td><td>10 FLEURS clips, 1 per language. Preliminary; a 30-clip-per-language run is next</td></tr>
         <tr><td>Speech end → text ready</td><td class="num">0.4–0.9 s</td><td>Snapdragon 870</td></tr>
-        <tr><td>Text-to-speech first audio</td><td class="num">0.6–0.95 s</td><td>Indic-Mio (hi/gu/en); VITS languages start faster</td></tr>
+        <tr><td>Text-to-speech first audio</td><td class="num">0.6–0.95 s</td><td>FULL profile, engine warm. Indic-Mio (hi/gu/en); VITS languages start faster</td></tr>
         <tr><td>Audio underruns during playback</td><td class="num">0</td><td>hi, en, gu, ta, bn on the Snapdragon 870</td></tr>
         <tr><td>Alert on the alarm stream</td><td class="num">16/16</td><td>Full volume with exclusive audio focus</td></tr>
         <tr><td>End to end, said → heard</td><td class="num">≈1.5–2.5 s</td><td>Estimate from one phone in both roles with a peer simulator</td></tr>
@@ -278,6 +278,21 @@
       </tbody>
     </table></div>
     <p class="note">A hot phone can run 2 to 4 times slower. The Metrics screen shows thermal state beside every number, so results can be compared fairly.</p>
+
+    <h3 class="sub">4 GB-class memory test</h3>
+    <p class="note">Method: the 12 GB vivo I2202 (Snapdragon 870) with RAM reserved by a helper app so only about 1.7 GB was left free, like a 4 GB phone, running the LITE profile. The chip was not slowed down, so a real budget phone will be slower.</p>
+    <div class="tbl rows"><table>
+      <thead><tr><th>Metric</th><th class="num">Value</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>Speech-to-text (10 languages)</td><td class="num">14× faster than speech</td><td>10/10 languages; real-time factor median 0.07</td></tr>
+        <tr><td>Speech end → text</td><td class="num">0.62 s median</td><td>Range 0.42–0.70 s</td></tr>
+        <tr><td>App memory</td><td class="num">765 MB idle · 1.8 GB peak</td><td>Peak while speaking</td></tr>
+        <tr><td>Idle CPU</td><td class="num">0.33%</td><td>Of one core</td></tr>
+        <tr><td>App killed under pressure?</td><td class="num">No</td><td>Android closed 115 other processes; the app stayed alive</td></tr>
+        <tr><td>Voice output start (LITE)</td><td class="num">3–6 s after arrival</td><td>Known weak spot: the voice model loads cold and smooth mode buffers first. 0 playback stutters</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">Same test with about 3 GB free (6 GB-class): identical speech-to-text (0.62 s median), 850 MB idle, app stayed alive.</p>
   </div>
 </section>
 
