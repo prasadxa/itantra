@@ -1,5 +1,6 @@
 package org.itantra.app.ui
 
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -206,10 +207,16 @@ fun ChatScreen(onOpenModels: () -> Unit) {
                         last >= listState.layoutInfo.totalItemsCount - 2
                     }
                 }
-                var stickToBottom by remember { mutableStateOf(true) }
-                LaunchedEffect(isAtBottom) { stickToBottom = isAtBottom }
+                // Follow new messages unless the user has dragged up to read history. Measuring
+                // "at bottom" alone fails when one tall card (e.g. a long alert) fills the viewport.
+                val dragged by listState.interactionSource.collectIsDraggedAsState()
+                var userScrolledUp by remember { mutableStateOf(false) }
+                LaunchedEffect(dragged, isAtBottom) {
+                    if (dragged && !isAtBottom) userScrolledUp = true
+                    if (isAtBottom) userScrolledUp = false
+                }
                 LaunchedEffect(rows.size) {
-                    if (rows.isNotEmpty() && stickToBottom) listState.animateScrollToItem(rows.size - 1)
+                    if (rows.isNotEmpty() && !userScrolledUp) listState.animateScrollToItem(rows.size - 1)
                 }
                 LazyColumn(
                     state = listState,

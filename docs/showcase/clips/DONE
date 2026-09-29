@@ -1,0 +1,12 @@
+01_onboarding.mp4 | 30s | First-run onboarding: greeting cycling per language, "Speak your language" grid (10 Indic languages), offline-capability page, and "Built on Indian open AI" credits/permissions page. Onboarding flag was cleared to re-trigger this, then restored (onboarding_done=true, ui_locale_tag=en) after recording.
+02_receive_voice.mp4 | 28s | Talk screen receiving 3 gateway broadcast messages in Hindi, Tamil, and English in sequence; message cards appear and are spoken aloud (device audio captured).
+03_alert.mp4 | 16s | Gateway sends a Hindi ALERT (flood warning); red alert card appears with flash and is spoken at device volume.
+05_sos.mp4 | 18s | Tap SOS button, bottom sheet opens with location coordinates and quick templates, real tap sends "बचाव चाहिए" (need rescue) request; delivered confirmation and history show the sent card with GPS coordinates. Location services were temporarily enabled for this clip and switched back off afterward.
+04_speak_to_text.mp4 | 20s | DEBUG_STT_WAV injected on hi.wav then ta.wav test clips, running the real on-device STT pipeline; transcribed sentences appear as sent messages in History with delivery ticks. Audio is injected from bundled test clips, not live microphone speech.
+06_settings_text_size.mp4 | 38s | Settings tour: message text size S -> XL, theme System -> Dark -> Light, speech playback speed 0.8x -> 1.3x, then everything reset back to defaults (M / System / 1.0x), confirmed against itantra_settings.xml.
+07_metrics_history.mp4 | 24s | Metrics dashboard (CPU/RAM/model size, latency histogram, STT real-time-factor) scrolled, then History screen with searchable/filterable message log scrolled.
+08_hindi_ui.mp4 | 38s | App language switched from English to Hindi (हिन्दी) via Settings > App language picker, quick tour of Talk and Settings screens fully localized, then switched back to English at the end; ui_locale_tag confirmed restored to "en".
+
+Screenshots in docs/showcase/images/: 01_alert_card.png, 02_sos_sent.png, 03_sos_sheet.png, 04_settings_theme.png, 05_theme_dark.png, 06_theme_light.png, 06_receive_cards.png, 07_history.png, 07_metrics.png, 08_hindi_ui.png, 09_onboarding_credits.png.
+
+Notes: all recordings made with scrcpy (--no-playback --no-control, device audio + H.264 video). Device state fully restored: onboarding_done=true, ui_locale_tag=en, theme=SYSTEM, message_text_scale=1.0, speech_rate=1.0, location services off. No adb uninstall/pm clear used.
