@@ -8,6 +8,7 @@ import java.io.File
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
 import org.itantra.app.location.LocationProvider
+import org.itantra.app.ui.settings.SettingsPrefs
 import org.itantra.core.Lang
 import org.itantra.core.Priority
 import org.itantra.core.TtsEngine
@@ -390,7 +391,12 @@ class DebugCommandReceiver : BroadcastReceiver() {
             priority = if (alert) Priority.ALERT else Priority.NORMAL, emotion = null, ssml = ssml,
             speechEndAt = now, sttDoneAt = now, sentAt = now,
         )
-        val plan = textPipeline.plan(message)
+        // DEBUG_SPEAK simulates the receive path (see the method doc above), so it applies the
+        // Settings speech-rate slider exactly as Orchestrator.onMessageReceived does - lets a
+        // host-side harness verify a rate/playback-mode change takes effect without a real peer.
+        val speechRate = SettingsPrefs.getSpeechRate(service.applicationContext)
+        val playbackMode = SettingsPrefs.getPlaybackMode(service.applicationContext)
+        val plan = textPipeline.plan(message).withSpeechRate(speechRate)
 
         val ttsEngine = service.engines.ttsEngine
         val speechOutput = service.engines.speechOutput
@@ -446,6 +452,7 @@ class DebugCommandReceiver : BroadcastReceiver() {
                 "event" to "debug_speak", "id" to message.id, "text" to text, "lang" to lang.code,
                 "segments" to plan.segments.size, "engine" to engineUsed, "synthesisRtf" to rtf,
                 "synthMs" to synthMs, "audioSeconds" to audioSeconds, "firstChunkMs" to firstChunkMs,
+                "speechRate" to speechRate, "playbackMode" to playbackMode,
             )
             return
         }
@@ -459,10 +466,12 @@ class DebugCommandReceiver : BroadcastReceiver() {
         org.itantra.tts.output.SpeechOutput.observeMetricsOnce(message.id) { playbackMetrics ->
             Metrics.log(
                 "event" to "debug_speak_playback", "id" to playbackMetrics.id, "text" to text, "lang" to lang.code,
-                "engine" to engineUsed, "timeToFirstAudioMs" to timeToFirstAudioMs,
+                "engine" to (playbackMetrics.engine ?: engineUsed), "timeToFirstAudioMs" to timeToFirstAudioMs,
                 "underrunCountDelta" to playbackMetrics.underrunCountDelta,
                 "preRollMs" to playbackMetrics.preRollMs,
                 "rebufferPauses" to playbackMetrics.rebufferPauses,
+                "ttsRtf" to playbackMetrics.ttsRtf,
+                "speechRate" to speechRate, "playbackMode" to playbackMode,
             )
         }
         speechOutput.enqueue(message.id, plan, phoneMode = false) { id, playStartedEpochMs ->
@@ -472,6 +481,7 @@ class DebugCommandReceiver : BroadcastReceiver() {
                 "alert" to alert, "ssml" to ssml, "segments" to plan.segments.size,
                 "engine" to engineUsed, "synthesisRtf" to rtf, "synthMs" to synthMs,
                 "audioSeconds" to audioSeconds, "timeToFirstAudioMs" to timeToFirstAudioMs,
+                "speechRate" to speechRate, "playbackMode" to playbackMode,
             )
         }
     }

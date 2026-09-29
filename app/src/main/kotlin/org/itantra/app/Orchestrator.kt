@@ -12,6 +12,7 @@ import org.itantra.core.Lang
 import org.itantra.core.Priority
 import org.itantra.core.RecognizedSentence
 import org.itantra.core.SttEngine
+import org.itantra.core.SynthesisPlan
 import org.itantra.core.TextPipeline
 import org.itantra.core.Transport
 import org.itantra.core.VoiceMessage
@@ -49,7 +50,24 @@ data class MessageMetrics(
     val ttsStartMs: Long? = null,
     val endToEndMs: Long? = null,
     val timestamp: Long,
+    /** Which TTS engine ("vits"/"mio") played this RECEIVED message; null for SENT or until its
+     * playback-metrics callback fires (see [SpeechOutputPort.observePlaybackMetrics]). */
+    val ttsEngine: String? = null,
+    /** TTS synthesis RTF (synth-time / audio-duration) for this message's playback. */
+    val ttsRtf: Float? = null,
+    /** Buffered-audio-before-play actually used, in ms — see :tts `PreRollEstimator`. */
+    val preRollMs: Long? = null,
+    /** Times playback paused mid-utterance to rebuffer because synthesis fell behind; target 0. */
+    val rebufferPauses: Int? = null,
+    /** `AudioTrack.getUnderrunCount()` delta over this message's playback; target 0. */
+    val underrunCountDelta: Int? = null,
 )
+
+/** Scales every segment's [org.itantra.core.TtsSegment.rate] by [rate] (the Settings speech-rate
+ * slider) — applied to RECEIVED-message playback only, see [Orchestrator.onMessageReceived].
+ * `rate == 1f` is a no-op (no allocation). */
+fun SynthesisPlan.withSpeechRate(rate: Float): SynthesisPlan =
+    if (rate == 1f) this else copy(segments = segments.map { it.copy(rate = it.rate * rate) })
 
 /**
  * Small port matching the shape of :tts `SpeechOutput` so [Orchestrator] can be unit-tested
@@ -79,6 +97,15 @@ interface SpeechOutputPort {
     var onVoiceNoteStored: ((id: String, durationSeconds: Float) -> Unit)?
         get() = null
         set(_) {}
+
+    /** Registers a one-shot listener for [id]'s post-playback TTS metrics (engine, synthesis RTF,
+     * pre-roll ms, rebuffer pauses, AudioTrack underrun delta) — see :tts
+     * `SpeechOutput.SpeechPlaybackMetrics`. Call before [enqueue]. Default no-op so existing
+     * fakes/tests need no changes. */
+    fun observePlaybackMetrics(
+        id: String,
+        listener: (engine: String?, ttsRtf: Float?, preRollMs: Long, rebufferPauses: Int, underrunCountDelta: Int) -> Unit,
+    ) {}
 }
 
 /**
@@ -110,6 +137,9 @@ class Orchestrator(
      * existing fakes/tests (which don't model per-language support) are unaffected.
      */
     private val ttsSupports: (Lang) -> Boolean = { true },
+    /** Settings speech-rate slider (0.8-1.3, see `SettingsPrefs`), read live on every RECEIVED
+     * message via [withSpeechRate] — never applied to what this device itself speaks. */
+    private val speechRateProvider: () -> Float = { 1f },
     /** Profile.LITE: turn off live STT partials (both the local shimmering bubble and the
      * over-the-wire [Frame.Partial]) to save CPU/battery/bandwidth on low/mid-range phones; the
      * decode itself is throttled inside SttEngine, this just stops us from doing anything with it.
@@ -274,18 +304,30 @@ class Orchestrator(
         val networkMs = receivedAt - message.sentAt + clockOffsetMs
         onLog(LogEntry(message.id, Direction.RECEIVED, message.text, message.lang, message.priority == Priority.ALERT, message.ssml, receivedAt))
 
-        val plan = textPipeline?.plan(message)
+        val plan = textPipeline?.plan(message)?.withSpeechRate(speechRateProvider())
         if (plan != null && speechOutput != null && ttsSupports(message.lang)) {
+            // Mutated by both callbacks below (onPlayStarted fires first, mid-playback; the
+            // playback-metrics listener fires once, after playback finishes) so each emits a
+            // MessageMetrics carrying everything gathered so far rather than clobbering fields
+            // the other one already filled in - see AppRepository.addOrUpdateMetrics, which
+            // replaces the prior entry for this (id, direction) in place.
+            var latest = MessageMetrics(
+                id = message.id, direction = Direction.RECEIVED, lang = message.lang,
+                priority = message.priority, networkMs = networkMs, timestamp = receivedAt,
+            )
+            speechOutput.observePlaybackMetrics(message.id) { engine, ttsRtf, preRollMs, rebufferPauses, underrunCountDelta ->
+                latest = latest.copy(
+                    ttsEngine = engine, ttsRtf = ttsRtf, preRollMs = preRollMs,
+                    rebufferPauses = rebufferPauses, underrunCountDelta = underrunCountDelta,
+                )
+                onMetrics(latest)
+            }
             speechOutput.enqueue(message.id, plan, mode == Mode.PHONE) { id, playedAt ->
                 onSpeaking(id)
                 val ttsStartMs = playedAt - receivedAt
                 val endToEndMs = playedAt - message.speechEndAt
-                onMetrics(
-                    MessageMetrics(
-                        id = id, direction = Direction.RECEIVED, lang = message.lang, priority = message.priority,
-                        networkMs = networkMs, ttsStartMs = ttsStartMs, endToEndMs = endToEndMs, timestamp = receivedAt,
-                    ),
-                )
+                latest = latest.copy(ttsStartMs = ttsStartMs, endToEndMs = endToEndMs)
+                onMetrics(latest)
                 scope.launch { transport.send(Frame.Ack(id, receivedAt, playedAt)) }
             }
         } else {

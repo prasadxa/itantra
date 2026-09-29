@@ -42,14 +42,23 @@ private class FakeTextPipeline : TextPipeline {
 
 private class FakeSpeechOutput : SpeechOutputPort {
     var lastId: String? = null
+    var lastPlan: SynthesisPlan? = null
     var playAt: Long = 0L
+    private var playbackMetricsListener: ((String?, Float?, Long, Int, Int) -> Unit)? = null
     override fun enqueue(id: String, plan: SynthesisPlan, phoneMode: Boolean, onPlayStarted: (id: String, epochMs: Long) -> Unit) {
         lastId = id
+        lastPlan = plan
         onPlayStarted(id, playAt)
     }
     override fun stopNormal() {}
     override fun close() {}
     override val isPlaying = MutableStateFlow(false)
+    override fun observePlaybackMetrics(id: String, listener: (String?, Float?, Long, Int, Int) -> Unit) {
+        playbackMetricsListener = listener
+    }
+    fun firePlaybackMetrics(engine: String?, ttsRtf: Float?, preRollMs: Long, rebufferPauses: Int, underrunCountDelta: Int) {
+        playbackMetricsListener?.invoke(engine, ttsRtf, preRollMs, rebufferPauses, underrunCountDelta)
+    }
 }
 
 private class FakeTransport : Transport {
@@ -157,6 +166,66 @@ class OrchestratorTest {
     }
 
     @Test
+    fun `speech rate is applied to received-message segments only`() = runTest {
+        val transport = FakeTransport()
+        val speechOutput = FakeSpeechOutput()
+        val orchestrator = Orchestrator(
+            deviceId = "device-b", stt = FakeSttEngine(), textPipeline = FakeTextPipeline(),
+            speechOutput = speechOutput, transport = transport, scope = backgroundScope,
+            clock = { 1_100L }, speechRateProvider = { 1.3f },
+        )
+        orchestrator.start()
+        runCurrent()
+
+        val incomingMsg = VoiceMessage(
+            id = "m1", from = "device-a", lang = Lang.HI, text = "hi",
+            priority = Priority.NORMAL, speechEndAt = 1_000, sttDoneAt = 1_000, sentAt = 1_000,
+        )
+        transport.incoming.emit(Frame.Msg(incomingMsg))
+        runCurrent()
+
+        assertEquals(1.3f, speechOutput.lastPlan!!.segments.single().rate, 0.0001f)
+
+        // Sent messages must never have the received-message rate applied.
+        orchestrator.sendText("evacuate now", Lang.EN, ssml = false)
+        runCurrent()
+        val sent = (transport.sent.first { it is Frame.Msg } as Frame.Msg).message
+        assertEquals("evacuate now", sent.text) // no TTS path for SENT, so no rate to check - just confirms it wasn't touched
+    }
+
+    @Test
+    fun `received-message playback metrics are merged into MessageMetrics`() = runTest {
+        val transport = FakeTransport()
+        val speechOutput = FakeSpeechOutput().apply { playAt = 1_200L }
+        val allMetrics = mutableListOf<MessageMetrics>()
+        val orchestrator = Orchestrator(
+            deviceId = "device-b", stt = FakeSttEngine(), textPipeline = FakeTextPipeline(),
+            speechOutput = speechOutput, transport = transport, scope = backgroundScope,
+            clock = { 1_100L }, onMetrics = { allMetrics.add(it) },
+        )
+        orchestrator.start()
+        runCurrent()
+
+        val incomingMsg = VoiceMessage(
+            id = "m1", from = "device-a", lang = Lang.HI, text = "hi",
+            priority = Priority.NORMAL, speechEndAt = 1_000, sttDoneAt = 1_000, sentAt = 1_000,
+        )
+        transport.incoming.emit(Frame.Msg(incomingMsg))
+        runCurrent()
+        speechOutput.firePlaybackMetrics("vits", 0.6f, 250L, 1, 2)
+
+        val last = allMetrics.last { it.id == "m1" && it.direction == Direction.RECEIVED }
+        assertEquals("vits", last.ttsEngine)
+        assertEquals(0.6f, last.ttsRtf)
+        assertEquals(250L, last.preRollMs)
+        assertEquals(1, last.rebufferPauses)
+        assertEquals(2, last.underrunCountDelta)
+        // ttsStartMs/endToEndMs from the earlier onPlayStarted callback must survive the merge.
+        assertNotNull(last.ttsStartMs)
+        assertNotNull(last.endToEndMs)
+    }
+
+    @Test
     fun `pong updates clock offset using the given formula`() = runTest {
         val transport = FakeTransport()
         var reportedRtt = -1L
@@ -177,5 +246,16 @@ class OrchestratorTest {
         val expectedOffset = ((2_500L - 1_000L) + (2_500L - 3_000L)) / 2
         assertEquals(expectedOffset, reportedOffset)
         assertEquals(2_000L, reportedRtt) // t3 - t0
+    }
+
+    @Test
+    fun `withSpeechRate scales every segment's rate, rate 1f is a no-op`() {
+        val plan = SynthesisPlan(Lang.HI, Priority.NORMAL, listOf(TtsSegment("a", rate = 1f), TtsSegment("b", rate = 1.1f)))
+
+        val scaled = plan.withSpeechRate(1.3f)
+        assertEquals(1.3f, scaled.segments[0].rate, 0.0001f)
+        assertEquals(1.1f * 1.3f, scaled.segments[1].rate, 0.0001f)
+
+        assertTrue(plan.withSpeechRate(1f) === plan) // exact same instance, no allocation
     }
 }

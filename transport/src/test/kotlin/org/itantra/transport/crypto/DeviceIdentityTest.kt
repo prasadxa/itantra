@@ -70,6 +70,32 @@ class DeviceIdentityTest {
         assertFalse(DeviceIdentity.verify(ByteArray(3), ByteArray(0), ByteArray(5)))
     }
 
+    @Test
+    fun `export then restore reproduces the same public keys`() {
+        val original = DeviceIdentity.generate()
+        val restored = DeviceIdentity.restore(original.export())
+
+        assertArrayEquals(original.x25519PublicKey, restored.x25519PublicKey)
+        assertArrayEquals(original.ed25519PublicKey, restored.ed25519PublicKey)
+        assertEqualsInt(DeviceIdentity.EXPORTED_SIZE, original.export().size)
+    }
+
+    @Test
+    fun `restored identity signs and agrees identically to the original`() {
+        val original = DeviceIdentity.generate()
+        val restored = DeviceIdentity.restore(original.export())
+        val peer = DeviceIdentity.generate()
+
+        val message = "evacuate now".toByteArray()
+        assertTrue(DeviceIdentity.verify(restored.ed25519PublicKey, message, restored.sign(message)))
+        assertArrayEquals(original.deriveSharedKey(peer.x25519PublicKey), restored.deriveSharedKey(peer.x25519PublicKey))
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `restore rejects the wrong-length input`() {
+        DeviceIdentity.restore(ByteArray(10))
+    }
+
     private fun assertEqualsInt(expected: Int, actual: Int) {
         org.junit.Assert.assertEquals(expected.toLong(), actual.toLong())
     }

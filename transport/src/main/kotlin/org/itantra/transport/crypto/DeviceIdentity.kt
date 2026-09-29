@@ -54,8 +54,35 @@ class DeviceIdentity private constructor(
         return sig
     }
 
+    /**
+     * Raw private-key material for persistence: X25519 private (32B) + Ed25519 private (32B) = 64B.
+     * The two public keys are intentionally NOT included - both are deterministically re-derivable
+     * from their private key (see [restore]), so there's less secret material for the caller to
+     * protect. This module stays pure/offline (no Android dependency): encrypting/persisting these
+     * bytes (e.g. Android Keystore-wrapped AES-GCM) is the app layer's job - see
+     * [org.itantra.app.ui.pairing.DeviceIdentityHolder].
+     */
+    fun export(): ByteArray = x25519PrivateKey.copyOf() + ed25519PrivateKey.copyOf()
+
     companion object {
         private val DEFAULT_AEAD_INFO = "itantra-v1-aead".toByteArray(Charsets.UTF_8)
+
+        /** Size in bytes of [export]'s output / [restore]'s expected input. */
+        val EXPORTED_SIZE = X25519.SCALAR_SIZE + Ed25519.SECRET_KEY_SIZE
+
+        /** Rebuilds a [DeviceIdentity] from [export]'s output, re-deriving both public keys from
+         * their private keys. Throws [IllegalArgumentException] if [rawKeyMaterial] isn't
+         * [EXPORTED_SIZE] bytes. */
+        fun restore(rawKeyMaterial: ByteArray): DeviceIdentity {
+            require(rawKeyMaterial.size == EXPORTED_SIZE) { "raw key material must be $EXPORTED_SIZE bytes" }
+            val xPriv = rawKeyMaterial.copyOfRange(0, X25519.SCALAR_SIZE)
+            val edPriv = rawKeyMaterial.copyOfRange(X25519.SCALAR_SIZE, rawKeyMaterial.size)
+            val xPub = ByteArray(X25519.POINT_SIZE)
+            X25519.generatePublicKey(xPriv, 0, xPub, 0)
+            val edPub = ByteArray(Ed25519.PUBLIC_KEY_SIZE)
+            Ed25519.generatePublicKey(edPriv, 0, edPub, 0)
+            return DeviceIdentity(xPriv, xPub, edPriv, edPub)
+        }
 
         fun generate(random: SecureRandom = SecureRandom()): DeviceIdentity {
             val xPriv = ByteArray(X25519.SCALAR_SIZE)

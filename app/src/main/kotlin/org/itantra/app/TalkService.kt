@@ -113,6 +113,7 @@ class TalkService : LifecycleService() {
             onRtt = { rtt, offset -> AppRepository.rttMs.value = rtt; AppRepository.clockOffsetMs.value = offset },
             alertProvider = { AppRepository.alertNext.value },
             ttsSupports = { lang -> engines.ttsEngine?.supports(lang) ?: false },
+            speechRateProvider = { SettingsPrefs.speechRateFlow(applicationContext).value },
             // LITE: live STT partials off (spec allows "off, or every 1.5s"; off saves the most -
             // see Orchestrator.onLocalPartial / the SherpaSttEngine partial-decode early-return).
             partialsEnabled = !lite,

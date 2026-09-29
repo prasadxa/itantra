@@ -88,7 +88,7 @@ fun PairingScreen() {
             return
         }
         PairedDevicesStore.add(context, info)
-        TalkService.instance?.pairWith(DeviceIdentityHolder.identity, info)
+        TalkService.instance?.pairWith(DeviceIdentityHolder.identity(context), info)
         pairedDevices = PairedDevicesStore.list(context)
         toast = context.getString(R.string.pairing_added)
         tab = PairingTab.PAIRED
@@ -146,7 +146,7 @@ fun PairingScreen() {
 @Composable
 private fun MyCodeTab(context: android.content.Context) {
     val deviceId = remember { DeviceIdentityHolder.deviceId(context) }
-    val qrString = remember { DeviceIdentityHolder.identity.pairingInfo(deviceId).toQrString() }
+    val qrString = remember { DeviceIdentityHolder.identity(context).pairingInfo(deviceId).toQrString() }
     val bitmap: Bitmap = remember(qrString) { encodeQrBitmap(qrString) }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {

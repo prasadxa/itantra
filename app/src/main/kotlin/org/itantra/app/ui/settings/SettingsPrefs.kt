@@ -10,12 +10,13 @@ import kotlinx.coroutines.flow.asStateFlow
  * Small SharedPreferences-backed settings for the Settings screen — same file
  * ([ProfileManager]'s `itantra_settings`) so every user-tunable knob lives in one place.
  *
- * [speechRate]/[playbackMode] are written here for the :tts side to read later (not yet wired up
- * to [org.itantra.tts.output.SpeechOutput] — that engine currently always synthesizes at rate
- * 1.0/"fast" pre-roll; hooking these two keys into [org.itantra.tts.output.PreRollEstimator] and
- * [org.itantra.core.TtsSegment.rate] is follow-up work for the TTS owner, out of this UI pass's
- * scope). [largeText] and [themeMode] are applied locally by [org.itantra.app.ui.AppRoot] and
- * [org.itantra.app.MainActivity] respectively.
+ * [speechRate]/[playbackMode] are read live via [speechRateFlow]/[playbackModeFlow] (same
+ * seeded-StateFlow pattern as [largeText], pushed to by [setSpeechRate]/[setPlaybackMode]) so
+ * [org.itantra.app.Orchestrator] (speech rate, applied to [org.itantra.core.TtsSegment.rate] for
+ * received messages only) and [org.itantra.tts.output.SpeechOutput] (playback mode, gating
+ * [org.itantra.tts.output.PreRollEstimator]'s adaptive pre-roll vs a fixed minimal one) pick up a
+ * change immediately, without a service restart. [largeText] and [themeMode] are applied locally
+ * by [org.itantra.app.ui.AppRoot] and [org.itantra.app.MainActivity] respectively.
  */
 object SettingsPrefs {
     private const val PREFS_NAME = "itantra_settings"
@@ -40,7 +41,10 @@ object SettingsPrefs {
         prefs(context).getFloat(KEY_SPEECH_RATE, 1f).coerceIn(SPEECH_RATE_MIN, SPEECH_RATE_MAX)
 
     fun setSpeechRate(context: Context, rate: Float) {
-        prefs(context).edit().putFloat(KEY_SPEECH_RATE, rate.coerceIn(SPEECH_RATE_MIN, SPEECH_RATE_MAX)).apply()
+        val clamped = rate.coerceIn(SPEECH_RATE_MIN, SPEECH_RATE_MAX)
+        prefs(context).edit().putFloat(KEY_SPEECH_RATE, clamped).apply()
+        speechRateFlow(context) // ensures speechRateFlowRef is seeded before we push into it
+        speechRateFlowRef?.value = clamped
     }
 
     /** [PLAYBACK_SMOOTH] (default) or [PLAYBACK_FAST]. */
@@ -49,6 +53,24 @@ object SettingsPrefs {
 
     fun setPlaybackMode(context: Context, mode: String) {
         prefs(context).edit().putString(KEY_PLAYBACK_MODE, mode).apply()
+        playbackModeFlow(context) // ensures playbackModeFlowRef is seeded before we push into it
+        playbackModeFlowRef?.value = mode
+    }
+
+    private var speechRateFlowRef: MutableStateFlow<Float>? = null
+    private var playbackModeFlowRef: MutableStateFlow<String>? = null
+
+    /** Reactive so [org.itantra.app.TalkService] can hand [org.itantra.app.Orchestrator] a
+     * provider lambda that reflects a change made while the service is running (see class doc). */
+    fun speechRateFlow(context: Context): StateFlow<Float> {
+        val flow = speechRateFlowRef ?: MutableStateFlow(getSpeechRate(context)).also { speechRateFlowRef = it }
+        return flow.asStateFlow()
+    }
+
+    /** Reactive counterpart of [playbackMode] — see [speechRateFlow]. */
+    fun playbackModeFlow(context: Context): StateFlow<String> {
+        val flow = playbackModeFlowRef ?: MutableStateFlow(getPlaybackMode(context)).also { playbackModeFlowRef = it }
+        return flow.asStateFlow()
     }
 
     /** Reactive so [org.itantra.app.ui.AppRoot] can scale the whole subtree's fontScale without a

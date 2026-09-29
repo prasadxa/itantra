@@ -71,7 +71,15 @@ private const val FADE_MS = 8
  * [MAX_VOICE_NOTES_BYTES], oldest evicted first) so [replay] can re-play a message — NORMAL or
  * ALERT — without re-running TTS.
  */
-class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
+class SpeechOutput(
+    private val context: Context,
+    private val tts: TtsEngine,
+    /** Settings playback-mode toggle ("smooth"/"fast"), read live on every message: true selects a
+     * fixed minimal pre-roll ([PreRollEstimator.MIN_PREROLL_MS], accepting occasional rebuffer)
+     * instead of [PreRollEstimator]'s adaptive estimate. Default false (current/"smooth" behaviour)
+     * so existing callers are unaffected. */
+    private val fastPreRoll: () -> Boolean = { false },
+) {
 
     private sealed interface Job {
         val id: String
@@ -299,15 +307,27 @@ class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
     private class JobMetrics {
         var preRollMs: Long = 0
         var rebufferPauses: Int = 0
+        /** Which engine synthesized this job ("vits"/"mio"/"unknown"); null for a [Job.Replay]
+         * (no synthesis happens for those). Set on the calling thread before the producer starts. */
+        var engine: String? = null
+        /** Synthesis RTF (synth-time / audio-duration) for this job; null for a [Job.Replay] or if
+         * nothing was synthesized (e.g. stopped before any chunk). Set by the producer thread,
+         * safely visible afterwards via its [Thread.join] in [playSynthesizeSegments]. */
+        var ttsRtf: Float? = null
     }
 
     private fun reportMetrics(job: Job, underrunDelta: Int, jobMetrics: JobMetrics) {
         Log.i(
             TAG,
-            "playback done id=${job.id} underrunDelta=$underrunDelta preRollMs=${jobMetrics.preRollMs} " +
-                "rebufferPauses=${jobMetrics.rebufferPauses}",
+            "playback done id=${job.id} engine=${jobMetrics.engine} ttsRtf=${jobMetrics.ttsRtf} " +
+                "underrunDelta=$underrunDelta preRollMs=${jobMetrics.preRollMs} rebufferPauses=${jobMetrics.rebufferPauses}",
         )
-        fireMetrics(SpeechPlaybackMetrics(job.id, underrunDelta, jobMetrics.preRollMs, jobMetrics.rebufferPauses))
+        fireMetrics(
+            SpeechPlaybackMetrics(
+                job.id, underrunDelta, jobMetrics.preRollMs, jobMetrics.rebufferPauses,
+                jobMetrics.engine, jobMetrics.ttsRtf,
+            ),
+        )
     }
 
     /**
@@ -338,9 +358,13 @@ class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
         onComplete: (FloatArray) -> Unit,
     ) {
         val engineName = (tts as? FallbackTtsEngine)?.engineNameFor(job.plan.lang) ?: "unknown"
+        jobMetrics.engine = engineName
         val langCode = job.plan.lang.code
         val totalChars = job.plan.segments.sumOf { it.text.length }
-        val preRollMs = preRollEstimator.targetPreRollMs(engineName, langCode, totalChars)
+        // "fast" playback mode: skip the adaptive estimate entirely and always start at the fixed
+        // minimal pre-roll, accepting an occasional mid-utterance rebuffer in exchange for the
+        // lowest possible time-to-first-audio - see the constructor doc and PreRollEstimator's.
+        val preRollMs = if (fastPreRoll()) PreRollEstimator.MIN_PREROLL_MS else preRollEstimator.targetPreRollMs(engineName, langCode, totalChars)
         val preRollSamples = (preRollMs * tts.sampleRate / 1000L).toInt()
         val rebufferTargetSamples = (REBUFFER_TARGET_MS * tts.sampleRate / 1000L).toInt()
 
@@ -387,11 +411,10 @@ class SpeechOutput(private val context: Context, private val tts: TtsEngine) {
             }
             queue.markProducerDone()
             if (synthesizedSamples > 0) {
-                preRollEstimator.recordSample(
-                    engineName, langCode, totalChars,
-                    audioSeconds = synthesizedSamples / tts.sampleRate.toFloat(),
-                    synthSeconds = synthNanos / 1_000_000_000f,
-                )
+                val audioSeconds = synthesizedSamples / tts.sampleRate.toFloat()
+                val synthSeconds = synthNanos / 1_000_000_000f
+                preRollEstimator.recordSample(engineName, langCode, totalChars, audioSeconds, synthSeconds)
+                if (synthSeconds > 0f) jobMetrics.ttsRtf = synthSeconds / audioSeconds
             }
         }
 
@@ -623,4 +646,8 @@ data class SpeechPlaybackMetrics(
     val preRollMs: Long,
     /** Times playback was paused mid-utterance to rebuffer because synthesis fell behind; target 0. */
     val rebufferPauses: Int,
+    /** Which engine synthesized this message ("vits"/"mio"/"unknown"); null for a replayed message. */
+    val engine: String? = null,
+    /** Synthesis RTF (synth-time / audio-duration); null for a replayed message. */
+    val ttsRtf: Float? = null,
 )

@@ -9,6 +9,7 @@ import org.itantra.core.TextPipeline
 import org.itantra.core.Transport
 import org.itantra.stt.MicCapture
 import org.itantra.stt.SherpaSttEngine
+import org.itantra.app.ui.settings.SettingsPrefs
 import org.itantra.text.IndicTextPipeline
 import org.itantra.transport.TransportManager
 import org.itantra.tts.engine.FallbackTtsEngine
@@ -58,7 +59,8 @@ object EngineFactory {
         }
         val speechOutput: SpeechOutputPort? = ttsEngine?.let { engine ->
             try {
-                SpeechOutputAdapter(SpeechOutput(context, engine))
+                val fastPreRoll = { SettingsPrefs.playbackModeFlow(context).value == SettingsPrefs.PLAYBACK_FAST }
+                SpeechOutputAdapter(SpeechOutput(context, engine, fastPreRoll))
             } catch (t: Throwable) {
                 ttsError = t.message ?: t.toString(); null
             }
@@ -163,4 +165,10 @@ private class SpeechOutputAdapter(private val delegate: SpeechOutput) : SpeechOu
     override var onVoiceNoteStored: ((id: String, durationSeconds: Float) -> Unit)?
         get() = delegate.onVoiceNoteStored
         set(value) { delegate.onVoiceNoteStored = value }
+    override fun observePlaybackMetrics(
+        id: String,
+        listener: (engine: String?, ttsRtf: Float?, preRollMs: Long, rebufferPauses: Int, underrunCountDelta: Int) -> Unit,
+    ) {
+        SpeechOutput.observeMetricsOnce(id) { m -> listener(m.engine, m.ttsRtf, m.preRollMs, m.rebufferPauses, m.underrunCountDelta) }
+    }
 }

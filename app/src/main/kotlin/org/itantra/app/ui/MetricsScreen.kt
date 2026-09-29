@@ -56,8 +56,8 @@ import org.itantra.app.ui.charts.StackedBarChart
 import org.itantra.app.ui.theme.MonoText
 import org.itantra.core.Lang
 
-private val COLS = listOf(56.dp, 44.dp, 56.dp, 48.dp, 56.dp, 56.dp, 56.dp)
-private val HEADERS = listOf("DIR", "LANG", "STT", "RTF", "NET", "TTS", "E2E")
+private val COLS = listOf(56.dp, 44.dp, 56.dp, 48.dp, 56.dp, 56.dp, 56.dp, 40.dp)
+private val HEADERS = listOf("DIR", "LANG", "STT", "RTF", "NET", "TTS", "E2E", "ENG")
 
 /** TTS languages VITS actually has a voice for (see [org.itantra.app.Profile]'s doc / ModelFiles);
  * every other language falls back to Mio. Used only to label the RTF sparklines below — the STT
@@ -176,6 +176,23 @@ fun MetricsScreen() {
             RtfRow("Mio-family langs (hi/gu/or/en)", mioLangRtf)
             Spacer(Modifier.height(8.dp))
             RtfRow("VITS-voiced langs (bn/kn/ml/mr/ta/te)", vitsLangRtf)
+            Spacer(Modifier.height(14.dp))
+        }
+
+        item {
+            SectionLabel("TTS RTF — synthesis (synth-time / audio; target < 1.0x), by actual engine")
+            val vitsRtf = metrics.filter { it.ttsEngine == "vits" }.mapNotNull { it.ttsRtf }.takeLast(24)
+            val mioRtf = metrics.filter { it.ttsEngine == "mio" }.mapNotNull { it.ttsRtf }.takeLast(24)
+            RtfRow("VITS", vitsRtf)
+            Spacer(Modifier.height(8.dp))
+            RtfRow("Mio", mioRtf)
+            val underrunTotal = metrics.sumOf { it.underrunCountDelta ?: 0 }
+            val rebufferTotal = metrics.sumOf { it.rebufferPauses ?: 0 }
+            MonoText(
+                "Underruns total: $underrunTotal   ·   Rebuffer pauses total: $rebufferTotal",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp),
+            )
             Spacer(Modifier.height(14.dp))
         }
 
@@ -362,6 +379,7 @@ private fun SummaryRow(label: String, stt: Double, net: Double, tts: Double, e2e
         MonoText(net.fmt(), Modifier.width(COLS[4]), textAlign = TextAlign.End)
         MonoText(tts.fmt(), Modifier.width(COLS[5]), textAlign = TextAlign.End)
         MonoText(e2e.fmt(), Modifier.width(COLS[6]), textAlign = TextAlign.End)
+        MonoText("", Modifier.width(COLS[7]))
     }
 }
 
@@ -375,6 +393,7 @@ private fun MetricsRow(m: MessageMetrics) {
         MonoText(m.networkMs?.toString() ?: "—", Modifier.width(COLS[4]), textAlign = TextAlign.End)
         MonoText(m.ttsStartMs?.toString() ?: "—", Modifier.width(COLS[5]), textAlign = TextAlign.End)
         MonoText(m.endToEndMs?.toString() ?: "—", Modifier.width(COLS[6]), textAlign = TextAlign.End)
+        MonoText(m.ttsEngine ?: "—", Modifier.width(COLS[7]))
     }
 }
 
@@ -406,9 +425,16 @@ private fun exportCsv(
                 "${profile?.name ?: ""},${pssKb ?: ""},${javaHeapKb ?: ""},${nativeHeapKb ?: ""},${cpuPercent10s ?: ""},$modelBytes,$apkSizeBytes," +
                     "${thermalStatus ?: ""},\"${deviceLine.replace("\"", "'")}\"\n",
             )
-            w.append("\nid,direction,lang,priority,sttLatencyMs,rtf,networkMs,ttsStartMs,endToEndMs,timestamp\n")
+            w.append(
+                "\nid,direction,lang,priority,sttLatencyMs,rtf,networkMs,ttsStartMs,endToEndMs,timestamp," +
+                    "ttsEngine,ttsRtf,preRollMs,rebufferPauses,underrunCountDelta\n",
+            )
             metrics.forEach { m ->
-                w.append("${m.id},${m.direction},${m.lang.code},${m.priority},${m.sttLatencyMs ?: ""},${m.rtf ?: ""},${m.networkMs ?: ""},${m.ttsStartMs ?: ""},${m.endToEndMs ?: ""},${m.timestamp}\n")
+                w.append(
+                    "${m.id},${m.direction},${m.lang.code},${m.priority},${m.sttLatencyMs ?: ""},${m.rtf ?: ""}," +
+                        "${m.networkMs ?: ""},${m.ttsStartMs ?: ""},${m.endToEndMs ?: ""},${m.timestamp}," +
+                        "${m.ttsEngine ?: ""},${m.ttsRtf ?: ""},${m.preRollMs ?: ""},${m.rebufferPauses ?: ""},${m.underrunCountDelta ?: ""}\n",
+                )
             }
         }
         "Exported to ${file.absolutePath}"
