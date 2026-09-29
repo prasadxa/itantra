@@ -1,17 +1,17 @@
 # iTantra — SIH 2026 idea deck
 
-`iTantra_SIH2026_v4.pptx` / `.pdf`: 6 slides on the official SIH 2026 idea template
+`iTantra_SIH2026_v5.pptx` / `.pdf`: 6 slides on the official SIH 2026 idea template
 (`SIH2026-IDEA-Presentation-Format.pptx`). Upload the **PDF** to the SIH portal.
 
 ## Rebuild
 ```bash
 cd docs/presentation
-python3 build_deck.py          # needs python-pptx, Pillow, lxml -> iTantra_SIH2026_v4.pptx
+python3 build_deck.py          # needs python-pptx, Pillow, lxml -> iTantra_SIH2026_v5.pptx (v4 kept for reference)
 ```
 Export the PDF from PowerPoint (File → Export → PDF), or with LibreOffice.
 
 - `icons/` lucide icons as PNG, rendered by `icons.js` (`npm install react-icons react react-dom sharp`, then `node icons.js`)
-- `img/` real app screenshots (status bar cropped), logo, QR codes for the website and the demo film
+- `img/` real app screenshots (status bar cropped), PC control-room dashboard, logo, QR codes (website, demo film, GitHub, APK)
 - `photos/` Wikimedia Commons photos; licences and authors in `photos/credits.json` (credited on slide 5)
 
 ## Content rules used
