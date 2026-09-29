@@ -50,7 +50,9 @@ object EngineFactory {
             // the user's currently-selected language (AppRepository.language, default HI) instead
             // of unconditionally warming both Mio and VITS — see docs/design.md "lazy, per-need TTS".
             FallbackTtsEngine(context, paths, numThreads = numThreads, preferFast = true, idleUnloadMs = idleUnloadMs)
-                .also { it.warmUp(listOf(AppRepository.language.value)) }
+                // LITE keeps idle RAM low: nothing is preloaded; the first message in a language
+                // pays the load once, and the idle unload returns the memory afterwards.
+                .also { if (profile == Profile.FULL) it.warmUp(listOf(AppRepository.language.value)) }
         } catch (t: Throwable) {
             ttsError = t.message ?: t.toString(); null
         }

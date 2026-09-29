@@ -8,6 +8,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.Image
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -258,7 +259,7 @@ private fun StatusCard(linkState: LinkState, rttMs: Long?) {
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        PulsingDot(color = dotColor, animate = (searching || connected) && !reducedMotion)
+        PulsingDot(color = dotColor, animate = searching && !reducedMotion)
         Column(Modifier.padding(start = 12.dp).weight(1f)) {
             Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
             if (subtitle != null) {
@@ -270,12 +271,20 @@ private fun StatusCard(linkState: LinkState, rttMs: Long?) {
 
 @Composable
 private fun PulsingDot(color: androidx.compose.ui.graphics.Color, animate: Boolean) {
-    val infinite = rememberInfiniteTransition(label = "dot")
-    val pulse by infinite.animateFloat(0.35f, 1f, infiniteRepeatable(tween(750), RepeatMode.Reverse), label = "pulse")
+    // Idle CPU is judged: an infinite transition keeps Compose and RenderThread drawing every frame
+    // (~50% of a core on a Snapdragon 870). Pulse a few times when the state changes, then rest.
+    val alpha = remember { androidx.compose.animation.core.Animatable(1f) }
+    LaunchedEffect(animate) {
+        if (!animate) { alpha.snapTo(1f); return@LaunchedEffect }
+        repeat(4) {
+            alpha.animateTo(0.35f, tween(750))
+            alpha.animateTo(1f, tween(750))
+        }
+    }
     Box(
         Modifier
             .size(14.dp)
-            .alpha(if (animate) pulse else 1f)
+            .alpha(alpha.value)
             .clip(CircleShape)
             .background(color),
     )
