@@ -1,0 +1,2 @@
+n2: A@0.02 spoken@0.11 sentence@0.80 is@1.72 heavy,@1.94 256@2.74 kilobits@3.77 a@4.68 second@4.78 as@5.58 raw@5.70 audio.@6.04
+n3: But@0.02 the@0.19 links@0.38 that@0.74 survive@0.95 a@1.40 disaster,@1.46 Bluetooth,@2.44 a@3.33 crowded@3.36 hotspot@3.91 or@4.36 long-range@4.90 radio,@5.52 carry@6.41 only@6.82 a@7.10 few@7.17 hundred@7.39 bits.@7.91

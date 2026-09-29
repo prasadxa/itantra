@@ -1,0 +1,209 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8">
+<script src="assets/gsap.min.js"></script>
+<link rel="stylesheet" href="assets/film.css">
+<style>
+/* c03 — the idea. Cue table (n4 @[n4], n5 @[n5]):
+   0.00             c02 end frame: ONE saffron line y 540, x 360→1560
+   0.18             the line thickens into the tricolour and fills the frame (.triwipe, use 1 of 2)
+   0.85             bands retract (triWipeOut) revealing logo + iTantra + .tri strip   ("iTantra" n4+0.34)
+   n4+1.04 "doesn't send your voice"  small grey waveform under the title; n4+1.61 saffron strike line through it
+   n4+3.50 "what you said"            waveform goes; Hindi line blur-rises in its place
+   n4_e             title lifts away; two line-art phones draw on (0.75 scale), left 560 / right 1360
+   n5+0.04 "Speech"   saffron bars in the left phone;  n5+1.34 "text": bars collapse into the Hindi text
+   n5+3.01 "few dozen bytes"  text squeezes into a saffron "≈ 62 B" chip;  n5+4.18 "cross the link": chip flies the arc (packet line)
+   n5+4.90 "link"   chip lands, turns teal; right phone shows the text in teal
+   n5+6.28 "speaks it aloud"  teal text dissolves into teal bars + teal rings
+   n5+8.24 "ten Indian languages"  10 names in their own scripts blur-rise under the phones
+   END-1.1          row + left phone out; right phone glides to centre (left 795, top 210, scale 1), empty screen (hand-off to c04) */
+#startline { position: absolute; left: 360px; top: 538.5px; width: 1200px; height: 3px; border-radius: 2px; background: var(--sa);
+             box-shadow: 0 0 14px rgba(249,115,22,.55); }
+#tw { transform-origin: 50% 50%; overflow: hidden; }
+
+/* title */
+#trow { position: absolute; left: 0; right: 0; top: 300px; display: flex; justify-content: center; }
+#tbox { display: flex; flex-direction: column; align-items: stretch; }
+#tline { display: flex; align-items: center; gap: 34px; }
+#logo { width: 120px; height: 120px; display: block; }
+#tname { font-size: 150px; line-height: 1; padding-bottom: 8px; }
+#tbox .tri { position: relative; width: 100%; margin-top: 30px; }
+#vrow { position: absolute; left: 0; right: 0; top: 590px; height: 120px; }
+#sw { position: absolute; left: 769px; top: 5px; }
+#sw .bar { background: var(--fg2); }
+#strike { position: absolute; left: 740px; top: 58px; width: 440px; height: 4px; border-radius: 2px; background: var(--sa); transform-origin: 0 50%;
+          box-shadow: 0 0 10px rgba(249,115,22,.5); }
+#hi { position: absolute; left: 0; right: 0; top: 18px; text-align: center; font-size: 64px; line-height: 1.3; color: var(--fg); }
+
+/* phones (c01 line-art style), 330x660 wrappers scaled .75 */
+.ph { position: absolute; top: 170px; width: 330px; height: 660px; transform-origin: 50% 50%; }
+#pL { left: 395px; } #pR { left: 1195px; }
+.ph svg { left: 0; top: 0; width: 330px; height: 660px; overflow: visible; }
+.ph .body { stroke: var(--fg); stroke-width: 3; }
+.scr { position: absolute; left: 16px; top: 16px; width: 298px; height: 628px; border-radius: 40px; overflow: hidden;
+       background: linear-gradient(180deg, #151922 0%, #0E1013 100%); }
+.wv { position: absolute; left: 30px; top: 229px; }
+#wL .bar { background: var(--sa); } #wR .bar { background: var(--te); }
+.htx { position: absolute; left: 0; right: 0; top: 246px; text-align: center; font-size: 46px; line-height: 1.45; }
+#hL { color: var(--fg); } #hR { color: var(--te); }
+#rgR { position: absolute; left: 1360px; top: 500px; width: 0; height: 0; }
+#rgR .ring { left: -200px; top: -200px; width: 400px; height: 400px; }
+
+/* packet line + chip */
+#arc { left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+#arcTail { stroke: var(--sa); stroke-width: 3; fill: none; stroke-linecap: round; opacity: 0; filter: drop-shadow(0 0 6px rgba(249,115,22,.6)); }
+#chipPos { position: absolute; left: 0; top: 0; }
+#chip { height: 58px; padding: 0 24px; font-size: 28px; white-space: nowrap; box-shadow: 0 10px 30px -8px rgba(0,0,0,.8); }
+
+/* step labels */
+.stl { position: absolute; top: 780px; width: 440px; text-align: center; }
+.stl .a { font-family: var(--mono); font-weight: 500; font-size: 22px; letter-spacing: .08em; color: var(--fg); text-transform: uppercase; }
+.stl .b { font-family: var(--mono); font-size: 20px; letter-spacing: .08em; color: var(--fg2); text-transform: uppercase; margin-top: 8px; }
+#s0 { left: 340px; } #s1 { left: 740px; } #s2 { left: 1140px; }
+
+/* languages */
+#langs { position: absolute; left: 0; right: 0; top: 812px; text-align: center; font-size: 44px; color: var(--fg); white-space: nowrap; }
+#langs .sep { color: rgba(236,234,229,.42); margin: 0 18px; }
+#langs .en { font-family: var(--sans); }
+</style></head>
+<body><div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="@[END]">
+<section id="s" class="scene clip" data-start="0" data-duration="@[END]" data-track-index="1">
+  <div class="contours" data-layout-ignore></div>
+  <div class="cam">
+    <!-- n4: title -->
+    <div id="trow">
+      <div id="tbox">
+        <div id="tline"><img id="logo" src="assets/img/itantra-logo.png" alt=""><div id="tname" class="h1">iTantra</div></div>
+        <div class="tri" id="ttri"><i></i><i></i><i></i></div>
+      </div>
+    </div>
+    <div id="vrow" data-layout-allow-overlap>
+      <div id="sw" data-layout-allow-overlap></div>
+      <div id="strike" data-layout-allow-overlap></div>
+      <div id="hi" class="indic" data-layout-allow-overlap>बाढ़ का पानी बढ़ रहा है</div>
+    </div>
+
+    <!-- n5: two phones -->
+    <div id="rgR" data-layout-allow-overflow><div class="ring te"></div><div class="ring te"></div><div class="ring te"></div></div>
+    <svg id="arc" class="abs" viewBox="0 0 1920 1080" width="1920" height="1080" style="left:0px;top:0px" data-layout-ignore>
+      <path id="arcPath" d="M560 500 C650 40 1270 40 1360 500" fill="none" stroke="none"/>
+      <path id="arcTail" d="M560 500 C650 40 1270 40 1360 500"/>
+    </svg>
+    <div class="ph" id="pL" data-layout-allow-overflow>
+      <div class="scr">
+        <div class="wv" id="wL"></div>
+        <div class="htx indic" id="hL" data-layout-allow-overlap>बाढ़ का पानी<br>बढ़ रहा है</div>
+      </div>
+      <svg class="abs draw" viewBox="0 0 330 660"><rect class="body" x="4" y="4" width="322" height="652" rx="52"/></svg>
+    </div>
+    <div class="ph" id="pR" data-layout-allow-overflow>
+      <div class="scr">
+        <div class="wv" id="wR"></div>
+        <div class="htx indic" id="hR" data-layout-allow-overlap>बाढ़ का पानी<br>बढ़ रहा है</div>
+      </div>
+      <svg class="abs draw" viewBox="0 0 330 660"><rect class="body" x="4" y="4" width="322" height="652" rx="52"/></svg>
+    </div>
+
+    <div class="stl" id="s0"><div class="a">Speech → text</div><div class="b">on the phone</div></div>
+    <div class="stl" id="s1"><div class="a">One sentence</div><div class="b">median 62 bytes</div></div>
+    <div class="stl" id="s2"><div class="a">Text → speech</div><div class="b">on the phone</div></div>
+
+    <div id="chipPos" data-layout-allow-overflow data-layout-allow-overlap><div id="chip" class="chip sa" data-layout-allow-overlap>≈ 62 B</div></div>
+
+    <div id="langs" class="indic"><span class="lg">हिन्दी</span><span class="sep">·</span><span class="lg">বাংলা</span><span class="sep">·</span><span class="lg">मराठी</span><span class="sep">·</span><span class="lg">తెలుగు</span><span class="sep">·</span><span class="lg">தமிழ்</span><span class="sep">·</span><span class="lg">ગુજરાતી</span><span class="sep">·</span><span class="lg">ಕನ್ನಡ</span><span class="sep">·</span><span class="lg">മലയാളം</span><span class="sep">·</span><span class="lg">ଓଡ଼ିଆ</span><span class="sep">·</span><span class="lg en">English</span></div>
+  </div>
+  <div id="startline" data-layout-allow-overlap></div>
+  <div class="vignette" data-layout-ignore></div>
+  <div class="triwipe" id="tw" data-layout-ignore><i></i><i></i><i></i></div>
+  <div class="grain" data-layout-ignore></div>
+</section>
+<!--@AUDIO-->
+</div>
+<script src="assets/film.js"></script>
+<script>
+const N4 = @[n4], N5 = @[n5], N4E = @[n4_e], END = @[END];
+bars("#sw", 26, 8, 7, 110);
+bars("#wL", 22, 6, 5, 170);
+bars("#wR", 22, 6, 5, 170);
+
+/* ---- start state = c02's last frame: one saffron line ---- */
+tl.fromTo(".cam", { scale: 1.0 }, { scale: 1.04, duration: END - 1.1, ease: "none", immediateRender: false }, 0);
+tl.set("#trow, #vrow, .ph, .stl, #langs, #chip", { opacity: 0 }, 0);
+tl.set("#hi", { opacity: 0 }, 0);
+tl.set("#strike", { scaleX: 0 }, 0);
+tl.set("#pL, #pR", { scale: 0.75 }, 0);
+
+/* ---- n4: the line becomes the tricolour, which wipes the frame and reveals the name ---- */
+tl.set("#tw i", { scaleY: 1 }, 0);
+tl.set("#tw", { scaleX: 0.625, scaleY: 3 / 1080, opacity: 0 }, 0);
+tl.to("#tw", { opacity: 1, duration: 0.1, ease: "none" }, 0.18);
+tl.to("#startline", { opacity: 0, duration: 0.15, ease: "none" }, 0.24);
+tl.to("#tw", { scaleX: 1, duration: 0.32, ease: E.cam }, 0.16);
+tl.to("#tw", { scaleY: 1, duration: 0.6, ease: "expo.inOut" }, 0.22);
+tl.to("#tw i", { yPercent: -300, duration: 0.8, ease: "expo.inOut", stagger: 0.08 }, 0.8);
+tl.set("#trow", { opacity: 1 }, 0.8);
+tl.fromTo("#logo", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.8, ease: E.pop }, 1.0);
+tl.fromTo("#tname", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.9, ease: E.in }, 0.95);
+triDraw("#ttri", 1.45, 0.9);
+// "doesn't send your voice": small grey waveform, struck through in saffron
+tl.set("#vrow", { opacity: 1 }, 0);
+tl.fromTo("#sw .bar", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: E.p3, stagger: { each: 0.015, from: "center" } }, N4 + 1.0);
+eq("#sw", N4 + 1.0, 1.7, 21, 0.1, 0.9);
+tl.to("#strike", { scaleX: 1, duration: 0.5, ease: E.cam }, N4 + 1.62);
+tl.to("#sw", { opacity: 0.45, duration: 0.4, ease: E.soft }, N4 + 2.1);
+flat("#sw", N4 + 2.7, 0.4, 0.006);
+// "what you said": the words, not the sound
+tl.to("#sw, #strike", { opacity: 0, duration: 0.35, ease: E.out }, N4 + 3.2);
+tl.set("#hi", { opacity: 1 }, N4 + 3.4);
+blurRise("#hi", N4 + 3.5, 0.09, 0.8);
+
+/* ---- n5: two phones — speech → text → bytes → text → speech ---- */
+tl.to("#trow", { opacity: 0, y: -40, duration: 0.45, ease: E.out }, N4E - 0.05);
+tl.to("#hi", { opacity: 0, y: -20, filter: "blur(8px)", duration: 0.45, ease: E.out }, N4E);
+tl.set(".ph", { opacity: 1 }, N4E + 0.15);
+draw("#pL .body", N4E + 0.15, 0.9, 0, E.cam);
+draw("#pR .body", N4E + 0.3, 0.9, 0, E.cam);
+tl.fromTo("#pL .scr", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: E.p3 }, N4E + 0.5);
+tl.fromTo("#pR .scr", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: E.p3 }, N4E + 0.65);
+tl.set("#hL, #hR, #wL .bar, #wR .bar", { opacity: 0 }, 0);
+// "Speech": saffron bars in the left phone
+tl.fromTo("#wL .bar", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: E.p3, stagger: { each: 0.015, from: "center" }, immediateRender: false }, N5 + 0.02);
+eq("#wL", N5 + 0.02, 1.3, 13, 0.1, 1.0);
+fadeIn("#s0", N5 + 0.1, 0.6, { y: 14 });
+tl.set("#s0 .b", { opacity: 0 }, 0);
+// "text": bars collapse into the words
+flat("#wL", N5 + 1.3, 0.3, 0.004);
+tl.to("#wL", { opacity: 0, duration: 0.3, ease: E.out }, N5 + 1.5);
+tl.set("#hL", { opacity: 1 }, N5 + 1.3);
+blurRise("#hL", N5 + 1.34, 0.08, 0.7);
+fadeIn("#s0 .b", N5 + 1.9, 0.5, { y: 8 });
+// "a few dozen bytes": the text squeezes into a saffron chip
+tl.to("#hL", { scale: 0.25, opacity: 0, filter: "blur(6px)", duration: 0.45, ease: "power3.in" }, N5 + 2.95);
+tl.fromTo("#chip", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.5, ease: E.pop, immediateRender: false }, N5 + 3.28);
+fadeIn("#s1", N5 + 3.7, 0.6, { y: 14 });
+// "cross the link": packet line
+packet("#arcPath", "#chipPos", N5 + 4.1, 0.95, "power2.inOut", "#arcTail");
+// arrival: turns teal and drops into the right phone
+tl.to("#chip", { color: "#2DD4BF", borderColor: "#2DD4BF", backgroundColor: "rgba(45,212,191,.12)", duration: 0.25, ease: E.p3 }, N5 + 4.95);
+tl.to("#chip", { scale: 0.5, opacity: 0, duration: 0.4, ease: "power2.in" }, N5 + 5.3);
+tl.set("#hR", { opacity: 1 }, N5 + 5.3);
+blurRise("#hR", N5 + 5.35, 0.08, 0.7);
+// "speaks it aloud": teal text dissolves into teal bars + rings
+fadeIn("#s2", N5 + 6.2, 0.6, { y: 14 });
+tl.to("#hR .w", { opacity: 0, y: -12, filter: "blur(10px)", duration: 0.45, ease: E.out, stagger: 0.04 }, N5 + 6.3);
+tl.fromTo("#wR .bar", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: E.p3, stagger: { each: 0.015, from: "center" }, immediateRender: false }, N5 + 6.45);
+eq("#wR", N5 + 6.45, END - 1.25 - (N5 + 6.45), 17, 0.11, 1.0);
+rings("#rgR .ring", N5 + 6.5, END - 1.2, 1.6, 0.4, 0.55, 1.6);
+// "ten Indian languages"
+tl.to(".stl", { opacity: 0, y: -8, duration: 0.35, ease: E.out }, N5 + 7.9);
+tl.set("#langs", { opacity: 1 }, N5 + 8.1);
+blurRise("#langs .lg, #langs .sep", N5 + 8.2, 0.05, 0.7);
+
+/* ---- hand-off: right phone glides to centre, empty screen ---- */
+const H = END - 1.15;
+tl.to("#langs", { opacity: 0, y: 12, duration: 0.4, ease: E.out }, H - 0.05);
+tl.to("#pL", { opacity: 0, x: -40, duration: 0.45, ease: E.out }, H);
+tl.to("#wR .bar", { opacity: 0, duration: 0.35, ease: E.out }, H);
+tl.to("#pR", { x: 795 - 1195, y: 210 - 170, scale: 1, duration: 1.05, ease: E.cam }, H + 0.05);
+tl.to(".cam", { scale: 1.0, duration: 1.05, ease: E.cam }, H + 0.05);
+window.__timelines = window.__timelines || {}; window.__timelines["main"] = tl;
+</script>
+</body></html>

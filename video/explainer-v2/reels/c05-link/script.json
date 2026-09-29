@@ -1,0 +1,54 @@
+{
+ "music": "silence",
+ "tail": 1.2,
+ "lines": [
+  {
+   "id": "n8",
+   "voice": "en-in-storyteller-2",
+   "text": "If there's no Wi-Fi, it finds Wi-Fi Direct. Then Bluetooth. And the same packets are ready for a LoRa radio bridge.",
+   "at": 0.45
+  }
+ ],
+ "sfx": [
+  [
+   "impactSoft_medium_001.ogg",
+   "n8+1.12",
+   0.2
+  ],
+  [
+   "select_008.ogg",
+   "n8+2.57",
+   0.22
+  ],
+  [
+   "msg_pop.wav",
+   "n8+3.5",
+   0.14
+  ],
+  [
+   "select_008.ogg",
+   "n8+4.22",
+   0.22
+  ],
+  [
+   "msg_pop.wav",
+   "n8+5.1",
+   0.12
+  ],
+  [
+   "whoosh_long.wav",
+   "n8+5.9",
+   0.14
+  ],
+  [
+   "rollover2.ogg",
+   "n8+7.02",
+   0.2
+  ],
+  [
+   "riser_short.wav",
+   "END-1.35",
+   0.16
+  ]
+ ]
+}

@@ -24,3 +24,16 @@ tools/gateway/data/
 website/.r2-staging/
 website/.wrangler/
 .wrangler/
+
+# explainer film v2: keep sources (reels, kit, scripts, notes, narration, chosen score); ignore renders and research media
+video/explainer-v2/out/
+video/explainer-v2/chapters/
+video/explainer-v2/build/
+video/explainer-v2/share/
+video/explainer-v2/research/videos/
+video/explainer-v2/voice-lab/raw/
+video/explainer-v2/*.mp4
+video/explainer-v2/chapters-*.log
+video/explainer-v2/chapters-all.done
+video/explainer-v2/voice-lab/cand/
+video/explainer-v2/music-originals/*.mp3

@@ -1,0 +1,28 @@
+1 m4-film {
+  "score": 1,
+  "structure_matches": false,
+  "voice_space": 5,
+  "cheesiness": 8,
+  "why": "The track completely ignores the brief's stylistic and structural requirements. Instead of a premium, modern technology explainer score with a tense electronic intro and a hopeful pulse featuring Indian instrumentation (tabla, santoor, tanpura), the provided audio is a generic, sentimental piano and string piece. The timings, instrumentation, and overall emotional tone do not match the requested prompt at all."
+}
+1 m5-film {
+  "score": 2,
+  "structure_matches": false,
+  "voice_space": 7,
+  "cheesiness": 8,
+  "why": "The track completely misses the requested Indian instrumentation, featuring no tabla, tanpura, or santoor. Instead of a premium cinematic tech pulse, it delivers a very generic lo-fi hip-hop beat that feels like standard stock music. While it transitions around 22 seconds, it fails to execute the required riser at 95 seconds and the final sustained chord at 102 seconds. It leaves reasonable space for a voiceover, but the stylistic failure is too severe."
+}
+2 m4-film {
+  "score": 2,
+  "structure_matches": false,
+  "voice_space": 8,
+  "cheesiness": 7,
+  "why": "The track completely misses the brief's structural and stylistic requirements. Instead of the requested tense, sparse electronic intro leading into a modern tech pulse with Indian instrumentation (tanpura, tabla, santoor), the score delivers a slow, melancholic piano piece that evolves into a standard lo-fi hip-hop beat. None of the specific timing cues or instrumentation requests were met. It does, however, successfully avoid vocals and leaves enough midrange space for a voiceover."
+}
+2 m5-film {
+  "score": 10,
+  "structure_matches": true,
+  "voice_space": 9,
+  "cheesiness": 1,
+  "why": "The track perfectly follows the strict structural timings of the brief, transitioning seamlessly from a tense, sparse intro at 0:22 into a steady, hopeful pulse. The instrumentation is exactly as requested, featuring a tasteful blend of modern electronic elements with Indian accents like the santoor and light tabla, while remaining completely vocal-free. The mix is pristine and leaves ample space in the midrange for a voiceover, maintaining a premium, cinematic feel throughout without any cheesy corporate tropes."
+}

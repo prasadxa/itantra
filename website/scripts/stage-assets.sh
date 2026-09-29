@@ -48,8 +48,10 @@ for src in "$SHOW"/images/diagram_*.png; do
 done
 
 # --- Video + clips with poster frames ---------------------------------------
-cp "$SHOW/iTantra_explainer.mp4" "$OUT/media/video/explainer.mp4"
-ffmpeg -v error -y -ss 3 -i "$SHOW/iTantra_explainer.mp4" -frames:v 1 -vf scale=1280:-2 -q:v 4 "$OUT/media/video/explainer-poster.jpg"
+# Explainer film v2 (motion graphics, built in video/explainer-v2; poster = its end card at 113 s)
+FILM="$ROOT/video/explainer-v2"
+cp "$FILM/share/iTantra-Explainer.mp4" "$OUT/media/video/explainer-v2.mp4"
+ffmpeg -v error -y -ss 113 -i "$FILM/iTantra-Explainer.mp4" -frames:v 1 -vf scale=1280:-2 -q:v 3 "$OUT/media/video/explainer-v2-poster.jpg"
 for src in "$SHOW"/clips/*.mp4; do
   name="$(basename "$src" .mp4)"
   cp "$src" "$OUT/media/clips/$name.mp4"

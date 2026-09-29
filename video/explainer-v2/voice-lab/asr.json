@@ -1,0 +1,54 @@
+{
+ "cart-aarav": {
+  "acc": 0.98,
+  "hyp": "When a flood takes the towers down, your phone still works. The network doesn't. So Itantra doesn't send your voice. It sends what you said. Speech becomes text on your phone. A few dozen bytes cross the link and the other phone speaks it aloud in 10 Indian languages."
+ },
+ "cart-devansh": {
+  "acc": 0.98,
+  "hyp": "When a flood takes the towers down, your phone still works. The network doesn't. So Itantra doesn't send your voice. It sends what you said. Speech becomes text on your phone. A few dozen bytes cross the link, and the other phone speaks it aloud in 10 Indian languages."
+ },
+ "cart-kiara": {
+  "acc": 0.961,
+  "hyp": "When a flood takes the towers down, your phone still works. The network doesn't. So Aitantra doesn't send your voice. It sends what you said. Speech becomes text on your phone. A few dozen bytes cross the link and the other phone speaks it aloud in 10 Indian languages."
+ },
+ "cart-krishna": {
+  "acc": 0.98,
+  "hyp": "When a flood takes the towers down, your phone still works, the network doesn't. So Itantra doesn't send your voice, it sends what you said. Speech becomes text on your phone, a few dozen bytes cross the link, and the other phone speaks it aloud in 10 Indian languages."
+ },
+ "cart-sterling": {
+  "acc": 0.98,
+  "hyp": "When a flood takes the towers down, your phone still works. The network doesn't. So Itantra doesn't send your voice. It sends what you said. Speech becomes text on your phone. A few dozen bytes cross the link. And the other phone speaks it aloud in 10 Indian languages."
+ },
+ "gem-podcaster-3": {
+  "acc": 0.961,
+  "hyp": "When a flood takes the towers down, your phone still works. The network doesn't. So Aitantra doesn't send your voice. It sends what you said. Speech becomes text on your phone. A few dozen bytes cross the link. And the other phone speaks it aloud in 10 Indian languages."
+ },
+ "gem-podcaster-4": {
+  "acc": 0.961,
+  "hyp": "When a flood takes the towers down, your phone still works. The network doesn't. So Aitantra doesn't send your voice, it sends what you said. Speech becomes text on your phone, a few dozen bytes cross the link and the other phone speaks it aloud, in 10 Indian languages."
+ },
+ "gem-podcaster-5": {
+  "acc": 0.961,
+  "hyp": "When a flood takes the towers down, your phone still works. The network doesn't. So Aitantra doesn't send your voice. It sends what you said. Speech becomes text on your phone, a few dozen bytes cross the link and the other phone speaks it aloud in 10 Indian languages."
+ },
+ "gem-storyteller-1": {
+  "acc": 0.961,
+  "hyp": "When a flood takes the towers down, your phone still works. The network doesn't. So, Aitandra doesn't send your voice. It sends what you said. Speech becomes text on your phone. A few dozen bytes cross the link. And the other phone speaks it aloud, in 10 Indian languages."
+ },
+ "gem-storyteller-11": {
+  "acc": 0.961,
+  "hyp": "When a flood takes the towers down, your phone still works. The network doesn't. So, Aitantra doesn't send your voice. It sends what you said. Speech becomes text on your phone. A few dozen bytes cross the link. And the other phone speaks it aloud, in 10 Indian languages."
+ },
+ "gem-storyteller-2": {
+  "acc": 0.961,
+  "hyp": "When a flood takes the towers down, your phone still works. The network doesn't. So Aitantra doesn't send your voice. It sends what you said. Speech becomes text on your phone, a few dozen bytes cross the link and the other phone speaks it aloud, in 10 Indian languages."
+ },
+ "gem-storyteller-7": {
+  "acc": 0.941,
+  "hyp": "When a flood takes the towers down, your phone still works. The network doesn't. So, e-Tantra doesn't send your voice. It sends what you said. Speech becomes text on your phone. A few dozen bytes cross the link. And the other phone speaks it aloud in 10 Indian languages."
+ },
+ "gem-storyteller-8": {
+  "acc": 0.941,
+  "hyp": "When a flood takes the towers down, your phone still works. The network doesn't. So e-Tantra doesn't send your voice. It sends what you said. Speech becomes text on your phone. A few dozen bytes cross the link. And the other phone speaks it aloud, in 10 Indian languages."
+ }
+}

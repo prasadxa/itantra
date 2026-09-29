@@ -1,0 +1,158 @@
+m1-film {
+  "sections": [
+    {
+      "from_s": 0,
+      "to_s": 25,
+      "instruments": "synthesizer",
+      "energy_1_10": 1
+    },
+    {
+      "from_s": 25,
+      "to_s": 50,
+      "instruments": "harp, flute, strings",
+      "energy_1_10": 3
+    },
+    {
+      "from_s": 50,
+      "to_s": 104,
+      "instruments": "harp, flute, strings",
+      "energy_1_10": 4
+    },
+    {
+      "from_s": 104,
+      "to_s": 130,
+      "instruments": "harp, flute, strings, brass, percussion",
+      "energy_1_10": 7
+    },
+    {
+      "from_s": 130,
+      "to_s": 139,
+      "instruments": "harp, flute, strings",
+      "energy_1_10": 3
+    },
+    {
+      "from_s": 139,
+      "to_s": 154,
+      "instruments": "harp, flute, strings, brass, percussion",
+      "energy_1_10": 7
+    }
+  ],
+  "bpm": 96,
+  "has_orchestral_strings": true,
+  "has_flute": true,
+  "has_lofi_hiphop_beat": false,
+  "midrange_busy_1_10": 6,
+  "genre": "Cinematic",
+  "mood": "Epic"
+}
+m2-film {
+  "sections": [
+    {
+      "from_s": 0,
+      "to_s": 25,
+      "instruments": "synthesizer, pad, ambient sound effects",
+      "energy_1_10": 2
+    },
+    {
+      "from_s": 25,
+      "to_s": 116,
+      "instruments": "acoustic guitar, flute, bass, light percussion",
+      "energy_1_10": 4
+    },
+    {
+      "from_s": 116,
+      "to_s": 145,
+      "instruments": "orchestral strings, acoustic guitar, flute, bass, orchestral percussion",
+      "energy_1_10": 7
+    },
+    {
+      "from_s": 145,
+      "to_s": 155,
+      "instruments": "orchestral strings",
+      "energy_1_10": 2
+    }
+  ],
+  "bpm": 80,
+  "has_orchestral_strings": true,
+  "has_flute": true,
+  "has_lofi_hiphop_beat": false,
+  "midrange_busy_1_10": 6,
+  "genre": "Cinematic",
+  "mood": "Emotional"
+}
+m4-film {
+  "sections": [
+    {
+      "from_s": 0.0,
+      "to_s": 19.0,
+      "instruments": "acoustic guitar, vinyl crackle",
+      "energy_1_10": 2
+    },
+    {
+      "from_s": 19.0,
+      "to_s": 41.0,
+      "instruments": "acoustic guitar, bass, lo-fi drum beat",
+      "energy_1_10": 4
+    },
+    {
+      "from_s": 41.0,
+      "to_s": 60.0,
+      "instruments": "acoustic guitar, piano, bass, lo-fi drum beat",
+      "energy_1_10": 4
+    },
+    {
+      "from_s": 60.0,
+      "to_s": 83.0,
+      "instruments": "flute, acoustic guitar, piano, bass, lo-fi drum beat",
+      "energy_1_10": 5
+    },
+    {
+      "from_s": 83.0,
+      "to_s": 111.0,
+      "instruments": "acoustic guitar, piano, vinyl crackle",
+      "energy_1_10": 2
+    }
+  ],
+  "bpm": 80,
+  "has_orchestral_strings": false,
+  "has_flute": true,
+  "has_lofi_hiphop_beat": true,
+  "midrange_busy_1_10": 4,
+  "genre": "Lo-Fi Hip-Hop",
+  "mood": "Relaxed, Melancholic, Chill"
+}
+m5-film {
+  "sections": [
+    {
+      "from_s": 0,
+      "to_s": 21,
+      "instruments": "acoustic guitar, synth pads, vinyl noise",
+      "energy_1_10": 2
+    },
+    {
+      "from_s": 21,
+      "to_s": 104,
+      "instruments": "lofi drum beat, acoustic guitar, bass, electric piano, synth pads",
+      "energy_1_10": 4
+    },
+    {
+      "from_s": 104,
+      "to_s": 147,
+      "instruments": "flute, lofi drum beat, acoustic guitar, bass, electric piano",
+      "energy_1_10": 5
+    },
+    {
+      "from_s": 147,
+      "to_s": 151,
+      "instruments": "acoustic guitar, synth pads",
+      "energy_1_10": 1
+    }
+  ],
+  "bpm": 75,
+  "has_orchestral_strings": false,
+  "has_flute": true,
+  "has_lofi_hiphop_beat": true,
+  "midrange_busy_1_10": 3,
+  "genre": "lofi hip-hop",
+  "mood": "chill, relaxed, peaceful"
+}

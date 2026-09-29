@@ -1,0 +1,30 @@
+{
+ "music": "silence",
+ "tail": 1.2,
+ "lines": [
+  {
+   "id": "n4",
+   "voice": "en-in-storyteller-2",
+   "text": "So iTantra doesn't send your voice. It sends what you said.",
+   "style": "confident reveal, a small smile, a clear pause after 'your voice'",
+   "at": 0.45
+  },
+  {
+   "id": "n5",
+   "voice": "en-in-storyteller-2",
+   "text": "Speech becomes text on your phone. A few dozen bytes cross the link. And the other phone speaks it aloud, in ten Indian languages.",
+   "gap": 0.45
+  }
+ ],
+ "sfx": [
+  ["whoosh_up.wav", "0.14", 0.22],
+  ["sub_hit.wav", "0.95", 0.2],
+  ["click2.ogg", "n4+1.62", 0.22],
+  ["msg_pop.wav", "n4+3.5", 0.14],
+  ["chip-lay-1.ogg", "n5+3.28", 0.18],
+  ["whoosh_up.wav", "n5+4.1", 0.14],
+  ["connect_beep.wav", "n5+4.98", 0.15],
+  ["swell_pad.wav", "n5+8.2", 0.12],
+  ["card-slide-1.ogg", "END-1.1", 0.16]
+ ]
+}

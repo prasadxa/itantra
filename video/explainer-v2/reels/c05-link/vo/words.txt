@@ -1,0 +1,1 @@
+n8: If@0.02 there@0.16 is@0.57 no@0.73 Wi-Fi,@0.94 it@1.53 finds@1.72 Wi-Fi@2.20 direct,@2.65 then@3.62 Bluetooth@3.84 and@4.80 the@4.96 same@5.13 packets@5.36 are@6.02 ready@6.17 for@6.62 a@6.83 LoRa@6.90 radio@7.20 bridge.@7.58

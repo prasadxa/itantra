@@ -1,0 +1,22 @@
+{
+ "music": "silence",
+ "tail": 1.1,
+ "lines": [
+  {
+   "id": "n9",
+   "voice": "en-in-storyteller-2",
+   "text": "Each sentence packs into a compact binary frame, a median of sixty-two bytes, encrypted and signed once phones are paired.",
+   "at": 0.45
+  }
+ ],
+ "sfx": [
+  ["whoosh_up.wav", "n9+0.4", 0.18, "1.2"],
+  ["chip-lay-1.ogg", "n9+1.55", 0.16],
+  ["tick.wav", "n9+4.3", 0.2],
+  ["click2.ogg", "n9+5.42", 0.3],
+  ["impactSoft_medium_001.ogg", "n9+6.14", 0.28],
+  ["connect_beep.wav", "n9+7.5", 0.14],
+  ["whoosh_down.wav", "END-0.95", 0.18, "0.9"],
+  ["sub_hit.wav", "END-0.42", 0.2, "0.4"]
+ ]
+}

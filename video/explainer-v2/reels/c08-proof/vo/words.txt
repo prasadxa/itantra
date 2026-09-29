@@ -1,0 +1,1 @@
+n11: On@0.02 a@0.20 real@0.29 phone,@0.74 recognition@1.47 runs@2.47 20@2.84 times@3.36 faster@3.70 than@4.20 speech,@4.52 and@5.26 idle@5.49 CPU@5.83 stays@6.08 under@6.50 2%.@6.98

@@ -1,0 +1,2 @@
+n6: everything@0.01 runs@0.85 on@1.19 the@1.36 phone@1.61 itself,@2.04 no@2.86 cloud,@2.88 no@3.59 internet.@3.89
+n7: open@0.01 speech@0.49 models@1.20 from@1.92 IISC,@2.40 IIT@3.15 Madras@3.47 and@4.20 AI@4.56 for@4.80 Bharat,@5.16 listen@6.10 and@6.66 speak@6.91 in@7.19 Hindi,@7.57 Tamil,@8.41 Bengali@9.03 and@9.66 seven@9.93 more.@10.38

@@ -1,0 +1,119 @@
+{
+ "cart-aarav": {
+  "naturalness": 6,
+  "clarity": 8,
+  "warmth": 6,
+  "fit": 5,
+  "pacing": 4,
+  "errors": "None",
+  "critique": "Clear pronunciation but pacing is too fast and delivery feels slightly robotic, lacking the required documentary gravitas and measured cadence for this audience."
+ },
+ "cart-devansh": {
+  "naturalness": 6,
+  "clarity": 8,
+  "warmth": 5,
+  "fit": 6,
+  "pacing": 6,
+  "errors": "iTantra pronounced as eye-TAN-tra instead of eye-TUN-truh.",
+  "critique": "Clear and professional but lacks the requested warmth and hopeful ending. Pacing is slightly fast and the app name is mispronounced."
+ },
+ "cart-kiara": {
+  "naturalness": 7,
+  "clarity": 8,
+  "warmth": 6,
+  "fit": 6,
+  "pacing": 5,
+  "errors": "iTantra (pronounced as eye-TAHN-tra instead of eye-TUN-truh)",
+  "critique": "Clear and professional, but pacing is slightly fast and it lacks the requested emotional gravity and warmth for a documentary narrator."
+ },
+ "cart-krishna": {
+  "naturalness": 4,
+  "clarity": 7,
+  "warmth": 4,
+  "fit": 4,
+  "pacing": 6,
+  "errors": "Mispronounces iTantra as 'eye-tan-truh' instead of 'eye-TUN-truh'.",
+  "critique": "Synthetic and flat delivery with a noticeable mispronunciation of the core product name. Lacks the gravity and credibility needed for ISRO judges."
+ },
+ "cart-sterling": {
+  "naturalness": 9,
+  "clarity": 8,
+  "warmth": 8,
+  "fit": 7,
+  "pacing": 9,
+  "errors": "Mispronounced iTantra (said eye-TAN-tra instead of eye-TUN-truh)",
+  "critique": "Excellent pacing and vocal gravity, but the Americanized pronunciation of iTantra detracts slightly from its fit for an Indian tech audience."
+ },
+ "gem-podcaster-3": {
+  "naturalness": 5,
+  "clarity": 9,
+  "warmth": 4,
+  "fit": 5,
+  "pacing": 6,
+  "errors": "None",
+  "critique": "Clear and intelligible Indian English, but lacks necessary gravitas and warmth; artificial phrasing makes it sound like a generic automated system."
+ },
+ "gem-podcaster-4": {
+  "naturalness": 8,
+  "clarity": 10,
+  "warmth": 7,
+  "fit": 8,
+  "pacing": 8,
+  "errors": "None.",
+  "critique": "Clear and confident Indian English delivery. Excellent pronunciation and pacing. Slightly clinical tone but highly suitable for a tech explainer."
+ },
+ "gem-podcaster-5": {
+  "naturalness": 6,
+  "clarity": 8,
+  "warmth": 6,
+  "fit": 7,
+  "pacing": 7,
+  "errors": "None",
+  "critique": "Good gravitas for the opening but slightly stiff phrasing limits the transition to a hopeful tone at the end."
+ },
+ "gem-storyteller-1": {
+  "naturalness": 5,
+  "clarity": 8,
+  "warmth": 6,
+  "fit": 6,
+  "pacing": 8,
+  "errors": "iTantra (pronounced as I-tandra)",
+  "critique": "Clear and well-paced with an appropriate accent, but noticeably synthetic prosody reduces the desired emotional gravity and credibility."
+ },
+ "gem-storyteller-11": {
+  "naturalness": 5,
+  "clarity": 8,
+  "warmth": 5,
+  "fit": 6,
+  "pacing": 7,
+  "errors": "Slight mispronunciation: 'iTantra' sounds like 'Eye-tan-tra' instead of 'Eye-TUN-truh'.",
+  "critique": "Clear Indian English delivery, but noticeably synthetic. It lacks the requested emotional arc, warmth, and natural phrasing required for a compelling documentary narrator."
+ },
+ "gem-storyteller-2": {
+  "naturalness": 8,
+  "clarity": 9,
+  "warmth": 8,
+  "fit": 9,
+  "pacing": 9,
+  "errors": "None",
+  "critique": "Excellent Indian English delivery with a natural, measured cadence and credible warmth suited perfectly for a tech explainer."
+ },
+ "gem-storyteller-7": {
+  "naturalness": 8,
+  "clarity": 9,
+  "warmth": 7,
+  "fit": 9,
+  "pacing": 9,
+  "errors": "None",
+  "critique": "Strong, credible Indian English delivery with appropriate gravity for disaster scenarios. Excellent pacing and clarity, making it highly suitable for ISRO judges."
+ },
+ "gem-storyteller-8": {
+  "naturalness": 8,
+  "clarity": 9,
+  "warmth": 7,
+  "fit": 8,
+  "pacing": 9,
+  "errors": "None",
+  "critique": "Authoritative and clear with an authentic Indian accent, but could use a touch more warmth and hopefulness towards the end."
+ }
+}

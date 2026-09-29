@@ -1,0 +1,45 @@
+{
+ "wins": {
+  "cart-sterling": 0,
+  "gem-podcaster-4": 2,
+  "gem-storyteller-2": 4
+ },
+ "log": [
+  {
+   "A": "cart-sterling",
+   "B": "gem-podcaster-4",
+   "winner": "gem-podcaster-4",
+   "why": "Candidate B's authentic Indian accent and natural pronunciation of 'iTantra' perfectly suit the national-technology context, offering a warm, credible, and engaging delivery for the target audience."
+  },
+  {
+   "A": "cart-sterling",
+   "B": "gem-storyteller-2",
+   "winner": "gem-storyteller-2",
+   "why": "Candidate B features a natural, clear Indian accent perfectly suited for an Indian national-technology audience, sounding warmer and far more credible than Candidate A's slightly robotic, dramatic tone."
+  },
+  {
+   "A": "gem-podcaster-4",
+   "B": "cart-sterling",
+   "winner": "gem-podcaster-4",
+   "why": "Candidate A's authentic Indian accent perfectly fits the national tech audience. Her delivery is warm, clear, and highly credible, whereas B's Western accent feels disconnected from the project's local context."
+  },
+  {
+   "A": "gem-podcaster-4",
+   "B": "gem-storyteller-2",
+   "winner": "gem-storyteller-2",
+   "why": "Candidate B offers a deep, authoritative, yet warm documentary-style voice. His natural inflection and pacing build credibility, making him the perfect fit for a technology explainer, whereas A sounds slightly robotic."
+  },
+  {
+   "A": "gem-storyteller-2",
+   "B": "cart-sterling",
+   "winner": "gem-storyteller-2",
+   "why": "Candidate A's natural Indian accent provides authentic cultural fit for the national-technology audience, delivering the script with warmth, clarity, and credibility that Candidate B's Western accent lacks for this context."
+  },
+  {
+   "A": "gem-storyteller-2",
+   "B": "gem-podcaster-4",
+   "winner": "gem-storyteller-2",
+   "why": "Candidate A's authoritative yet engaging and warm tone feels more natural and credible, making it a perfect fit for a highly technical Indian audience like ISRO scientists."
+  }
+ ]
+}

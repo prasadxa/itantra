@@ -1,0 +1,22 @@
+1 m1-film {
+  "score": 3,
+  "structure_matches": false,
+  "voice_space": 3,
+  "cheesiness": 8,
+  "why": "While the track roughly follows the timing of the sections requested, it completely misses the stylistic brief. Instead of a restrained, modern tech explainer with subtle electronic elements, analog pads, and a delicate santoor motif, the music erupts into a melodramatic, traditional orchestral arrangement driven by a prominent bansuri flute and sweeping strings. This instrumentation is very busy in the midrange, leaving almost no room for a voiceover, and the overall tone feels more like a generic television drama than a premium, sleek space-agency hackathon promo."
+}
+1 m2-film {
+  "score": 1,
+  "structure_matches": false,
+  "voice_space": 2,
+  "cheesiness": 8,
+  "why": "The track completely ignores the brief's request for a restrained, premium, modern tech explainer score. Instead of a sparse synth intro with a heartbeat pulse, it features massive, dramatic cinematic brass blares. Rather than a gentle modern pulse with analog pads and a santoor motif, the main section is a heavy, melodramatic orchestral arrangement with sweeping strings, loud bansuri melodies, and heavy percussion (which was explicitly forbidden). This epic, almost Bollywood-historical-drama style leaves very little room for a calm voiceover and entirely misses the requested Apple/Google aesthetic."
+}
+2 m1-film {"score": 4, "structure_matches": true, "voice_space": 2, "cheesiness": 8, "why": "Although the track accurately follows the structural timing markers, including the sparse drone intro until 0:22 and the final chord around 1:42, it completely misses the stylistic brief. The prompt requested a restrained, modern tech explainer vibe with a deep sub bass and uncluttered midrange. Instead, the track delivers a highly dramatic, traditional Indian cinematic score heavily driven by sweeping strings and loud bansuri. These elements severely clutter the midrange, leaving almost no space for a calm voiceover, and make the track feel like a melodramatic soap opera cue rather than a sleek, premium space-agency film."}
+2 m2-film {
+  "score": 2,
+  "structure_matches": false,
+  "voice_space": 2,
+  "cheesiness": 9,
+  "why": "While the initial 24 seconds loosely provide a sparse intro, the track completely abandons the brief after that point. Instead of a restrained, modern electronic pulse with subtle Indian accents suitable for a premium tech explainer, it explodes into a highly melodramatic, sweeping orchestral piece with dominant bansuri (flute), heavy strings, and large traditional percussion. It sounds more suited to a historical epic or travelogue. The midrange is heavily cluttered, leaving no room for a calm voiceover, and the timing of the build and final chord do not align with the requested structure."
+}

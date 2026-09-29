@@ -1,0 +1,23 @@
+{
+ "music": "silence",
+ "tail": 1.4,
+ "lines": [
+  {
+   "id": "n11",
+   "voice": "en-in-storyteller-2",
+   "text": "On a real phone, recognition runs twenty times faster than speech, and idle CPU stays under two percent.",
+   "at": 0.45
+  }
+ ],
+ "sfx": [
+  ["whoosh_up.wav", "n11+0.32", 0.14],
+  ["rollover2.ogg", "n11+1.45", 0.2],
+  ["whoosh_up.wav", "n11+2.3", 0.16],
+  ["tick.wav", "n11+2.82", 0.2],
+  ["sub_hit.wav", "n11+3.25", 0.2],
+  ["card-slide-1.ogg", "n11+5.05", 0.18],
+  ["select_008.ogg", "n11+6.45", 0.2],
+  ["chip-lay-1.ogg", "n11+6.9", 0.16],
+  ["swell_pad.wav", "END-0.86", 0.2]
+ ]
+}

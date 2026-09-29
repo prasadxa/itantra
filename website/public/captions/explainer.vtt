@@ -1,70 +1,115 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:05.974
-iTantra is an offline, multilingual voice walkie-
-talkie for India — speech becomes text, text
+00:00:00.470 --> 00:00:03.330
+When a flood takes the towers down,
 
-00:00:05.974 --> 00:00:08.961
-becomes speech, when the network is gone.
+00:00:03.380 --> 00:00:05.480
+your phone still works.
 
-00:00:08.961 --> 00:00:14.922
-Voice is heavy: a raw spoken sentence needs about
-two hundred fifty six kilobits per second, but
+00:00:05.530 --> 00:00:07.052
+The network doesn't.
 
-00:00:14.922 --> 00:00:20.883
-disaster links carry only a few hundred bits per
-second. And a text-only alert misses the many
+00:00:08.437 --> 00:00:11.107
+A spoken sentence is heavy:
 
-00:00:20.883 --> 00:00:22.636
-people who cannot read it.
+00:00:11.157 --> 00:00:14.407
+two hundred and fifty-six kilobits a second,
 
-00:00:22.636 --> 00:00:29.362
-So iTantra sends only the text of what was said — a
-couple hundred bytes — over Wi-Fi, Bluetooth, or
+00:00:14.457 --> 00:00:15.257
+as raw audio.
 
-00:00:29.362 --> 00:00:34.742
-a LoRa bridge, and speaks it back on the other
-phone, in the listener's own language.
+00:00:15.597 --> 00:00:17.967
+But the links that survive a disaster,
 
-00:00:34.742 --> 00:00:40.786
-Under the hood: on-device speech recognition, a
-self-healing link that falls back from Wi-Fi to
+00:00:18.017 --> 00:00:19.887
+Bluetooth, a crowded hotspot,
 
-00:00:40.786 --> 00:00:47.233
-Bluetooth to a long-range LoRa bridge, and a full
-deployment reaching phones, relay nodes, and an
+00:00:19.937 --> 00:00:23.878
+a long-range radio, carry only a few hundred bits.
 
-00:00:47.233 --> 00:00:48.442
-offline control room.
+00:00:25.290 --> 00:00:28.240
+So iTantra doesn't send your voice.
 
-00:00:48.442 --> 00:00:55.492
-Every model is open source and fully offline:
-SraVaani speech recognition from ARTPARK and I I Sc,
+00:00:28.290 --> 00:00:29.794
+It sends what you said.
 
-00:00:55.492 --> 00:01:01.713
-and Indic-Mio and VITS Rasa text-to-speech from
-SPRING Lab I I T Madras and AI4Bharat.
+00:00:30.284 --> 00:00:33.144
+Speech becomes text on your phone.
 
-00:01:01.713 --> 00:01:08.669
-And it's built for real phones: under two percent
-idle CPU, well under a gigabyte of memory in the
+00:00:33.194 --> 00:00:35.434
+A few dozen bytes cross the link.
 
-00:01:08.669 --> 00:01:13.429
-LITE profile, and sentences as small as sixty two
-bytes on the wire.
+00:00:35.484 --> 00:00:37.814
+And the other phone speaks it aloud,
 
-00:01:13.429 --> 00:01:15.130
-Here it is on a real phone.
+00:00:37.864 --> 00:00:39.690
+in ten Indian languages.
 
-00:01:15.130 --> 00:01:31.130
-ALERT priority — max volume, cannot be interrupted
+00:00:41.360 --> 00:00:44.160
+Everything runs on the phone itself.
 
-00:01:31.130 --> 00:01:49.130
-One-tap SOS — location sent and spoken
+00:00:44.210 --> 00:00:46.043
+No cloud. No internet.
 
-00:01:49.130 --> 00:01:55.781
-iTantra — built for the moment the towers go silent.
-Smart India Hackathon twenty twenty six, ISRO
+00:00:46.503 --> 00:00:50.643
+Open speech models from I I Sc,
 
-00:01:55.781 --> 00:01:58.520
-problem statement two six one seven three.
+00:00:50.693 --> 00:00:53.633
+I I T Madras and AI4Bharat listen,
+
+00:00:53.683 --> 00:00:56.103
+and speak, in Hindi,
+
+00:00:56.153 --> 00:00:57.554
+Tamil, Bengali and seven more.
+
+00:00:58.937 --> 00:00:59.807
+If there's no Wi-Fi,
+
+00:00:59.857 --> 00:01:01.517
+it finds Wi-Fi Direct.
+
+00:01:01.567 --> 00:01:05.487
+Then Bluetooth. And the same packets are ready for
+
+00:01:05.537 --> 00:01:07.048
+a LoRa radio bridge.
+
+00:01:08.737 --> 00:01:12.267
+Each sentence packs into a compact binary frame,
+
+00:01:12.317 --> 00:01:14.057
+a median of sixty-two bytes,
+
+00:01:14.107 --> 00:01:16.816
+encrypted and signed once phones are paired.
+
+00:01:18.393 --> 00:01:21.053
+Alerts cut through at full volume.
+
+00:01:21.103 --> 00:01:22.753
+And one tap sends an SOS,
+
+00:01:22.803 --> 00:01:25.459
+with your location, read aloud on the other side.
+
+00:01:28.537 --> 00:01:29.937
+On a real phone,
+
+00:01:29.987 --> 00:01:33.727
+recognition runs twenty times faster than speech,
+
+00:01:33.777 --> 00:01:36.361
+and idle CPU stays under two percent.
+
+00:01:38.237 --> 00:01:41.157
+iTantra. Speak in your language,
+
+00:01:41.207 --> 00:01:45.474
+and be heard, even when the towers go silent.
+
+00:01:45.954 --> 00:01:49.534
+Smart India Hackathon twenty twenty-six.
+
+00:01:49.584 --> 00:01:52.630
+ISRO problem statement two six one seven three.

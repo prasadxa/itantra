@@ -1,0 +1,29 @@
+{
+ "music": "silence",
+ "tail": 0.9,
+ "lines": [
+  {
+   "id": "n2",
+   "voice": "en-in-storyteller-2",
+   "text": "A spoken sentence is heavy: two hundred and fifty-six kilobits a second, as raw audio.",
+   "at": 0.45
+  },
+  {
+   "id": "n3",
+   "voice": "en-in-storyteller-2",
+   "text": "But the links that survive a disaster, Bluetooth, a crowded hotspot, a long-range radio, carry only a few hundred bits.",
+   "gap": 0.45
+  }
+ ],
+ "sfx": [
+  ["whoosh_up.wav", "0.65", 0.18],
+  ["sub_hit.wav", "n2+1.94", 0.24],
+  ["rollover2.ogg", "n2+2.74", 0.18],
+  ["whoosh_down.wav", "n2_e+0.05", 0.16],
+  ["chip-lay-1.ogg", "n3+2.44", 0.15],
+  ["chip-lay-1.ogg", "n3+3.36", 0.15],
+  ["chip-lay-1.ogg", "n3+4.90", 0.15],
+  ["impactSoft_medium_001.ogg", "n3+6.41", 0.3],
+  ["whoosh_long.wav", "END-1.36", 0.14]
+ ]
+}

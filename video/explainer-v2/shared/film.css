@@ -1,0 +1,72 @@
+/* iTantra explainer v2 — shared film kit (1920x1080).
+   Direction (research/STYLE-NOTES.md): Apple-SOS / Linear dark. Ink ground with faint topographic contours and grain,
+   ONE accent per moment: saffron = speaker / transmit / action, teal = listener / receive / system. Never both on one element.
+   Tricolour strip is the signature (max 3 full wipes). Type: IBM Plex Sans Condensed (display), Plex Sans (support), Plex Mono (data). */
+@font-face { font-family: "Plex Cond"; src: url("fonts/IBMPlexSansCondensed-Bold.ttf"); font-weight: 700; }
+@font-face { font-family: "Plex Cond"; src: url("fonts/IBMPlexSansCondensed-SemiBold.ttf"); font-weight: 600; }
+@font-face { font-family: "Plex Sans"; src: url("fonts/IBMPlexSans.ttf"); font-weight: 100 700; }
+@font-face { font-family: "Plex Mono"; src: url("fonts/IBMPlexMono-Regular.ttf"); font-weight: 400; }
+@font-face { font-family: "Plex Mono"; src: url("fonts/IBMPlexMono-Medium.ttf"); font-weight: 500; }
+@font-face { font-family: "Noto Deva"; src: url("fonts/NotoSansDevanagari.ttf"); font-weight: 100 900; }
+@font-face { font-family: "Noto Taml"; src: url("fonts/NotoSansTamil.ttf"); font-weight: 100 900; }
+@font-face { font-family: "Noto Beng"; src: url("fonts/NotoSansBengali.ttf"); font-weight: 100 900; }
+@font-face { font-family: "Noto Telu"; src: url("fonts/NotoSansTelugu.ttf"); font-weight: 100 900; }
+@font-face { font-family: "Noto Gujr"; src: url("fonts/NotoSansGujarati.ttf"); font-weight: 100 900; }
+@font-face { font-family: "Noto Knda"; src: url("fonts/NotoSansKannada.ttf"); font-weight: 100 900; }
+@font-face { font-family: "Noto Mlym"; src: url("fonts/NotoSansMalayalam.ttf"); font-weight: 100 900; }
+@font-face { font-family: "Noto Orya"; src: url("fonts/NotoSansOriya.ttf"); font-weight: 100 900; }
+
+:root {
+  --ink: #0E1013; --surface: #161920; --raised: #1D2129; --line: rgba(255,255,255,.08); --line2: rgba(255,255,255,.16);
+  --fg: #ECEAE5; --fg2: rgba(236,234,229,.70); --fg3: rgba(236,234,229,.42);
+  --sa: #F97316; --sa-soft: rgba(249,115,22,.14); --te: #2DD4BF; --te-soft: rgba(45,212,191,.12);
+  --alert: #EF4444; --green: #22C55E; --india-green: #138808; --paper: #F4F1EA;
+  --cond: "Plex Cond", "Arial Narrow", sans-serif; --sans: "Plex Sans", "Noto Deva", sans-serif; --mono: "Plex Mono", monospace;
+  --indic: "Noto Deva", "Noto Taml", "Noto Beng", "Noto Telu", "Noto Gujr", "Noto Knda", "Noto Mlym", "Noto Orya", sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; background: var(--ink); overflow: hidden; }
+body { color: var(--fg); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+#root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--ink); }
+.scene { position: absolute; inset: 0; overflow: hidden; }
+.abs { position: absolute; }
+.center { position: absolute; left: 0; right: 0; text-align: center; }
+
+/* texture: topographic contours (5%) + grain (3%) + edge vignette */
+.contours { position: absolute; inset: -60px; background: url("img/contours.svg") center / cover no-repeat; opacity: .05; }
+.grain { position: absolute; inset: 0; background: url("img/grain.png"); opacity: .035; mix-blend-mode: overlay; pointer-events: none; }
+.vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0,0,0,.55) 100%); pointer-events: none; }
+.cam { position: absolute; inset: 0; transform-origin: 50% 50%; }
+
+/* type */
+.h1 { font-family: var(--cond); font-weight: 700; font-size: 132px; line-height: 1.0; letter-spacing: -.012em; }
+.h2 { font-family: var(--cond); font-weight: 600; font-size: 88px; line-height: 1.05; letter-spacing: -.01em; }
+.h3 { font-family: var(--cond); font-weight: 600; font-size: 56px; line-height: 1.1; }
+.sub { font-family: var(--sans); font-weight: 400; font-size: 40px; line-height: 1.35; color: var(--fg2); }
+.mono { font-family: var(--mono); font-weight: 500; font-size: 22px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg3); }
+.num { font-family: var(--mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+.sa { color: var(--sa); } .te { color: var(--te); } .dim { color: var(--fg3); }
+.indic { font-family: var(--indic); }
+.w { display: inline-block; will-change: transform, filter, opacity; }       /* word spans made by words() */
+.mask { display: block; overflow: hidden; padding-bottom: .08em; }           /* line mask for maskUp() */
+.mask > .ln { display: block; }
+
+/* pieces */
+.card { position: absolute; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; }
+.chip { display: inline-flex; align-items: center; gap: 12px; height: 56px; padding: 0 24px; border-radius: 999px;
+        border: 1px solid var(--line2); font-family: var(--mono); font-weight: 500; font-size: 22px; letter-spacing: .06em; color: var(--fg2); background: rgba(22,25,32,.8); }
+.chip.sa { border-color: var(--sa); color: var(--sa); background: var(--sa-soft); }
+.chip.te { border-color: var(--te); color: var(--te); background: var(--te-soft); }
+.tri { position: absolute; display: flex; height: 6px; }
+.tri i { flex: 1; } .tri i:nth-child(1) { background: var(--sa); } .tri i:nth-child(2) { background: #F2F2EF; } .tri i:nth-child(3) { background: var(--india-green); }
+.triwipe { position: absolute; inset: 0; display: flex; flex-direction: column; pointer-events: none; }
+.triwipe i { flex: 1; transform-origin: 50% 0; transform: scaleY(0); }
+.triwipe i:nth-child(1) { background: var(--sa); } .triwipe i:nth-child(2) { background: #F2F2EF; } .triwipe i:nth-child(3) { background: var(--india-green); }
+
+/* phone (real screen recordings/screens, minimal flat bezel) */
+.phone { position: absolute; width: 360px; height: 800px; border-radius: 48px; background: #05070A; padding: 12px;
+         box-shadow: 0 0 0 1px var(--line2), 0 40px 120px -30px rgba(0,0,0,.9); }
+.phone > img, .phone > video { width: 100%; height: 100%; object-fit: cover; border-radius: 38px; display: block; }
+.ring { position: absolute; border-radius: 50%; border: 2px solid var(--sa); opacity: 0; }
+.ring.te { border-color: var(--te); }
+svg.draw path, svg.draw line, svg.draw circle, svg.draw polyline, svg.draw rect, svg.draw ellipse, svg.draw polygon { fill: none; stroke-linecap: round; stroke-linejoin: round; }

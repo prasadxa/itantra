@@ -1,0 +1,29 @@
+{
+ "music": "silence",
+ "tail": 2.8,
+ "lines": [
+  {
+   "id": "n12",
+   "voice": "en-in-storyteller-2",
+   "text": "iTantra. Speak in your language, and be heard, even when the towers go silent.",
+   "style": "warm, hopeful, confident close; slow; let 'even when the towers go silent' land",
+   "at": 0.45
+  },
+  {
+   "id": "n13",
+   "voice": "en-in-storyteller-2",
+   "text": "Smart India Hackathon twenty twenty-six. ISRO problem statement two six one seven three.",
+   "style": "calm sign-off, clear numbers",
+   "gap": 0.45
+  }
+ ],
+ "sfx": [
+  ["whoosh_up.wav", "n12-0.33", 0.15],
+  ["whoosh_down.wav", "n12+0.74", 0.16],
+  ["rollover2.ogg", "n12+4.15", 0.15],
+  ["msg_pop.wav", "n12+6.52", 0.16],
+  ["connect_beep.wav", "n12+7.3", 0.14],
+  ["select_008.ogg", "n13+5.16", 0.16],
+  ["swell_pad.wav", "n13_e-0.55", 0.18]
+ ]
+}

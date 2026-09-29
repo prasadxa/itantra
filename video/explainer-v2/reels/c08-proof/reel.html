@@ -1,0 +1,196 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8">
+<script src="assets/gsap.min.js"></script>
+<link rel="stylesheet" href="assets/film.css">
+<style>
+/* c08 — proof. Cue table (n11 starts @[n11]; word times from vo/words.txt):
+   0.00          START = c07 end: one teal dot 24 px at (960, 540) on ink; one soft teal ring
+   n11+0.02 "On"           the dot flies to the top-left and becomes the bullet of the device slug
+   n11+0.29 "real phone"   slug types in: VIVO I2202 · SNAPDRAGON 870 · MEASURED WITH THE APP'S OWN LOGGING
+   n11+1.47 "recognition"  race lanes draw on right (SPEECH grey waveform / TEXT teal Hindi line), finish line
+   n11+2.47 "runs"         race: the teal text line shoots to the finish, the grey speech line crawls
+   n11+2.84 "20 times"     hero counter rolls 1 -> 20x (left, big), lands on "times"
+   n11+3.70 "faster than speech"  label blur-rises on its words; sub REAL-TIME FACTOR 0.05; speech lane reaches the finish on "speech"
+   n11+5.26 "and"          race exits; hero settles into column 1 of a three-stat row (camera-like reframe), divider draws
+   n11+5.49 "idle CPU"     column 2 label; counter rolls 9 -> 2, lands on "2%", "<" + sub 0.3–1.6 % appear
+   n11+7.30 (last words)   column 3, the quiet stat: 688 MB · memory, LITE profile
+   END-1.25              stats blur out; tricolour strip 480x6 draws on at the centre (y 560, outside the camera) = c09 start */
+#dot { position: absolute; left: 960px; top: 540px; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%;
+       background: var(--te); box-shadow: 0 0 22px 5px rgba(45,212,191,.40); }
+#ringAt { position: absolute; left: 960px; top: 540px; width: 0; height: 0; }
+#ringAt .ring { left: -110px; top: -110px; width: 220px; height: 220px; }
+#head { left: 150px; top: 452px; }
+#head .h2 { font-size: 96px; }
+#slug { left: 184px; top: 112px; color: var(--fg2); white-space: nowrap; }
+#slug .c { display: inline-block; }
+
+/* stats row */
+#row { left: 150px; top: 384px; width: 1620px; height: 330px; }
+.col { position: absolute; top: 0; width: 540px; height: 330px; }
+#c1 { left: 0; } #c2 { left: 540px; padding-left: 64px; } #c3 { left: 1080px; padding-left: 64px; }
+.col .n { font-family: var(--mono); font-weight: 500; font-size: 168px; line-height: 1; letter-spacing: -.02em; color: var(--fg); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.col .n .v { display: inline-block; text-align: right; }
+#v1 { width: 2ch; } #v3 { width: 3ch; } #v2 { width: 1ch; }
+.col .n .u { font-size: .46em; letter-spacing: 0; color: var(--te); margin-left: .08em; }
+.col .n .lt { display: inline-block; font-size: .5em; color: var(--fg2); margin-right: .12em; vertical-align: .32em; }
+#c2 .n .u { vertical-align: .0em; }
+.col .l { margin-top: 26px; font-family: var(--sans); font-size: 40px; line-height: 1.2; color: var(--fg); white-space: nowrap; }
+.col .s { margin-top: 16px; font-family: var(--mono); font-weight: 500; font-size: 22px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg2); white-space: nowrap; }
+#c3 .n { color: var(--fg2); } #c3 .n .u { color: var(--fg2); } #c3 .l { color: var(--fg2); }
+.div { position: absolute; top: 8px; width: 1px; height: 300px; background: var(--line2); transform-origin: 50% 0; }
+#d1 { left: 540px; } #d2 { left: 1080px; }
+
+/* the race: speech (grey waveform, 1x) vs recognised text (teal, 20x) */
+#race { left: 930px; top: 396px; width: 840px; height: 400px; }
+#race .lab { position: absolute; left: 0; font-family: var(--mono); font-weight: 500; font-size: 22px; letter-spacing: .08em; color: var(--fg2); }
+#race .lab.te { color: var(--te); }
+#lab1 { top: 0; } #lab2 { top: 214px; }
+#wave { position: absolute; left: 0; top: 44px; width: 840px; }
+#wave .bar { background: rgba(236,234,229,.55); }
+#trk1, #trk2 { position: absolute; left: 0; width: 840px; height: 2px; background: rgba(255,255,255,.10); transform-origin: 0 50%; }
+#trk1 { top: 172px; } #trk2 { top: 358px; }
+#run1, #run2 { position: absolute; left: 0; width: 840px; height: 2px; transform-origin: 0 50%; transform: scaleX(0); }
+#run1 { top: 172px; background: rgba(236,234,229,.70); }
+#run2 { top: 358px; background: var(--te); box-shadow: 0 0 12px rgba(45,212,191,.5); }
+#hd1, #hd2 { position: absolute; left: 0; width: 12px; height: 12px; margin: -5px 0 0 -6px; border-radius: 50%; }
+#hd1 { top: 172px; background: var(--fg); }
+#hd2 { top: 358px; background: var(--te); box-shadow: 0 0 16px 4px rgba(45,212,191,.45); }
+#txt { position: absolute; left: 0; top: 256px; font-size: 62px; line-height: 1.2; color: var(--te); white-space: nowrap; }
+#fin { position: absolute; left: 840px; top: 30px; width: 0; height: 350px; border-left: 2px dashed rgba(236,234,229,.28); transform-origin: 50% 0; }
+
+/* hand-off strip (outside the camera so it lands at exactly 480x6, centre y 560) */
+#tri { left: 720px; top: 557px; width: 480px; }
+</style></head>
+<body><div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="@[END]">
+<section id="s" class="scene clip" data-start="0" data-duration="@[END]" data-track-index="1">
+  <div class="contours" data-layout-ignore></div>
+  <div class="cam">
+    <div id="ringAt" data-layout-ignore><div class="ring te"></div><div class="ring te"></div></div>
+    <div id="slug" class="abs mono"><span class="c">vivo I2202 · Snapdragon 870 · measured with the app's own logging</span></div>
+
+    <div id="head" class="abs" data-layout-allow-overlap><div class="mask"><div class="ln h2" data-layout-allow-overlap>On a real phone.</div></div></div>
+
+    <div id="row" class="abs">
+      <div id="d1" class="div"></div><div id="d2" class="div"></div>
+      <div id="c1" class="col">
+        <div class="n"><span id="v1" class="v">20</span><span class="u">×</span></div>
+        <div class="l">faster than speech</div>
+        <div class="s">real-time factor 0.05</div>
+      </div>
+      <div id="c2" class="col">
+        <div class="n"><span class="lt">&lt;</span><span id="v2" class="v">2</span><span class="u">%</span></div>
+        <div class="l">idle CPU, push-to-talk</div>
+        <div class="s">measured 0.3–1.6 %</div>
+      </div>
+      <div id="c3" class="col">
+        <div class="n"><span id="v3" class="v">688</span><span class="u"> MB</span></div>
+        <div class="l">memory, LITE profile</div>
+      </div>
+    </div>
+
+    <div id="race" class="abs" data-layout-allow-overlap>
+      <div id="lab1" class="lab">SPEECH</div>
+      <div id="wave"></div>
+      <div id="trk1"></div><div id="run1"></div><div id="hd1"></div>
+      <div id="lab2" class="lab te">TEXT</div>
+      <div id="txt" class="indic">बाढ़ का पानी बढ़ रहा है</div>
+      <div id="trk2"></div><div id="run2"></div><div id="hd2"></div>
+      <div id="fin"></div>
+    </div>
+    <div id="dot"></div>
+  </div>
+  <div id="tri" class="tri"><i></i><i></i><i></i></div>
+  <div class="vignette" data-layout-ignore></div>
+  <div class="grain" data-layout-ignore></div>
+</section>
+<!--@AUDIO-->
+</div>
+<script src="assets/film.js"></script>
+<script>
+const N = @[n11], END = @[END];
+const w = (s) => N + s;                      // word time inside n11
+push(".cam", 0, END, 1.0, 1.05);
+
+// START: exactly c07's last frame — one teal dot on ink
+tl.set("#dot", { opacity: 1, x: 0, y: 0, scale: 1 }, 0);
+// one breath before it moves (never a frozen frame)
+tl.fromTo("#dot", { scale: 1 }, { scale: 1.22, duration: 0.2, ease: E.soft, yoyo: true, repeat: 1, immediateRender: false }, 0.06);
+rings("#ringAt .ring", 0.1, 0.75, 0.75, 0.18, 0.15, 1.2);
+
+// "On a real phone": the dot flies to the slug and becomes its bullet; slug types in
+tl.to("#dot", { x: 166 - 960, y: 125 - 540, scale: 0.5, duration: 0.95, ease: E.cam }, w(0.0));
+const slug = $("#slug .c"), full = slug.textContent, typ = { n: 0 };
+tl.set(typ, { n: 0, onUpdate: () => { slug.textContent = full.slice(0, Math.round(typ.n)); } }, 0);
+tl.to(typ, { n: full.length, duration: 1.0, ease: "none", onUpdate: () => { slug.textContent = full.slice(0, Math.round(typ.n)); } }, w(0.29));
+
+// big type on the words, gone before the race starts
+maskUp("#head", w(0.22), 0.08, 0.75);
+maskOut("#head", w(1.38), 0.4);
+tl.set("#head", { display: "none" }, w(1.82));
+
+// hero stat, big on the left (column 1 scaled up), race on the right
+tl.set("#c1", { scale: 1.32, transformOrigin: "0% 0%", y: -6 }, 0);
+tl.set("#c2, #c3, #d1, #d2", { opacity: 0 }, 0);
+tl.set("#c1 .n, #c1 .s", { opacity: 0 }, 0);
+
+// "recognition": lanes draw on
+fadeIn("#lab1", w(1.40), 0.6, { x: -16 });
+fadeIn("#lab2", w(1.52), 0.6, { x: -16 });
+tl.fromTo("#trk1, #trk2", { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: E.cam, stagger: 0.1 }, w(1.45));
+tl.fromTo("#fin", { scaleY: 0, opacity: 0 }, { scaleY: 1, opacity: 1, duration: 0.7, ease: E.p3 }, w(1.75));
+tl.fromTo("#hd1, #hd2", { opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1, duration: 0.4, ease: E.pop, stagger: 0.08 }, w(1.9));
+
+// "runs": the race. speech crawls in real time; text shoots to the finish
+const WB = bars("#wave", 56, 6, 9, 120);
+const r = rng(26173);
+const RACE = w(2.40), SPEECH_D = w(4.62) - RACE, TEXT_D = 0.42;
+WB.forEach((b, i) => {
+  const env = 0.35 + 0.65 * Math.sin(Math.PI * (i + 0.5) / WB.length);
+  const v = Math.max(0.08, (0.15 + 0.85 * r()) * env);
+  tl.set(b, { opacity: 0 }, 0);
+  tl.fromTo(b, { opacity: 0, scaleY: 0.04 }, { opacity: 1, scaleY: v, duration: 0.22, ease: E.p3, immediateRender: false }, RACE + (i / WB.length) * SPEECH_D);
+});
+tl.fromTo("#run1", { scaleX: 0 }, { scaleX: 1, duration: SPEECH_D, ease: "none", immediateRender: false }, RACE);
+tl.fromTo("#hd1", { x: 0 }, { x: 840, duration: SPEECH_D, ease: "none", immediateRender: false }, RACE);
+tl.fromTo("#run2", { scaleX: 0 }, { scaleX: 1, duration: TEXT_D, ease: "power2.out", immediateRender: false }, RACE);
+tl.fromTo("#hd2", { x: 0 }, { x: 840, duration: TEXT_D, ease: "power2.out", immediateRender: false }, RACE);
+tl.fromTo("#txt", { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: TEXT_D * 0.75, ease: "power2.out" }, RACE);
+tl.fromTo("#hd2", { scale: 1 }, { scale: 1.6, duration: 0.25, ease: E.p3, yoyo: true, repeat: 1, immediateRender: false }, RACE + TEXT_D);
+
+// "20 times": hero counter rolls, lands on "times"
+tl.fromTo("#c1 .n", { opacity: 0, y: 30, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.7, ease: E.p3 }, w(2.78));
+count("#v1", w(2.78), 1.0, 1, 20);
+// "faster than speech"
+blurRise("#c1 .l", 0, 0.06, 0.7, [w(3.62), w(4.12), w(4.44)]);
+fadeIn("#c1 .s", w(4.55), 0.6, { y: 12 });
+
+// "and": race exits, hero settles into the row
+tl.to("#race", { opacity: 0, x: 40, filter: "blur(6px)", duration: 0.45, ease: E.out }, w(5.00));
+tl.to("#c1", { scale: 1, y: 0, duration: 1.0, ease: E.cam }, w(5.12));
+tl.fromTo("#d1", { opacity: 0, scaleY: 0 }, { opacity: 1, scaleY: 1, duration: 0.8, ease: E.cam }, w(5.40));
+
+// "idle CPU stays under 2%": column 2, 9 -> 2 lands on "2%"
+tl.fromTo("#c2", { opacity: 0 }, { opacity: 1, duration: 0.01 }, w(5.40));
+tl.set("#c2 .lt, #c2 .s", { opacity: 0 }, 0);
+tl.fromTo("#c2 .n", { opacity: 0, y: 30, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.7, ease: E.p3 }, w(5.46));
+count("#v2", w(5.46), 1.55, 9, 2);
+blurRise("#c2 .l", 0, 0.06, 0.7, [w(5.44), w(5.80), w(6.02)]);
+tl.fromTo("#c2 .lt", { opacity: 0, x: 12 }, { opacity: 1, x: 0, duration: 0.5, ease: E.p3 }, w(6.45));
+fadeIn("#c2 .s", w(6.95), 0.6, { y: 12 });
+
+// last words: the quiet third stat
+tl.fromTo("#d2", { opacity: 0, scaleY: 0 }, { opacity: 1, scaleY: 1, duration: 0.8, ease: E.cam }, w(6.55));
+tl.fromTo("#c3", { opacity: 0 }, { opacity: 1, duration: 0.01 }, w(6.85));
+tl.set("#c3 .n, #c3 .l", { opacity: 0 }, 0);
+tl.fromTo("#c3 .n", { opacity: 0, y: 30, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.7, ease: E.p3 }, w(6.88));
+count("#v3", w(6.88), 0.95, 0, 688);
+fadeIn("#c3 .l", w(7.10), 0.7, { y: 14 });
+
+// hand-off: stats blur out, the tricolour strip draws on at the centre
+const OUT = END - 1.1;
+tl.to("#c1, #c2, #c3", { opacity: 0, y: -18, filter: "blur(8px)", duration: 0.45, ease: E.out, stagger: 0.06 }, OUT);
+tl.to("#d1, #d2", { opacity: 0, duration: 0.35, ease: E.out }, OUT);
+tl.to("#slug, #dot", { opacity: 0, duration: 0.4, ease: E.out }, OUT + 0.05);
+triDraw("#tri", OUT + 0.25, 0.6);
+window.__timelines = window.__timelines || {}; window.__timelines["main"] = tl;
+</script>
+</body></html>

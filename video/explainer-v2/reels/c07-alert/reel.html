@@ -1,0 +1,168 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8">
+<script src="assets/gsap.min.js"></script>
+<link rel="stylesheet" href="assets/film.css">
+<style>
+/* c07 — alert. Cue table (n10 starts @[n10]; absolute = n10 + word time):
+   0.00            START: ALERT red dot 24 px at (960,540) on ink (c06 hand-off)
+   0.15 .. 1.20    dot bursts into red rings; phone 1 (real recording 03_alert.mp4) grows out of the dot to the right, tilted
+   n10+0.01 "Alerts"       title word 1 blur-rises (left)
+   n10+0.70 "cut through"  title words 2–3; red rings pulse around phone 1
+   n10+1.71 "full volume"  chips ALARM STREAM · FULL VOLUME · VIBRATES; phone buzzes
+   n10+2.72 "and one tap"  title + chips exit; phone 1 swings left (the other side), phone 2 (05_sos.mp4) slides in
+   n10+3.40 "tap sends an SOS"  "One tap. SOS." (right column), SOS sheet opens in the recording
+   n10+5.00 "your location"    GPS / NavIC card 18.49 N, 73.84 E
+   n10+5.50 "read aloud on the other side"  packet leaves phone 2, turns teal at phone 1, teal rings + READ ALOUD
+   END-2.30        phones slide/fade out; ONE teal dot 24 px glides to (960,540) and holds (c08 start)
+   Videos: two <video class="clip"> direct children of #root, painted UNDER the transparent section. Their frames
+   (.bz, border-only bezels) live in #phones (outside .cam) and get the same GSAP transform as their video. */
+.vid { position: absolute; width: 336px; height: 776px; border-radius: 37px; object-fit: cover; background: #05070A; }
+#v1 { left: 1122px; top: 152px; }                         /* slot centre (1290, 540) */
+#v2 { left: 1012px; top: 152px; }                         /* slot centre (1180, 540) */
+#phones { position: absolute; inset: 0; }
+.bz { position: absolute; width: 360px; height: 800px; border-radius: 49px; border: 12px solid #05070A; background: transparent;
+      box-shadow: 0 0 0 1.5px rgba(255,255,255,.16), 0 50px 120px -30px rgba(0,0,0,.95); }
+.bz::after { content: ""; position: absolute; inset: -1px; border-radius: 38px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
+#b1 { left: 1110px; top: 140px; }
+#b2 { left: 1000px; top: 140px; }
+
+#dot { position: absolute; left: 948px; top: 528px; width: 24px; height: 24px; border-radius: 50%; background: var(--alert);
+       box-shadow: 0 0 22px 5px rgba(239,68,68,.45); }
+#burst { position: absolute; left: 960px; top: 540px; width: 0; height: 0; }
+#burst .ring { left: -160px; top: -160px; width: 320px; height: 320px; border-color: var(--alert); }
+#r1 { position: absolute; left: 1290px; top: 540px; width: 0; height: 0; }
+#r1 .ring { left: -420px; top: -420px; width: 840px; height: 840px; border-color: var(--alert); border-width: 2px; }
+#r3 { position: absolute; left: 470px; top: 560px; width: 0; height: 0; }
+#r3 .ring { left: -360px; top: -360px; width: 720px; height: 720px; }
+
+#t1 { left: 150px; top: 318px; width: 900px; }
+#t1 .h1 { font-size: 140px; line-height: 1.12; }
+#chips { left: 150px; top: 650px; display: flex; gap: 14px; }
+#chips .chip { color: var(--fg); }
+#chips .chip b { width: 10px; height: 10px; border-radius: 50%; background: var(--alert); display: inline-block; }
+
+#t2 { left: 1352px; top: 262px; }
+#t2 .h2 { font-size: 96px; }
+#t2 .red { color: var(--alert); }
+#loc { left: 1352px; top: 520px; width: 390px; height: 132px; padding: 22px 26px; }
+#loc .mono { font-size: 18px; color: var(--fg2); display: flex; align-items: center; gap: 12px; }
+#loc .mono b { width: 10px; height: 10px; border-radius: 50%; background: var(--alert); display: inline-block; }
+#loc .num { margin-top: 14px; font-size: 32px; color: var(--fg); }
+
+#pk { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+#pk path { fill: none; stroke-linecap: round; }
+#pkBase { stroke: rgba(236,234,229,.16); stroke-width: 2; stroke-dasharray: 4 8; }
+#pkTail { stroke: var(--alert); stroke-width: 3; }
+#pkDot { position: absolute; left: 0; top: 0; width: 16px; height: 16px; border-radius: 50%; background: var(--alert);
+         box-shadow: 0 0 18px 4px rgba(239,68,68,.45); opacity: 0; }
+#ra { left: 270px; top: 902px; width: 400px; text-align: center; }
+#ra .mono { font-size: 22px; color: var(--te); }
+
+#tdot { position: absolute; left: 458px; top: 548px; width: 24px; height: 24px; border-radius: 50%; background: var(--te);
+        box-shadow: 0 0 22px 5px rgba(45,212,191,.40); opacity: 0; }
+</style></head>
+<body><div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="@[END]">
+<video id="v1" class="clip vid" src="assets/img/03_alert.mp4" data-start="0.3" data-duration="@[END-0.3]" data-media-start="0" data-track-index="0" muted playsinline></video>
+<video id="v2" class="clip vid" src="assets/img/05_sos.mp4" data-start="3.4" data-duration="@[END-3.4]" data-media-start="3.8" data-track-index="0" muted playsinline></video>
+<section id="s" class="scene clip" data-start="0" data-duration="@[END]" data-track-index="1">
+  <div class="contours" data-layout-ignore></div>
+  <!-- phone bezels: same transforms as the videos underneath (not inside .cam) -->
+  <div id="phones" data-layout-ignore>
+    <div id="r1"><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
+    <div id="r3"><div class="ring te"></div><div class="ring te"></div><div class="ring te"></div></div>
+    <div id="b1" class="bz"></div>
+    <div id="b2" class="bz"></div>
+    <svg id="pk" width="1920" height="1080" viewBox="0 0 1920 1080" data-layout-allow-overflow>
+      <path id="pkBase" d="M912 560 C 830 470, 710 470, 626 560"/>
+      <path id="pkTail" d="M912 560 C 830 470, 710 470, 626 560"/>
+    </svg>
+    <div id="pkDot"></div>
+  </div>
+  <div class="cam">
+    <div id="t1" class="abs"><div class="h1">Alerts cut</div><div class="h1">through.</div></div>
+    <div id="chips" class="abs">
+      <span class="chip"><b></b>ALARM STREAM</span><span class="chip">FULL VOLUME</span><span class="chip">VIBRATES</span>
+    </div>
+    <div id="t2" class="abs">
+      <div class="mask"><div class="ln h2">One tap.</div></div>
+      <div class="mask"><div class="ln h2 red">SOS.</div></div>
+    </div>
+    <div id="loc" class="card">
+      <div class="mono"><b></b>GPS / NavIC location</div>
+      <div class="num">18.49 N, 73.84 E</div>
+    </div>
+    <div id="ra" class="abs"><div class="mono">Read aloud · other side</div></div>
+    <div id="burst"><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
+    <div id="dot"></div>
+    <div id="tdot"></div>
+  </div>
+  <div class="vignette" data-layout-ignore></div>
+  <div class="grain" data-layout-ignore></div>
+</section>
+<!--@AUDIO-->
+</div>
+<script src="assets/film.js"></script>
+<script>
+const N = @[n10], END = @[END];
+const w = (s) => N + s;
+const P = { transformPerspective: 1800, transformOrigin: "50% 50%" };
+const P1 = ["#b1", "#v1"], P2 = ["#b2", "#v2"];
+const ph = (tg, t, d, vars, ease = E.cam) => tl.to(tg, { ...vars, duration: d, ease: vars.ease || ease }, t);
+
+// START on c06's end frame: red dot, nothing else
+tl.set(".cam", { opacity: 1 }, 0);
+push(".cam", 0, END, 1.0, 1.05);
+tl.set(P1, { ...P, x: -330, y: 0, scale: 0.04, rotationY: 0, rotationX: 0, opacity: 0 }, 0);
+tl.set(P2, { ...P, x: 900, y: 0, scale: 0.92, rotationY: 14, rotationX: 4, opacity: 0 }, 0);
+
+// ---- the dot bursts: red rings, phone 1 grows out of it ----
+tl.fromTo("#dot", { scale: 1 }, { scale: 1.6, duration: 0.18, ease: E.p3, immediateRender: false }, 0.12);
+tl.to("#dot", { scale: 0.2, opacity: 0, duration: 0.35, ease: E.out }, 0.34);
+rings("#burst .ring", 0.22, 1.9, 1.3, 0.14, 0.2, 2.4);
+ph(P1, 0.3, 1.0, { x: 0, scale: 0.92, rotationY: 16, rotationX: 5, ease: "expo.out" });
+tl.to(P1, { opacity: 1, duration: 0.35, ease: "power1.out" }, 0.3);
+// slow dolly on the product shot
+ph(P1, 1.3, 1.7, { scale: 0.95, rotationY: 13, ease: E.soft });
+
+// ---- "Alerts cut through." ----
+blurRise("#t1 .h1", 0, 0.06, 0.8, [w(0.02), w(0.66), w(0.9)]);
+rings("#r1 .ring", w(0.7), w(2.9), 1.5, 0.4, 1.0, 1.32);
+// "full volume": chips; phone buzzes
+tl.fromTo("#chips .chip", { opacity: 0, y: 18, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: E.pop, stagger: 0.14 }, w(1.66));
+tl.fromTo(P1, { x: 0 }, { x: 6, duration: 0.04, ease: "none", yoyo: true, repeat: 9, immediateRender: false }, w(2.2));
+
+// ---- "and one tap sends an SOS" ----
+tl.to("#t1 .w", { opacity: 0, y: -24, filter: "blur(8px)", duration: 0.4, ease: E.out, stagger: 0.04 }, w(2.55));
+tl.to("#chips .chip", { opacity: 0, y: -16, duration: 0.35, ease: E.out, stagger: 0.05 }, w(2.6));
+ph(P1, w(2.5), 1.05, { x: -820, y: 20, scale: 0.8, rotationY: -12, rotationX: 4, ease: "expo.inOut" });
+ph(P2, w(3.0), 1.0, { x: -90, opacity: 1, rotationY: 14, ease: E.in });
+ph(P2, w(4.0), 3.2, { scale: 0.95, rotationY: 11, ease: E.soft });
+maskUp("#t2 .mask:nth-child(1)", w(3.3));
+maskUp("#t2 .mask:nth-child(2)", w(4.2));
+// tap feedback on the SOS phone
+tl.fromTo(P2, { scale: 0.92 }, { scale: 0.905, duration: 0.09, ease: E.out, yoyo: true, repeat: 1, immediateRender: false }, w(3.45));
+
+// ---- "with your location" ----
+tl.fromTo("#loc", { opacity: 0, y: 22, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: E.p3 }, w(4.95));
+tl.fromTo("#loc .num", { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.5, ease: E.p3 }, w(5.2));
+
+// ---- "read aloud on the other side": packet → teal at phone 1, teal rings ----
+tl.fromTo("#pkBase", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: E.soft }, w(5.1));
+tl.set("#pkDot", { opacity: 1 }, w(5.25));
+packet("#pkTail", "#pkDot", w(5.25), 0.6, "power2.inOut", "#pkTail");
+tl.to("#pkDot", { backgroundColor: "#2DD4BF", boxShadow: "0 0 18px 4px rgba(45,212,191,.45)", duration: 0.15, ease: E.out }, w(5.75));
+tl.to("#pkDot", { opacity: 0, scale: 2, duration: 0.35, ease: E.out }, w(5.9));
+tl.to("#pkBase", { opacity: 0, duration: 0.4, ease: E.out }, w(6.0));
+rings("#r3 .ring", w(5.85), w(7.9), 1.4, 0.4, 1.0, 1.3);
+fadeIn("#ra .mono", w(5.95), 0.6, { y: 12 });
+
+// ---- hand-off: phones leave, one teal dot to the centre ----
+const X = END - 2.35;
+tl.to("#t2 .ln, #loc", { opacity: 0, duration: 0.4, ease: E.out, stagger: 0.04 }, X);
+ph(P2, X + 0.05, 0.55, { x: 900, opacity: 0, ease: "power2.in" });
+tl.to("#ra", { opacity: 0, duration: 0.35, ease: E.out }, X + 0.2);
+tl.fromTo("#tdot", { opacity: 0, scale: 0.2 }, { opacity: 1, scale: 1, duration: 0.45, ease: E.pop }, X + 0.3);
+ph(P1, X + 0.35, 0.5, { scale: 0.7, opacity: 0, ease: "power2.in" });
+tl.to("#tdot", { left: 948.5, top: 528.5, width: 23, height: 23, duration: 1.0, ease: E.cam }, X + 0.85);
+window.__timelines = window.__timelines || {}; window.__timelines["main"] = tl;
+</script>
+</body></html>

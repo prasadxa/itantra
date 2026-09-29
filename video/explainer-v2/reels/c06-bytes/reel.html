@@ -1,0 +1,207 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8">
+<script src="assets/gsap.min.js"></script>
+<link rel="stylesheet" href="assets/film.css">
+<style>
+/* c06 — bytes. Cue table (n9 starts @[n9]; absolute times = n9 + word time):
+   0.00            START: saffron dot 64 px at (960,540) on ink (c05 hand-off); one ring pulse
+   n9+0.40 ..1.45  "Each sentence packs" the dot stretches into a long saffron bar (x 166→1754)
+   n9+1.45 ..2.60  "into a compact binary frame" bar greys out, 9 field cells build left→right
+   n9+2.98 "frame"      caption ONE SENTENCE · ON THE WIRE; scan line sweeps the strip
+   n9+3.68 "median"     counter rolls in (lands on "62" @ n9+4.35), note "median · 310 sentences · unit test"
+   n9+4.84 "bytes"      JSON 524 B appears dimmed and is struck through
+   n9+5.39 "encrypted"  line-art lock drops onto the text cell and clicks shut · CHACHA20-POLY1305
+   n9+6.14 "signed"     Ed25519 seal stamps onto the frame's end
+   n9+6.53 "once phones are paired"  QR glyph draws · X25519 PAIRING
+   END-1.25        everything else fades; strip folds back into one saffron bar → dot 64 px → 23 px, turns ALERT red at (960,540) */
+#bar { position: absolute; left: 928px; top: 508px; width: 64px; height: 64px; border-radius: 32px; background: var(--sa);
+       box-shadow: 0 0 28px 6px rgba(249,115,22,.40); }
+#ring0 { position: absolute; left: 960px; top: 540px; width: 0; height: 0; }
+#ring0 .ring { left: -110px; top: -110px; width: 220px; height: 220px; }
+
+#strip { position: absolute; left: 166px; top: 476px; width: 1588px; height: 128px; display: flex; gap: 6px; }
+.cell { position: relative; height: 128px; flex: none; background: var(--surface); border: 1px solid var(--line2); border-radius: 14px;
+        padding: 16px 16px 18px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+.cell .b { font-family: var(--mono); font-weight: 500; font-size: 42px; line-height: 1; color: var(--fg); font-variant-numeric: tabular-nums; }
+.cell .b i { font-style: normal; font-size: 22px; color: var(--fg2); margin-left: 4px; }
+.cell .f { font-family: var(--mono); font-weight: 500; font-size: 16px; letter-spacing: .06em; text-transform: uppercase; color: var(--fg2); white-space: nowrap; }
+.cell.tx { background: rgba(249,115,22,.13); border-color: rgba(249,115,22,.85); }
+.cell.tx .f { color: var(--sa); }
+#scan { position: absolute; left: 166px; top: 470px; width: 3px; height: 140px; background: var(--sa); border-radius: 2px;
+        box-shadow: 0 0 18px 4px rgba(249,115,22,.35); opacity: 0; }
+
+#cap { left: 166px; top: 420px; }
+#cap .ln { font-size: 22px; color: var(--fg2); }
+
+#ctr { position: absolute; left: 150px; top: 138px; display: flex; align-items: flex-end; height: 230px; }
+.dg { display: block; width: 144px; height: 230px; overflow: hidden; }
+.dg .col { display: block; font-family: var(--mono); font-weight: 500; font-size: 230px; line-height: 230px; text-align: center; color: var(--fg); }
+.dg .col span { display: block; height: 230px; }
+#ctr .u { font-family: var(--mono); font-weight: 500; font-size: 120px; line-height: 1; color: var(--fg3); margin: 0 0 22px 18px; }
+#note { left: 640px; top: 196px; }
+#note .mono { color: var(--fg2); font-size: 22px; }
+#json { left: 640px; top: 250px; display: flex; align-items: baseline; gap: 18px; }
+#json .mono { font-size: 22px; color: var(--fg2); }
+#json .num { font-size: 44px; color: var(--fg3); }
+#json .st { position: absolute; left: -6px; right: -6px; top: 58%; height: 3px; background: var(--fg2); transform-origin: 0 50%; transform: scaleX(0); }
+
+#lock { left: 1534px; top: 496px; width: 72px; height: 88px; overflow: visible; }
+#lock .bd { stroke: var(--fg); stroke-width: 3; fill: var(--ink) !important; }
+#lock .sh { stroke: var(--fg); stroke-width: 3; }
+#lock .kh { stroke: var(--fg); stroke-width: 3; }
+#lockL { left: 1400px; top: 632px; width: 340px; text-align: center; }
+#lockL .mono { font-size: 20px; color: var(--fg2); }
+#lockL .mono + .mono { margin-top: 6px; font-size: 18px; }
+
+#seal { left: 1682px; top: 404px; width: 144px; height: 144px; overflow: visible; }
+#seal .o { fill: var(--ink) !important; stroke: var(--fg); stroke-width: 2.5; }
+#seal .i { stroke: var(--fg2); stroke-width: 1.5; stroke-dasharray: 3 5; }
+#seal text { font-family: var(--mono); font-weight: 500; fill: var(--fg); letter-spacing: .06em; }
+
+#qr { left: 1234px; top: 770px; width: 104px; height: 104px; overflow: visible; }
+#qr rect { stroke: var(--fg); stroke-width: 3; }
+#qr .m { fill: var(--fg) !important; stroke: none; }
+#qrL { left: 1370px; top: 782px; }
+#qrL .h3 { font-family: var(--mono); font-weight: 500; font-size: 34px; letter-spacing: .04em; color: var(--fg); }
+#qrL .mono { margin-top: 10px; font-size: 20px; color: var(--fg2); }
+</style></head>
+<body><div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="@[END]">
+<section id="s" class="scene clip" data-start="0" data-duration="@[END]" data-track-index="1">
+  <div class="contours" data-layout-ignore></div>
+  <div class="cam">
+    <!-- rolling counter + notes -->
+    <div id="ctr" data-layout-ignore>
+      <span class="dg" id="d1"><span class="col"><span>&#8199;</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></span></span>
+      <span class="dg" id="d2"><span class="col" id="d2c"></span></span>
+      <span class="u">B</span>
+    </div>
+    <div id="note" class="abs"><div class="mono">median · 310 sentences · unit test</div></div>
+    <div id="json" class="abs"><span class="mono">JSON</span><span class="num">524 B</span><div class="st"></div></div>
+
+    <div id="cap" class="abs"><div class="mask"><div class="ln mono">One sentence · on the wire</div></div></div>
+
+    <!-- the binary frame -->
+    <div id="bar" data-layout-allow-overlap></div>
+    <div id="strip">
+      <div class="cell" style="width:110px"><div class="b">1<i>B</i></div><div class="f">ver·type</div></div>
+      <div class="cell" style="width:100px"><div class="b">1<i>B</i></div><div class="f">flags</div></div>
+      <div class="cell" style="width:170px"><div class="b">4<i>B</i></div><div class="f">message id</div></div>
+      <div class="cell" style="width:130px"><div class="b">2<i>B</i></div><div class="f">sender</div></div>
+      <div class="cell" style="width:120px"><div class="b">1<i>B</i></div><div class="f">lang·emo</div></div>
+      <div class="cell" style="width:90px"><div class="b">1<i>B</i></div><div class="f">TTL</div></div>
+      <div class="cell" style="width:200px"><div class="b">6<i>B</i></div><div class="f">timestamp</div></div>
+      <div class="cell" style="width:100px"><div class="b">1<i>B</i></div><div class="f">codec</div></div>
+      <div class="cell tx" style="width:520px"><div class="b">≈40–75<i>B</i></div><div class="f">compressed text</div></div>
+    </div>
+    <div id="scan" data-layout-allow-overflow></div>
+
+    <!-- encrypted: lock over the text cell -->
+    <svg id="lock" class="abs draw" viewBox="0 0 72 88" data-layout-allow-overlap>
+      <path class="sh" d="M18 44 V28 a18 18 0 0 1 36 0 V44"/>
+      <rect class="bd" x="6" y="42" width="60" height="42" rx="9"/>
+      <path class="kh" d="M36 58 V68"/>
+    </svg>
+    <div id="lockL" class="abs"><div class="mono">ChaCha20-Poly1305</div><div class="mono">+20 B nonce · tag</div></div>
+
+    <!-- signed: Ed25519 seal at the frame's end -->
+    <svg id="seal" class="abs draw" viewBox="0 0 144 144" data-layout-allow-overlap data-layout-allow-overflow>
+      <circle class="o" cx="72" cy="72" r="64"/>
+      <circle class="i" cx="72" cy="72" r="53"/>
+      <text x="72" y="70" text-anchor="middle" font-size="19">ED25519</text>
+      <text x="72" y="94" text-anchor="middle" font-size="14" style="fill:rgba(236,234,229,.7)">SIGNED</text>
+    </svg>
+
+    <!-- paired: QR + X25519 -->
+    <svg id="qr" class="abs draw" viewBox="0 0 104 104">
+      <rect x="4" y="4" width="30" height="30" rx="4"/><rect x="70" y="4" width="30" height="30" rx="4"/><rect x="4" y="70" width="30" height="30" rx="4"/>
+      <g id="qrm"></g>
+    </svg>
+    <div id="qrL" class="abs"><div class="h3">X25519 pairing</div><div class="mono">QR scan · key exchange</div></div>
+
+    <div id="ring0"><div class="ring"></div></div>
+  </div>
+  <div class="vignette" data-layout-ignore></div>
+  <div class="grain" data-layout-ignore></div>
+</section>
+<!--@AUDIO-->
+</div>
+<script src="assets/film.js"></script>
+<script>
+const N = @[n9], END = @[END];
+const w = (s) => N + s;                       // word time → absolute
+
+// ---- build dynamic bits (deterministic) ----
+(() => {
+  const c = $("#d2c"); let h = "";
+  for (let k = 0; k < 3; k++) for (let d = 0; d < 10; d++) h += `<span>${d}</span>`;
+  c.innerHTML = h;
+  const g = $("#qrm"), r = rng(26173); let m = "";
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+    const px = 4 + x * 12.3, py = 4 + y * 12.3;
+    const inFinder = (x < 3 && y < 3) || (x > 4 && y < 3) || (x < 3 && y > 4);
+    if (!inFinder && r() > 0.45) m += `<rect class="m" x="${(px + 1).toFixed(1)}" y="${(py + 1).toFixed(1)}" width="9" height="9" rx="1.5"/>`;
+  }
+  m += `<rect class="m" x="12" y="12" width="14" height="14" rx="2"/><rect class="m" x="78" y="12" width="14" height="14" rx="2"/><rect class="m" x="12" y="78" width="14" height="14" rx="2"/>`;
+  g.innerHTML = m;
+})();
+
+// START on c05's end frame: saffron dot, no fade from black
+tl.set(".cam", { opacity: 1 }, 0);
+push(".cam", 0, END, 1.0, 1.05);
+
+// ---- dot breathes once, then stretches into the frame ----
+rings("#ring0 .ring", 0.12, 1.2, 1.1, 0);
+tl.fromTo("#bar", { scale: 1 }, { scale: 1.14, duration: 0.3, ease: E.soft, yoyo: true, repeat: 1, immediateRender: false }, 0.12);
+tl.to("#bar", { left: 166, width: 1588, duration: 1.15, ease: "expo.inOut" }, w(0.36));
+tl.to("#bar", { top: 476, height: 128, borderRadius: 16, duration: 0.7, ease: E.cam }, w(1.0));
+tl.to("#bar", { backgroundColor: "#161920", boxShadow: "0 0 0px 0px rgba(249,115,22,0)", duration: 0.5, ease: E.soft }, w(1.45));
+// cells build left → right
+const cells = $$("#strip .cell");
+cells.forEach((c, i) => {
+  const t = w(1.5) + i * 0.1;
+  tl.fromTo(c, { opacity: 0, y: 14, scaleX: 0.92 }, { opacity: 1, y: 0, scaleX: 1, duration: 0.55, ease: E.p3 }, t);
+  tl.fromTo(c.children, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.45, ease: E.p3, stagger: 0.05 }, t + 0.15);
+});
+tl.to("#bar", { opacity: 0, duration: 0.4, ease: E.soft }, w(2.3));
+// "frame": caption + scan line sweeps the strip
+maskUp("#cap", w(2.85));
+tl.set("#scan", { opacity: 1 }, w(3.0));
+tl.fromTo("#scan", { x: 0 }, { x: 1585, duration: 0.9, ease: "power2.inOut", immediateRender: false }, w(3.0));
+tl.to("#scan", { opacity: 0, duration: 0.2, ease: E.out }, w(3.75));
+
+// ---- 62 B: rolling counter lands on "sixty-two" ----
+tl.fromTo("#ctr", { opacity: 0, y: 20, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.5, ease: E.p3 }, w(3.5));
+tl.fromTo("#d1 .col", { y: 0 }, { y: -6 * 230, duration: 0.95, ease: "power3.out", immediateRender: false }, w(3.55));
+tl.fromTo("#d2c", { y: 0 }, { y: -22 * 230, duration: 1.0, ease: "power3.out", immediateRender: false }, w(3.5));
+blurRise("#note .mono", w(3.72), 0.05, 0.7);
+// JSON 524 B, dimmed then struck
+fadeIn("#json", w(4.6), 0.5, { y: 12 });
+tl.to("#json .st", { scaleX: 1, duration: 0.4, ease: E.cam }, w(5.0));
+
+// ---- encrypted: lock drops onto the text cell and clicks shut ----
+tl.fromTo("#lock", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.45, ease: E.p3 }, w(5.0));
+tl.fromTo("#lock .sh", { y: -12 }, { y: 0, duration: 0.14, ease: "power4.in", immediateRender: false }, w(5.3));
+tl.fromTo("#lock", { scale: 1 }, { scale: 0.94, duration: 0.07, ease: E.out, yoyo: true, repeat: 1, transformOrigin: "50% 100%", immediateRender: false }, w(5.44));
+tl.fromTo(".cell.tx", { borderColor: "rgba(249,115,22,.85)" }, { borderColor: "rgba(249,115,22,1)", backgroundColor: "rgba(249,115,22,.22)", duration: 0.15, ease: E.out, yoyo: true, repeat: 1, immediateRender: false }, w(5.44));
+fadeIn("#lockL .mono", w(5.55), 0.55, { y: 12 });
+
+// ---- signed: Ed25519 seal stamps on ----
+tl.fromTo("#seal", { opacity: 0, scale: 1.7, rotation: -28 }, { opacity: 1, scale: 1, rotation: -8, duration: 0.3, ease: "power4.in" }, w(5.86));
+tl.fromTo("#seal", { scale: 1 }, { scale: 1.05, duration: 0.1, ease: E.out, yoyo: true, repeat: 1, immediateRender: false }, w(6.16));
+
+// ---- paired: QR glyph + X25519 ----
+tl.fromTo("#qr", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: E.soft }, w(6.5));
+draw("#qr > rect", w(6.5), 0.6, 0.08);
+tl.fromTo("#qr .m", { opacity: 0, scale: 0.3, transformOrigin: "50% 50%" }, { opacity: 1, scale: 1, duration: 0.3, ease: E.pop, stagger: { each: 0.012, from: "random" } }, w(6.75));
+tl.fromTo("#qrL .h3", { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.6, ease: E.p3 }, w(6.8));
+tl.fromTo("#qrL .mono", { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.6, ease: E.p3 }, w(7.4));
+
+// ---- hand-off: fold back into one dot, which turns ALERT red ----
+const X = END - 1.3;
+tl.to("#ctr, #note, #json, #cap, #lock, #lockL, #seal, #qr, #qrL", { opacity: 0, duration: 0.4, ease: E.out }, X);
+tl.fromTo("#bar", { opacity: 0, backgroundColor: "#161920" }, { opacity: 1, backgroundColor: "#F97316", duration: 0.3, ease: E.soft, immediateRender: false }, X + 0.15);
+tl.to(cells, { opacity: 0, duration: 0.25, ease: E.out }, X + 0.3);
+tl.to("#bar", { left: 928, width: 64, top: 508, height: 64, borderRadius: 32, boxShadow: "0 0 28px 6px rgba(249,115,22,.40)", duration: 0.55, ease: "expo.in" }, X + 0.35);
+tl.to("#bar", { left: 948.5, top: 528.5, width: 23, height: 23, borderRadius: 12, backgroundColor: "#EF4444", boxShadow: "0 0 22px 5px rgba(239,68,68,.45)", duration: 0.35, ease: E.p3 }, X + 0.9);
+window.__timelines = window.__timelines || {}; window.__timelines["main"] = tl;
+</script>
+</body></html>

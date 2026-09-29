@@ -1,0 +1,1 @@
+n1: When@0.02 a@0.25 flood@0.45 takes@0.90 the@1.35 towers@1.62 down,@2.56 your@2.93 phone@3.24 still@3.83 works.@4.96 The@5.08 network@5.51 doesn't.@5.94

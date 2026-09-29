@@ -1,0 +1,65 @@
+{
+ "music": "silence",
+ "tail": 0.9,
+ "lines": [
+  {
+   "id": "n6",
+   "voice": "en-in-storyteller-2",
+   "text": "Everything runs on the phone itself. No cloud. No internet.",
+   "at": 0.45
+  },
+  {
+   "id": "n7",
+   "voice": "en-in-storyteller-2",
+   "text": "Open speech models from I I Sc, I I T Madras and AI4Bharat listen, and speak, in Hindi, Tamil, Bengali and seven more.",
+   "gap": 0.45
+  }
+ ],
+ "sfx": [
+  [
+   "sub_hit.wav",
+   "n6+1.62",
+   0.16
+  ],
+  [
+   "click2.ogg",
+   "n6+2.95",
+   0.22
+  ],
+  [
+   "click2.ogg",
+   "n6+3.66",
+   0.22
+  ],
+  [
+   "card-slide-1.ogg",
+   "n7+2.3",
+   0.22
+  ],
+  [
+   "card-slide-1.ogg",
+   "n7+3.05",
+   0.2
+  ],
+  [
+   "card-slide-1.ogg",
+   "n7+4.45",
+   0.2
+  ],
+  [
+   "chip-lay-1.ogg",
+   "n7+7.52",
+   0.2
+  ],
+  [
+   "chip-lay-1.ogg",
+   "n7+9.92",
+   0.18
+  ],
+  [
+   "whoosh_down.wav",
+   "END-1.3",
+   0.18
+  ]
+ ]
+}
