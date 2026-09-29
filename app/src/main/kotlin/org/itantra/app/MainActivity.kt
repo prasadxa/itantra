@@ -12,11 +12,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import org.itantra.app.ui.AppRoot
 import org.itantra.app.ui.LocaleManager
 import org.itantra.app.ui.OnboardingScreen
+import org.itantra.app.ui.settings.SettingsPrefs
 import org.itantra.app.ui.theme.ItantraTheme
 
 class MainActivity : ComponentActivity() {
@@ -35,7 +37,17 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val onboardingAlreadyDone = LocaleManager.isOnboardingDone(this)
         setContent {
-            ItantraTheme {
+            // Settings screen's theme override (System/Light/Dark, see SettingsPrefs.ThemeMode);
+            // applied here (rather than reactively) via the same activity.recreate() pattern the
+            // UI-language picker already uses, so this stays a one-line additive read instead of
+            // a new app-wide observable.
+            val themeMode = remember { SettingsPrefs.getThemeMode(this) }
+            val darkTheme = when (themeMode) {
+                SettingsPrefs.ThemeMode.LIGHT -> false
+                SettingsPrefs.ThemeMode.DARK -> true
+                SettingsPrefs.ThemeMode.SYSTEM -> isSystemInDarkTheme()
+            }
+            ItantraTheme(darkTheme = darkTheme) {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     var showOnboarding by remember { mutableStateOf(!onboardingAlreadyDone) }
                     if (showOnboarding) {

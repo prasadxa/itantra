@@ -6,6 +6,8 @@ import android.content.Intent
 import android.util.Log
 import java.io.File
 import java.util.UUID
+import kotlinx.coroutines.runBlocking
+import org.itantra.app.location.LocationProvider
 import org.itantra.core.Lang
 import org.itantra.core.Priority
 import org.itantra.core.TtsEngine
@@ -16,6 +18,7 @@ private const val ACTION_DEBUG_STT_WAV = "org.itantra.DEBUG_STT_WAV"
 private const val ACTION_DEBUG_SPEAK = "org.itantra.DEBUG_SPEAK"
 private const val ACTION_DEBUG_STT_BATCH = "org.itantra.DEBUG_STT_BATCH"
 private const val ACTION_DEBUG_TTS_SAVE = "org.itantra.DEBUG_TTS_SAVE"
+private const val ACTION_DEBUG_SOS = "org.itantra.DEBUG_SOS"
 
 /**
  * Debug-build-only hooks for automated on-device testing (this whole `app/src/debug` source set
@@ -30,6 +33,9 @@ private const val ACTION_DEBUG_TTS_SAVE = "org.itantra.DEBUG_TTS_SAVE"
  *     --es path /sdcard/test.wav --es lang hi
  * adb shell am broadcast -a org.itantra.DEBUG_SPEAK -n org.itantra.app/.DebugCommandReceiver \
  *     --es text "namaste, kaise ho" --es lang hi --ez alert false --ez ssml false
+ * adb shell am broadcast -a org.itantra.DEBUG_SOS -n org.itantra.app/.DebugCommandReceiver \
+ *     --es text "Need rescue" --es lang en --ez safe false \
+ *     --es lat 12.9716 --es lon 77.5946 --es accuracyM 15
  * ```
  */
 class DebugCommandReceiver : BroadcastReceiver() {
@@ -83,6 +89,17 @@ class DebugCommandReceiver : BroadcastReceiver() {
                         pending.finish()
                     }
                 }.start()
+            }
+            ACTION_DEBUG_SOS -> {
+                handleSos(
+                    service = service,
+                    text = intent.getStringExtra("text") ?: "Need rescue",
+                    langCode = intent.getStringExtra("lang"),
+                    safe = intent.getBooleanExtra("safe", false),
+                    lat = intent.getStringExtra("lat")?.toDoubleOrNull(),
+                    lon = intent.getStringExtra("lon")?.toDoubleOrNull(),
+                    accuracyM = intent.getStringExtra("accuracyM")?.toFloatOrNull(),
+                )
             }
             ACTION_DEBUG_TTS_SAVE -> {
                 val text = intent.getStringExtra("text")
@@ -328,6 +345,37 @@ class DebugCommandReceiver : BroadcastReceiver() {
     }
 
     /** Runs the receive path locally: TextPipeline -> TTS -> SpeechOutput, as if a Frame.Msg arrived. */
+    /**
+     * One-tap SOS via the same [TalkService.onSendSos] path `SosSheet` uses. If `lat`/`lon`
+     * aren't given, fetches a real fix via [LocationProvider] (falls back to a location-less SOS
+     * on timeout/no permission) - exercises the actual on-device GPS path, not just a hardcoded
+     * coordinate, so this also serves as the "debug path" for end-to-end gateway verification.
+     */
+    private fun handleSos(service: TalkService, text: String, langCode: String?, safe: Boolean, lat: Double?, lon: Double?, accuracyM: Float?) {
+        val lang = langCode?.let { runCatching { Lang.of(it) }.getOrNull() } ?: service.orchestrator.language
+        if (lat != null && lon != null) {
+            val id = service.onSendSos(text, lang, lat, lon, accuracyM, safe)
+            Metrics.log("event" to "debug_sos", "id" to id, "lang" to lang.code, "lat" to lat, "lon" to lon, "accuracyM" to accuracyM, "source" to "extras")
+            return
+        }
+        val pending = goAsync()
+        Thread {
+            try {
+                val provider = LocationProvider(service.applicationContext)
+                val fix = runBlocking { provider.getFix(8_000L) }
+                val id = service.onSendSos(text, lang, fix?.lat, fix?.lon, fix?.accuracyOrNull, safe)
+                Metrics.log(
+                    "event" to "debug_sos", "id" to id, "lang" to lang.code,
+                    "lat" to fix?.lat, "lon" to fix?.lon, "accuracyM" to fix?.accuracyOrNull,
+                    "constellations" to fix?.constellations?.joinToString(","),
+                    "source" to "gps",
+                )
+            } finally {
+                pending.finish()
+            }
+        }.start()
+    }
+
     private fun handleSpeak(service: TalkService, text: String, langCode: String?, alert: Boolean, ssml: Boolean, play: Boolean = true) {
         val lang = langCode?.let { runCatching { Lang.of(it) }.getOrNull() } ?: service.orchestrator.language
         val textPipeline = service.engines.textPipeline

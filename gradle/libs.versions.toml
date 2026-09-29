@@ -11,6 +11,8 @@ coreKtx = "1.17.0"
 coreSplashscreen = "1.0.1"
 junit = "4.13.2"
 bouncycastle = "1.86"
+zxing = "3.5.3"
+camerax = "1.4.2"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -32,6 +34,11 @@ serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-jso
 sherpa-onnx = { module = "com.github.k2-fsa.sherpa-onnx:sherpa-onnx", version.ref = "sherpa" }
 junit = { module = "junit:junit", version.ref = "junit" }
 bouncycastle-prov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
+androidx-camera-core = { module = "androidx.camera:camera-core", version.ref = "camerax" }
+androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
+androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -22,7 +22,8 @@ import java.nio.charset.StandardCharsets
  * ```
  * byte 0      version(4b) | type(4b)
  * byte 1      flags: 0x01 ALERT priority, 0x02 SSML, 0x04 ENCRYPTED, 0x08 fragment (reserved),
- *             0x10 emotion nibble present, 0x40 Ed25519 signature appended
+ *             0x10 emotion nibble present, 0x40 Ed25519 signature appended, 0x80 SOS location
+ *             appended (plaintext, right after the payload — see [FLAG_LOCATION])
  * bytes 2-5   message id (int32) — stable hash of VoiceMessage.id, see [registerMessageId]
  * bytes 6-7   sender short id (uint16) — stable hash of VoiceMessage.from, see [registerSender]
  * byte 8      lang (high nibble) | emotion (low nibble, 0 if not present)
@@ -34,6 +35,9 @@ import java.nio.charset.StandardCharsets
  *             8-byte truncated AEAD tag (see [org.itantra.transport.crypto.ChaChaPoly1305]) wrapping
  *             those same compressed/raw text bytes — the 16-byte header above is the AEAD associated
  *             data, so tampering with it (message id, sender, priority flag, ...) is also detected.
+ * [11 bytes]  optional SOS location, present iff the 0x80 flag is set: 1-byte has-accuracy flag +
+ *             int32 lat + int32 lon (microdegrees) [+ int32 accuracy in decimetres] — see
+ *             [VoiceMessage.lat]/[lon]/[accuracyM].
  * [64 bytes]  Ed25519 signature over header ‖ plaintext text, present iff the 0x40 flag is set —
  *             required for an ALERT to survive decode as ALERT, see [decodeDetailed].
  * ```
@@ -64,6 +68,11 @@ object BinaryFrameCodec {
     const val FLAG_EMOTION_PRESENT = 0x10
     const val FLAG_TALKING = 0x20
     const val FLAG_SIGNED = 0x40
+    /** [Frame.Msg] only: an optional SOS location follows the payload (see [encodeMsg]/[decodeMsg]).
+     * Plaintext even when [FLAG_ENCRYPTED] is set (matches the "minimal additive" scope for this
+     * field) — lat/lon are carried as int32 microdegrees, accuracy as int32 decimetres, so no new
+     * [ByteWriter]/[ByteReader] primitives are needed. */
+    const val FLAG_LOCATION = 0x80
 
     const val DEFAULT_TTL = 8
     private const val HEADER_LEN_MSG = 16
@@ -203,6 +212,8 @@ object BinaryFrameCodec {
         if (encrypt) flags = flags or FLAG_ENCRYPTED
         val sign = signWith != null && m.priority == Priority.ALERT
         if (sign) flags = flags or FLAG_SIGNED
+        val hasLocation = m.lat != null && m.lon != null
+        if (hasLocation) flags = flags or FLAG_LOCATION
 
         val msgId = registerMessageId(m.id)
         val senderShortId = registerSender(m.from)
@@ -226,6 +237,14 @@ object BinaryFrameCodec {
         val payload = if (encrypt) session!!.encrypt(headerBytes, compressed) else compressed
         w.writeVarInt(payload.size)
         w.writeBytes(payload)
+
+        if (hasLocation) {
+            val hasAccuracy = m.accuracyM != null
+            w.writeU8(if (hasAccuracy) 1 else 0)
+            w.writeI32(Math.round(m.lat!! * 1_000_000.0).toInt())
+            w.writeI32(Math.round(m.lon!! * 1_000_000.0).toInt())
+            if (hasAccuracy) w.writeI32(Math.round(m.accuracyM!! * 10f))
+        }
 
         if (sign) {
             val textBytes = m.text.toByteArray(StandardCharsets.UTF_8)
@@ -299,6 +318,18 @@ object BinaryFrameCodec {
         val payload = r.readBytes(payloadLen)
         val headerBytes = raw.copyOfRange(0, HEADER_LEN_MSG)
 
+        // Read before the encrypted-payload branch below: these bytes sit on the wire right after
+        // the (possibly encrypted) payload regardless of whether decryption succeeds.
+        var lat: Double? = null
+        var lon: Double? = null
+        var accuracyM: Float? = null
+        if (flags and FLAG_LOCATION != 0) {
+            val hasAccuracy = r.readU8() != 0
+            lat = r.readI32() / 1_000_000.0
+            lon = r.readI32() / 1_000_000.0
+            if (hasAccuracy) accuracyM = r.readI32() / 10f
+        }
+
         val lang = Lang.entries[(langEmotion ushr 4) and 0xF]
         val emotion = if (flags and FLAG_EMOTION_PRESENT != 0) Emotion.entries[langEmotion and 0xF] else null
         val id = resolveMessageId(msgId)
@@ -318,6 +349,7 @@ object BinaryFrameCodec {
             val msg = VoiceMessage(
                 id = id, from = from, lang = lang, text = "",
                 priority = Priority.NORMAL, emotion = emotion, ssml = false, sentAt = sentAt,
+                lat = lat, lon = lon, accuracyM = accuracyM,
             )
             return BinaryDecodeResult(
                 Frame.Msg(msg),
@@ -356,6 +388,7 @@ object BinaryFrameCodec {
         val message = VoiceMessage(
             id = id, from = from, lang = lang, text = text,
             priority = priority, emotion = emotion, ssml = flags and FLAG_SSML != 0, sentAt = sentAt,
+            lat = lat, lon = lon, accuracyM = accuracyM,
         )
         return BinaryDecodeResult(Frame.Msg(message), alertDowngraded = downgraded, downgradeReason = downgradeReason, decrypted = encrypted)
     }

@@ -2,6 +2,7 @@ package org.itantra.app.ui
 
 import android.app.Activity
 import android.content.Context
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -11,7 +12,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,37 +25,47 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import org.itantra.app.AppRepository
 import org.itantra.app.R
 import org.itantra.app.TalkService
+import org.itantra.app.ui.history.HistoryScreen
+import org.itantra.app.ui.pairing.PairingScreen
+import org.itantra.app.ui.settings.SettingsPrefs
+import org.itantra.app.ui.settings.SettingsScreen
 import org.itantra.app.ui.theme.MonoText
 import org.itantra.app.ui.theme.TricolourHairline
 import org.itantra.app.ui.theme.rememberReducedMotion
@@ -63,7 +73,13 @@ import org.itantra.core.Lang
 import org.itantra.core.LinkKind
 import org.itantra.core.LinkState
 
-private enum class Screen { CHAT, METRICS, MODELS, ABOUT }
+/** [TALK]/[HISTORY]/[METRICS]/[SETTINGS] are the four bottom-nav destinations; [ABOUT]/[MODELS]/
+ * [PAIRING] are detail screens pushed from Settings (back returns to Settings — see [AppRoot]'s
+ * two [BackHandler]s). A plain enum round-trips through [rememberSaveable] (it implements
+ * `Serializable`) with no custom `Saver`, so the current tab survives process death/recreation. */
+private enum class Screen { TALK, HISTORY, METRICS, SETTINGS, ABOUT, MODELS, PAIRING }
+
+private fun Screen.isDetail() = this == Screen.ABOUT || this == Screen.MODELS || this == Screen.PAIRING
 
 tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
@@ -73,56 +89,116 @@ tailrec fun Context.findActivity(): Activity? = when (this) {
 
 @Composable
 fun AppRoot() {
-    var screen by remember { mutableStateOf(Screen.CHAT) }
+    var screen by rememberSaveable { mutableStateOf(Screen.TALK) }
     val linkState by AppRepository.linkState.collectAsState()
     val rttMs by AppRepository.rttMs.collectAsState()
     val language by AppRepository.language.collectAsState()
+    val context = LocalContext.current
+    val largeText by SettingsPrefs.largeText(context).collectAsState()
 
-    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
-            TopBar(
-                language = language,
-                onOpenMetrics = { screen = Screen.METRICS },
-                onOpenModels = { screen = Screen.MODELS },
-                onOpenAbout = { screen = Screen.ABOUT },
-                showBack = screen != Screen.CHAT,
-                onBack = { screen = Screen.CHAT },
-                screenTitle = when (screen) {
-                    Screen.METRICS -> stringResource(R.string.menu_metrics)
-                    Screen.MODELS -> stringResource(R.string.menu_models)
-                    Screen.ABOUT -> stringResource(R.string.menu_about)
-                    Screen.CHAT -> null
-                },
-            )
-            if (screen == Screen.CHAT) {
-                StatusCard(linkState = linkState, rttMs = rttMs)
-            }
-            Box(Modifier.weight(1f)) {
-                when (screen) {
-                    Screen.CHAT -> ChatScreen(onOpenModels = { screen = Screen.MODELS })
-                    Screen.METRICS -> MetricsScreen()
-                    Screen.MODELS -> ModelsScreen()
-                    Screen.ABOUT -> AboutScreen()
+    // Predictive/system back: a detail screen (About/Models/Pairing) returns to Settings; any
+    // other non-Talk tab returns to Talk; Talk itself is left alone so back exits the app as usual.
+    BackHandler(enabled = screen.isDetail()) { screen = Screen.SETTINGS }
+    BackHandler(enabled = !screen.isDetail() && screen != Screen.TALK) { screen = Screen.TALK }
+
+    val baseDensity = LocalDensity.current
+    val scaledDensity = remember(baseDensity, largeText) {
+        Density(baseDensity.density, fontScale = baseDensity.fontScale * (if (largeText) 1.25f else 1f))
+    }
+
+    CompositionLocalProvider(LocalDensity provides scaledDensity) {
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.background,
+            bottomBar = {
+                if (!screen.isDetail()) {
+                    BottomNavBar(screen = screen, onSelect = { screen = it })
+                }
+            },
+        ) { padding ->
+            Column(Modifier.padding(padding).fillMaxSize()) {
+                TopBar(
+                    screen = screen,
+                    language = language,
+                    linkState = linkState,
+                    onBack = { screen = Screen.SETTINGS },
+                )
+                if (screen == Screen.TALK) {
+                    StatusCard(linkState = linkState, rttMs = rttMs)
+                }
+                Box(Modifier.weight(1f)) {
+                    when (screen) {
+                        Screen.TALK -> ChatScreen(onOpenModels = { screen = Screen.MODELS })
+                        Screen.HISTORY -> HistoryScreen(onBack = { screen = Screen.TALK })
+                        Screen.METRICS -> MetricsScreen()
+                        Screen.SETTINGS -> SettingsScreen(
+                            onOpenPairing = { screen = Screen.PAIRING },
+                            onOpenModels = { screen = Screen.MODELS },
+                            onOpenAbout = { screen = Screen.ABOUT },
+                        )
+                        Screen.ABOUT -> AboutScreen()
+                        Screen.MODELS -> ModelsScreen()
+                        Screen.PAIRING -> PairingScreen()
+                    }
                 }
             }
         }
     }
 }
 
+@Composable
+private fun BottomNavBar(screen: Screen, onSelect: (Screen) -> Unit) {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+        NavigationBarItem(
+            selected = screen == Screen.TALK,
+            onClick = { onSelect(Screen.TALK) },
+            icon = { Icon(Icons.Filled.Chat, contentDescription = null) },
+            label = { Text(stringResource(R.string.nav_talk)) },
+        )
+        NavigationBarItem(
+            selected = screen == Screen.HISTORY,
+            onClick = { onSelect(Screen.HISTORY) },
+            icon = { Icon(Icons.Filled.History, contentDescription = null) },
+            label = { Text(stringResource(R.string.nav_history)) },
+        )
+        NavigationBarItem(
+            selected = screen == Screen.METRICS,
+            onClick = { onSelect(Screen.METRICS) },
+            icon = { Icon(Icons.Filled.Insights, contentDescription = null) },
+            label = { Text(stringResource(R.string.menu_metrics)) },
+        )
+        NavigationBarItem(
+            selected = screen == Screen.SETTINGS,
+            onClick = { onSelect(Screen.SETTINGS) },
+            icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
+            label = { Text(stringResource(R.string.nav_settings)) },
+        )
+    }
+}
+
+@Composable
+private fun screenTitle(screen: Screen): String = when (screen) {
+    Screen.TALK -> stringResource(R.string.app_name)
+    Screen.HISTORY -> stringResource(R.string.nav_history)
+    Screen.METRICS -> stringResource(R.string.menu_metrics)
+    Screen.SETTINGS -> stringResource(R.string.nav_settings)
+    Screen.ABOUT -> stringResource(R.string.menu_about)
+    Screen.MODELS -> stringResource(R.string.menu_models)
+    Screen.PAIRING -> stringResource(R.string.pairing_title)
+}
+
+/** Clean top app bar: logo (Talk tab only — a back arrow replaces it everywhere else), the
+ * section title, a compact peer-status pill, and (bottom-nav tabs only) the UI-language switch. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TopBar(
+    screen: Screen,
     language: Lang,
-    onOpenMetrics: () -> Unit,
-    onOpenModels: () -> Unit,
-    onOpenAbout: () -> Unit,
-    showBack: Boolean,
+    linkState: LinkState,
     onBack: () -> Unit,
-    screenTitle: String?,
 ) {
-    var overflowExpanded by remember { mutableStateOf(false) }
     var langSheetOpen by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val showBack = screen.isDetail()
 
     Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
         Column {
@@ -134,7 +210,7 @@ private fun TopBar(
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back), tint = MaterialTheme.colorScheme.onSurface)
                     }
-                    Text(screenTitle ?: "", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium, modifier = Modifier.padding(start = 4.dp).weight(1f))
+                    Text(screenTitle(screen), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium, modifier = Modifier.padding(start = 4.dp).weight(1f))
                 } else {
                     Image(
                         painter = painterResource(R.drawable.brand_logo),
@@ -142,28 +218,17 @@ private fun TopBar(
                         modifier = Modifier.size(28.dp).clip(RoundedCornerShape(6.dp)),
                     )
                     Text(
-                        stringResource(R.string.app_name),
+                        screenTitle(screen),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(start = 10.dp).weight(1f),
                     )
-                    LangButton(language) { langSheetOpen = true }
                 }
-                Box {
-                    IconButton(onClick = { overflowExpanded = true }, modifier = Modifier.size(48.dp)) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.cd_more_options), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    DropdownMenu(expanded = overflowExpanded, onDismissRequest = { overflowExpanded = false }) {
-                        DropdownMenuItem(text = { Text(stringResource(R.string.menu_change_language)) }, onClick = { overflowExpanded = false; langSheetOpen = true })
-                        DropdownMenuItem(text = { Text(stringResource(R.string.menu_metrics)) }, onClick = { overflowExpanded = false; onOpenMetrics() })
-                        DropdownMenuItem(text = { Text(stringResource(R.string.menu_models)) }, onClick = { overflowExpanded = false; onOpenModels() })
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.menu_about)) },
-                            leadingIcon = { Icon(Icons.Filled.Info, contentDescription = null) },
-                            onClick = { overflowExpanded = false; onOpenAbout() },
-                        )
-                    }
+                PeerStatusPill(linkState)
+                if (!showBack) {
+                    Spacer(Modifier.size(6.dp))
+                    LangButton(language) { langSheetOpen = true }
                 }
             }
             TricolourHairline()
@@ -205,12 +270,40 @@ private fun TopBar(
     }
 }
 
+/** Compact peer-connection indicator for the top bar (a coloured dot, +peer name once connected) —
+ * always visible so "is anyone even nearby" is answerable from every screen, not just Talk (which
+ * additionally shows the full [StatusCard]). */
+@Composable
+private fun PeerStatusPill(linkState: LinkState) {
+    val connected = linkState is LinkState.Connected
+    val failed = linkState is LinkState.Failed
+    val dotColor = when {
+        connected -> MaterialTheme.colorScheme.tertiary
+        failed -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val label = if (connected) (linkState as LinkState.Connected).peerName else null
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .heightIn(min = 32.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+    ) {
+        Box(Modifier.size(8.dp).clip(CircleShape).background(dotColor))
+        if (label != null) {
+            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.padding(start = 6.dp))
+        }
+    }
+}
+
 @Composable
 private fun LangButton(language: Lang, onClick: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .padding(end = 4.dp)
+            .padding(start = 4.dp)
             .heightIn(min = 48.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)

@@ -7,9 +7,16 @@ import android.os.PowerManager
 import android.provider.Settings
 
 object PermissionUtil {
-    /** RECORD_AUDIO + POST_NOTIFICATIONS(33+) + whatever :transport needs for this SDK level. */
+    /** RECORD_AUDIO + POST_NOTIFICATIONS(33+) + ACCESS_FINE/COARSE_LOCATION (SOS) + whatever
+     * :transport needs for this SDK level. Location is requested up front alongside everything
+     * else so [org.itantra.app.ui.sos.SosSheet] never has to run its own permission flow; a phone
+     * that denies it still gets a location-less SOS (see [org.itantra.app.location.LocationProvider]). */
     fun required(sdkInt: Int): Array<String> {
-        val perms = mutableListOf(android.Manifest.permission.RECORD_AUDIO)
+        val perms = mutableListOf(
+            android.Manifest.permission.RECORD_AUDIO,
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+        )
         if (sdkInt >= 33) perms += android.Manifest.permission.POST_NOTIFICATIONS
         perms += org.itantra.transport.TransportPermissions.required(sdkInt)
         return perms.distinct().toTypedArray()

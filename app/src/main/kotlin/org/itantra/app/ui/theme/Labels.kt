@@ -66,7 +66,32 @@ object Labels {
         "नमस्ते", "નમસ્તે", "नमस्कार", "ನಮಸ್ಕಾರ", "നമസ്കാരം", "வணக்கம்", "నమస్కారం", "ନମସ୍କାର", "নমস্কার", "Hello",
     )
 
+    /** The six big one-tap SOS-sheet templates (see `org.itantra.app.ui.sos.SosSheet`) — a
+     * different, larger set than [sos]'s four quick-reply chat chips. */
+    data class SosTemplateSet(
+        val rescue: String,
+        val medical: String,
+        val fire: String,
+        val flood: String,
+        val trapped: String,
+        val safe: String,
+    )
+
+    val sosTemplates: Map<Lang, SosTemplateSet> = mapOf(
+        Lang.HI to SosTemplateSet("बचाव चाहिए", "चिकित्सा आपातकाल", "आग लगी है", "बाढ़/पानी बढ़ रहा है", "फंस गए हैं", "सुरक्षित हूँ"),
+        Lang.EN to SosTemplateSet("Need rescue", "Medical emergency", "Fire", "Flood/water rising", "Trapped", "I am safe"),
+        Lang.BN to SosTemplateSet("উদ্ধার দরকার", "চিকিৎসা জরুরি", "আগুন লেগেছে", "বন্যা/পানি বাড়ছে", "আটকে গেছি", "নিরাপদ আছি"),
+        Lang.GU to SosTemplateSet("બચાવ જોઈએ", "તબીબી કટોકટી", "આગ લાગી છે", "પૂર/પાણી વધી રહ્યું છે", "ફસાયેલા છીએ", "સુરક્ષિત છું"), // best-effort
+        Lang.MR to SosTemplateSet("बचाव हवा", "वैद्यकीय आणीबाणी", "आग लागली आहे", "पूर/पाणी वाढत आहे", "अडकलो आहोत", "सुरक्षित आहे"),
+        Lang.KN to SosTemplateSet("ರಕ್ಷಣೆ ಬೇಕು", "ವೈದ್ಯಕೀಯ ತುರ್ತು", "ಬೆಂಕಿ ಹೊತ್ತಿದೆ", "ಪ್ರವಾಹ/ನೀರು ಏರುತ್ತಿದೆ", "ಸಿಕ್ಕಿಬಿದ್ದಿದ್ದೇವೆ", "ಸುರಕ್ಷಿತ"), // best-effort, needs native review
+        Lang.ML to SosTemplateSet("രക്ഷ വേണം", "മെഡിക്കൽ എമർജൻസി", "തീ പിടിച്ചു", "വെള്ളപ്പൊക്കം/വെള്ളം ഉയരുന്നു", "കുടുങ്ങിപ്പോയി", "സുരക്ഷിതം"), // best-effort, needs native review
+        Lang.TA to SosTemplateSet("மீட்பு தேவை", "மருத்துவ அவசரநிலை", "தீ பிடித்தது", "வெள்ளம்/நீர் உயர்கிறது", "சிக்கிக்கொண்டோம்", "பாதுகாப்பாக உள்ளேன்"), // best-effort, needs native review
+        Lang.TE to SosTemplateSet("రక్షణ కావాలి", "వైద్య అత్యవసరం", "మంటలు అంటుకున్నాయి", "వరద/నీరు పెరుగుతోంది", "చిక్కుకుపోయాము", "సురక్షితం"), // best-effort, needs native review
+        Lang.OR to SosTemplateSet("ଉଦ୍ଧାର ଦରକାର", "ଚିକିତ୍ସା ଜରୁରୀ", "ନିଆଁ ଲାଗିଛି", "ବନ୍ୟା/ପାଣି ବଢୁଛି", "ଅଟକି ଯାଇଛୁ", "ସୁରକ୍ଷିତ"), // low confidence, needs native review
+    )
+
     fun pttOf(lang: Lang): String = ptt[lang] ?: ptt.getValue(Lang.EN)
     fun alertOf(lang: Lang): String = alert[lang] ?: alert.getValue(Lang.EN)
     fun sosOf(lang: Lang): SosSet = sos[lang] ?: sos.getValue(Lang.EN)
+    fun sosTemplatesOf(lang: Lang): SosTemplateSet = sosTemplates[lang] ?: sosTemplates.getValue(Lang.EN)
 }

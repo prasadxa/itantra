@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -9,6 +9,15 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <!-- Unrestricted on every API level for real SOS GPS fixes (android:maxSdkVersion="32" and
+         tools:node="replace" override :transport's own ACCESS_FINE_LOCATION declaration, which is
+         deliberately capped at 32 there - it only needs it for legacy pre-31 BLE/pre-33 Wi-Fi NSD
+         scanning, not real position; see transport/src/main/AndroidManifest.xml). -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" tools:node="replace" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:label="iTantra"
@@ -33,6 +42,17 @@
             android:name=".TalkService"
             android:exported="false"
             android:foregroundServiceType="microphone|connectedDevice|mediaPlayback" />
+
+        <service
+            android:name=".tile.PttTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_tile_ptt"
+            android:label="@string/tile_ptt_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
 
     </application>
 </manifest>

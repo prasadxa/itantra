@@ -25,8 +25,22 @@ class IndicTextPipeline : TextPipeline {
         } else {
             TextSegmenter.segmentPlain(message.text, message.lang, normalizer)
         }
+        // Additive SOS-location hook: a message carrying a GPS fix gets one more spoken segment
+        // describing it, e.g. "location 12.97 north, 77.59 east, accuracy 15 metres" - built by
+        // LocationSpeller and run through the same IndicNormalizer as the message body, so its
+        // embedded numbers are spelled out identically to any other number. Normalized directly
+        // (not via TextSegmenter.segmentPlain) because that splits on '.', which would fragment
+        // the decimal points in the coordinates themselves.
+        val lat = message.lat
+        val lon = message.lon
+        val locationSegments = if (lat != null && lon != null) {
+            val phrase = LocationSpeller.phrase(lat, lon, message.accuracyM, message.lang)
+            listOf(TtsSegment(text = normalizer.normalize(phrase, message.lang), emotion = Emotion.NEUTRAL))
+        } else {
+            emptyList()
+        }
         val isAlert = message.priority == Priority.ALERT || AlertKeywords.containsAlertKeyword(message.text, message.lang)
-        val styled = segments.map { seg -> applyStyle(seg, message, isAlert) }
+        val styled = (segments + locationSegments).map { seg -> applyStyle(seg, message, isAlert) }
         return SynthesisPlan(message.lang, message.priority, styled)
     }
 

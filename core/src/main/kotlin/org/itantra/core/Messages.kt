@@ -28,6 +28,13 @@ data class VoiceMessage(
     val speechEndAt: Long = 0,
     val sttDoneAt: Long = 0,
     val sentAt: Long = 0,
+    /** Optional sender GPS fix (SOS location), added ADDITIVELY: all three default to null so
+     * existing JSON producers/consumers (e.g. `tools/peer_sim.py`) and binary-frame peers that
+     * predate this field are unaffected — see :transport `BinaryFrameCodec` FLAG_LOCATION and
+     * `tools/gateway`'s `_extract_location()`, which already renders a top-level lat/lon if present. */
+    val lat: Double? = null,
+    val lon: Double? = null,
+    val accuracyM: Float? = null,
 )
 
 /** Wire protocol. Encoded as JSON; framing is transport-specific (see transport module). */

@@ -21,12 +21,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.itantra.app.ui.settings.SettingsPrefs
 import org.itantra.core.Frame
 import org.itantra.core.Lang
 import org.itantra.core.LinkKind
 import org.itantra.core.LinkState
 import org.itantra.core.Transport
 import org.itantra.stt.CaptureMode
+import org.itantra.transport.BinaryFrameCodec
+import org.itantra.transport.TransportManager
+import org.itantra.transport.crypto.AlertTrustStore
+import org.itantra.transport.crypto.DeviceIdentity
+import org.itantra.transport.crypto.PairingInfo
+import org.itantra.transport.crypto.SecureSession
 
 /**
  * Foreground service holding the engines, transport and [Orchestrator]. Must be started from a visible
@@ -70,6 +77,10 @@ class TalkService : LifecycleService() {
      * directly from another thread - doing so raced with accept() and crashed the VAD JNI layer. */
     @Volatile private var pendingSttReset = false
 
+    /** ALERT-signature trust for accepted peers (see [pairWith]); starts empty ("no trust store at
+     * all downgrades every ALERT" per transport/README.md — unpaired peers behave exactly as before). */
+    private val trustStore = AlertTrustStore()
+
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -77,7 +88,9 @@ class TalkService : LifecycleService() {
         acquireLocks()
 
         deviceId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID) ?: "itantra-device"
-        val deviceName = Build.MODEL ?: "iTantra"
+        // Settings screen's optional custom device name (shown to nearby phones while pairing);
+        // falls back to the phone model, as before.
+        val deviceName = SettingsPrefs.getDeviceName(applicationContext) ?: (Build.MODEL ?: "iTantra")
 
         engines = EngineFactory.create(applicationContext, deviceId, deviceName, lifecycleScope)
         AppRepository.engineStatus.value = engines.status
@@ -171,6 +184,23 @@ class TalkService : LifecycleService() {
     fun onTextSend(text: String, lang: Lang, ssml: Boolean) {
         if (text.isBlank()) return
         orchestrator.sendText(text, lang, ssml)
+    }
+
+    /** One-tap SOS (see [org.itantra.app.ui.sos.SosSheet]). Returns the sent message id. */
+    fun onSendSos(text: String, lang: Lang, lat: Double?, lon: Double?, accuracyM: Float?, safe: Boolean): String =
+        orchestrator.sendSos(text, lang, lat, lon, accuracyM, safe)
+
+    /**
+     * Wires end-to-end encryption + ALERT-signature trust for a just-accepted pairing (see
+     * `ui/pairing/PairingScreen` — called after a peer's QR is scanned/pasted and accepted).
+     * Additive, per transport/README.md 4 ("TransportManager.configureSecurity() is the
+     * integration point") — a no-op if the active transport isn't a [TransportManager] (e.g.
+     * [NullTransport]).
+     */
+    fun pairWith(myIdentity: DeviceIdentity, peer: PairingInfo) {
+        val session = SecureSession.establish(myIdentity, peer)
+        trustStore.trust(peer, BinaryFrameCodec.registerSender(peer.deviceId))
+        (transport as? TransportManager)?.configureSecurity(session, myIdentity, trustStore)
     }
 
     /** Re-plays a received message's cached audio (see :tts `SpeechOutput.replay`); no-op if the

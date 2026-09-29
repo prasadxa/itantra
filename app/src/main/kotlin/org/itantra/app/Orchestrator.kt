@@ -6,6 +6,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.itantra.core.Emotion
 import org.itantra.core.Frame
 import org.itantra.core.Lang
 import org.itantra.core.Priority
@@ -189,6 +190,26 @@ class Orchestrator(
             speechEndAt = now, sttDoneAt = now, sentAt = now,
         )
         recordSentAndSend(message, sttLatencyMs = null, rtf = null)
+    }
+
+    /**
+     * One-tap SOS: bypasses STT/[alertProvider]/the composer entirely and sends [text] as an
+     * ALERT VoiceMessage (or NORMAL when [safe] is true, e.g. "I am safe") carrying the sender's
+     * GPS fix. Returns the message id so the caller can watch [onMetrics]/[onLog] for delivery
+     * (an `endToEndMs`-bearing [MessageMetrics] for this id means the peer's [Frame.Ack] arrived).
+     */
+    fun sendSos(text: String, lang: Lang, lat: Double?, lon: Double?, accuracyM: Float?, safe: Boolean = false): String {
+        val now = clock()
+        val id = UUID.randomUUID().toString()
+        val message = VoiceMessage(
+            id = id, from = deviceId, lang = lang, text = text,
+            priority = if (safe) Priority.NORMAL else Priority.ALERT,
+            emotion = if (safe) null else Emotion.URGENT, ssml = false,
+            speechEndAt = now, sttDoneAt = now, sentAt = now,
+            lat = lat, lon = lon, accuracyM = accuracyM,
+        )
+        recordSentAndSend(message, sttLatencyMs = null, rtf = null)
+        return id
     }
 
     private fun priority(): Priority = if (alertProvider()) Priority.ALERT else Priority.NORMAL

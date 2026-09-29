@@ -54,4 +54,126 @@
     <string name="about_version">Version %1$s</string>
     <string name="about_credits_title">Built on Indian open AI</string>
     <string name="about_licences_title">Open‑source licences</string>
+
+    <!-- SOS sheet -->
+    <string name="sos_title">SOS</string>
+    <string name="sos_subtitle">One tap sends your location with the alert.</string>
+    <string name="sos_location_fetching">Getting your location…</string>
+    <string name="sos_location_unknown">Location unknown</string>
+    <string name="sos_accuracy_label">Accuracy</string>
+    <string name="sos_satellites_label">Satellites</string>
+    <string name="sos_refresh_location">Refresh location</string>
+    <string name="sos_note_hint">Add a short note (optional)</string>
+    <string name="sos_permission_needed">Location permission not granted — SOS will send without it.</string>
+    <string name="sos_status_sending">Sending…</string>
+    <string name="sos_status_sent">Sent — waiting for delivery confirmation</string>
+    <string name="sos_status_delivered">Delivered</string>
+    <string name="cd_sos_close">Close SOS</string>
+
+    <!-- Talk-screen v2: deck labels, delivery, message menu, peer card, empty state (see ui/components) -->
+    <string name="mode_ptt">Talk</string>
+    <string name="mode_call">Call</string>
+    <string name="alert_toggle">Alert</string>
+    <string name="label_peer_talking">Peer is speaking</string>
+    <string name="label_rx">RX</string>
+    <string name="label_tx">TX</string>
+    <string name="label_ssml">SSML</string>
+    <string name="stt_missing">STT missing</string>
+    <string name="tts_missing">TTS missing</string>
+    <string name="tap_open_models">Tap to open Models</string>
+    <string name="composer_placeholder">Message…</string>
+    <string name="composer_placeholder_ssml">SSML…</string>
+    <string name="disabled_playing">Playing…</string>
+    <string name="status_sending">Sending…</string>
+    <string name="status_sent">Sent</string>
+    <string name="status_played">Played</string>
+    <string name="status_failed_send">Failed</string>
+    <string name="action_retry">Retry</string>
+    <string name="menu_copy_text">Copy text</string>
+    <string name="menu_show_latency">Show latency</string>
+    <string name="time_today">Today</string>
+    <string name="unread_divider">Unread messages</string>
+    <string name="nearby_devices_title">Nearby devices</string>
+    <string name="link_wifi_direct">Wi‑Fi Direct</string>
+    <string name="link_bluetooth">Bluetooth</string>
+    <string name="cd_sos_launch">Emergency SOS</string>
+    <string name="cd_peer_card">Peer connection, tap for nearby devices</string>
+    <string name="cd_message_options">Message options</string>
+    <string name="empty_tip_1">Hold Talk to speak instantly</string>
+    <string name="empty_tip_2">Tap the keyboard icon to type instead</string>
+    <string name="empty_tip_3">Arm ALERT so urgent messages play first</string>
+    <string name="copied_text">Copied</string>
+
+    <!-- History screen (ui/history) -->
+    <string name="history_search_hint">Search messages…</string>
+    <string name="history_filter_alerts">Alerts only</string>
+    <string name="history_filter_language">Language</string>
+    <string name="history_filter_all_languages">All languages</string>
+    <string name="history_export">Export</string>
+    <string name="history_empty">No messages yet.</string>
+    <string name="cd_history_search">Search history</string>
+
+    <!-- Quick Settings tile (tile/PttTileService) -->
+    <string name="tile_ptt_label">iTantra PTT/SOS</string>
+
+    <!-- Bottom navigation (ui/AppRoot) -->
+    <string name="nav_talk">Talk</string>
+    <string name="nav_history">History</string>
+    <string name="nav_settings">Settings</string>
+    <string name="cd_brand_logo">iTantra logo</string>
+
+    <!-- Settings screen (ui/settings) -->
+    <string name="settings_section_language">Language &amp; voice</string>
+    <string name="settings_ui_language">App language</string>
+    <string name="settings_conversation_language">Conversation language</string>
+    <string name="settings_section_profile">Performance profile</string>
+    <string name="settings_profile_desc">Auto detects from device memory; override to test both</string>
+    <string name="settings_section_speech">Speech playback</string>
+    <string name="settings_speech_rate">Speech speed</string>
+    <string name="settings_playback_mode">Playback style</string>
+    <string name="settings_playback_smooth">Smooth playback</string>
+    <string name="settings_playback_smooth_desc">Waits a little before speaking, for steadier audio</string>
+    <string name="settings_playback_fast">Fast start</string>
+    <string name="settings_playback_fast_desc">Starts speaking sooner, may stutter on a slow phone</string>
+    <string name="settings_alert_test">Test alert sound</string>
+    <string name="settings_alert_test_desc">Plays a sample emergency alert</string>
+    <string name="settings_alert_test_sample">This is a test alert.</string>
+    <string name="settings_alert_test_unavailable">Voice engine not ready</string>
+    <string name="settings_section_display">Display</string>
+    <string name="settings_large_text">Large text</string>
+    <string name="settings_large_text_desc">Bigger text across the app</string>
+    <string name="settings_theme">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="settings_section_device">Device</string>
+    <string name="settings_device_name">Device name</string>
+    <string name="settings_device_name_desc">Shown to nearby phones when pairing</string>
+    <string name="settings_battery">Ignore battery optimisation</string>
+    <string name="settings_battery_desc">Keeps the link alive in the background</string>
+    <string name="settings_battery_already">Already unrestricted</string>
+    <string name="settings_section_more">More</string>
+    <string name="settings_pairing">Pair devices</string>
+    <string name="settings_pairing_desc">Encrypt messages and verify alerts</string>
+    <string name="settings_models">Models</string>
+    <string name="settings_about">About</string>
+
+    <!-- Pairing screen (ui/pairing) -->
+    <string name="pairing_title">Pair devices</string>
+    <string name="pairing_explain">Pairing encrypts your messages and verifies alerts are really from that person, using keys stored only on your phones.</string>
+    <string name="pairing_my_qr">My code</string>
+    <string name="pairing_my_qr_desc">Show this to a nearby phone to pair</string>
+    <string name="pairing_scan">Scan a code</string>
+    <string name="pairing_scan_desc">Point your camera at their code</string>
+    <string name="pairing_paste">Paste a code instead</string>
+    <string name="pairing_paste_hint">Paste the code text here</string>
+    <string name="pairing_paste_action">Add</string>
+    <string name="pairing_camera_permission">Camera access needed to scan</string>
+    <string name="pairing_grant_camera">Allow camera</string>
+    <string name="pairing_invalid">That code isn\'t valid</string>
+    <string name="pairing_added">Paired</string>
+    <string name="pairing_paired_devices">Paired devices</string>
+    <string name="pairing_no_devices">No devices paired yet</string>
+    <string name="pairing_remove">Remove</string>
+    <string name="pairing_device_id">Device %1$s</string>
 </resources>

@@ -2,7 +2,6 @@ package org.itantra.app.ui
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -11,7 +10,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,8 +50,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -60,14 +61,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.delay
 import org.itantra.app.AppRepository
 import org.itantra.app.Direction
@@ -77,10 +81,22 @@ import org.itantra.app.Mode
 import org.itantra.app.PartialEntry
 import org.itantra.app.R
 import org.itantra.app.TalkService
-import org.itantra.app.ui.theme.KolamMotif
+import org.itantra.app.ui.components.DateHeader
+import org.itantra.app.ui.components.DeliveryTicksRow
+import org.itantra.app.ui.components.EmptyStateTips
+import org.itantra.app.ui.components.MessageOptionsMenu
+import org.itantra.app.ui.components.NearbyDevicesSheet
+import org.itantra.app.ui.components.PeerCard
+import org.itantra.app.ui.components.SosButton
+import org.itantra.app.ui.components.TalkButton
+import org.itantra.app.ui.components.UnreadDivider
+import org.itantra.app.ui.components.rememberAlertFlash
+import org.itantra.app.ui.components.vibrateAlert
+import org.itantra.app.ui.sos.SosSheet
 import org.itantra.app.ui.theme.Labels
 import org.itantra.app.ui.theme.MonoText
 import org.itantra.core.Lang
+import org.itantra.core.LinkState
 
 private sealed interface ChatItem {
     val id: String
@@ -93,6 +109,33 @@ private sealed interface ChatItem {
         override val id get() = entry.id
         override val timestamp get() = entry.timestamp
     }
+}
+
+/** One row in the rendered deck: a date separator, the unread marker, or an actual message —
+ * inserted around the plain time-sorted [ChatItem] list so grouping/unread live purely in the UI
+ * layer (see [buildRows]). */
+private sealed interface DeckRow {
+    val key: String
+    data class Header(val epochMs: Long) : DeckRow { override val key = "hdr-$epochMs" }
+    data object Unread : DeckRow { override val key = "unread-divider" }
+    data class Msg(val item: ChatItem) : DeckRow { override val key get() = item.id }
+}
+
+private fun dayKeyOf(epochMs: Long): String = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(epochMs))
+
+private fun buildRows(items: List<ChatItem>, unreadFromIndex: Int): List<DeckRow> {
+    val rows = mutableListOf<DeckRow>()
+    var lastDayKey: String? = null
+    items.forEachIndexed { idx, item ->
+        val dayKey = dayKeyOf(item.timestamp)
+        if (dayKey != lastDayKey) {
+            rows += DeckRow.Header(item.timestamp)
+            lastDayKey = dayKey
+        }
+        if (idx == unreadFromIndex) rows += DeckRow.Unread
+        rows += DeckRow.Msg(item)
+    }
+    return rows
 }
 
 @Composable
@@ -110,61 +153,100 @@ fun ChatScreen(onOpenModels: () -> Unit) {
     val ttsPlaying by AppRepository.ttsPlaying.collectAsState()
     val micLevel by AppRepository.micLevel.collectAsState()
     val voiceNoteDurations by AppRepository.voiceNoteDurations.collectAsState()
+    val linkState by AppRepository.linkState.collectAsState()
+    val rttMs by AppRepository.rttMs.collectAsState()
+
+    val context = LocalContext.current
+    var nearbySheetOpen by remember { mutableStateOf(false) }
+    var sosSheetOpen by remember { mutableStateOf(false) }
 
     val finalIds = remember(messages) { messages.map { it.id }.toHashSet() }
     val items = remember(messages, partials) {
         (messages.map { ChatItem.Final(it) } + partials.values.filter { it.id !in finalIds }.map { ChatItem.Live(it) })
             .sortedBy { it.timestamp }
     }
+    // Everything already in the deck the first time this screen composes counts as "seen"; only
+    // messages that arrive afterwards get the unread divider (see requirement: unread divider).
+    val seenCountAtOpen = remember { items.size }
+    val rows = remember(items) { buildRows(items, seenCountAtOpen) }
+
+    // New-ALERT bookkeeping for the finite flash + vibration: seed with whatever alerts already
+    // exist at first composition so history never re-announces itself, then track ids that show
+    // up afterwards as "fresh" exactly once each.
+    val seenAlertIds = remember { mutableStateSetOf<String>().apply { addAll(messages.filter { it.alert }.map { it.id }) } }
+    val freshAlertIds = remember(messages) {
+        val fresh = messages.asSequence()
+            .filter { it.alert && it.direction == Direction.RECEIVED && it.id !in seenAlertIds }
+            .map { it.id }.toSet()
+        seenAlertIds += fresh
+        fresh
+    }
+    LaunchedEffect(freshAlertIds) { if (freshAlertIds.isNotEmpty()) vibrateAlert(context) }
 
     Column(Modifier.fillMaxSize()) {
+        PeerCard(linkState = linkState, rttMs = rttMs, language = language, onTap = { nearbySheetOpen = true })
         if (engineStatus != null && (engineStatus!!.sttReady == false || engineStatus!!.ttsReady == false)) {
             EngineWarningBanner(engineStatus!!.sttReady, engineStatus!!.ttsReady, onOpenModels)
         }
         if (peerTalking) PeerTalkingBanner()
 
-        if (items.isEmpty()) {
-            Box(Modifier.weight(1f).fillMaxSize(), contentAlignment = Alignment.Center) {
-                KolamMotif(Modifier.fillMaxSize())
-                Text(
-                    stringResource(R.string.empty_transcript),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(horizontal = 40.dp),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                )
-            }
-        } else {
-            val listState = rememberLazyListState()
-            LaunchedEffect(items.size) {
-                if (items.isNotEmpty()) listState.animateScrollToItem(items.size - 1)
-            }
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-            ) {
-                items(items, key = { it.id }) { item ->
-                    when (item) {
-                        is ChatItem.Final -> if (item.entry.alert) {
-                            AlertCard(
-                                entry = item.entry,
-                                durationSeconds = voiceNoteDurations[item.entry.id],
-                                onReplay = { TalkService.instance?.onReplay(item.entry.id) },
-                            )
-                        } else {
-                            MessageCard(
-                                entry = item.entry,
-                                metrics = metrics.find { it.id == item.entry.id && it.direction == item.entry.direction },
-                                speaking = speakingId == item.entry.id,
-                                durationSeconds = voiceNoteDurations[item.entry.id],
-                                onReplay = { TalkService.instance?.onReplay(item.entry.id) },
-                            )
+        // The SOS button floats bottom-left of the message deck, pinned just above the composer —
+        // the usual chat-app FAB placement — rather than a magic-number offset from the full screen,
+        // so it stays put regardless of what other agents' screens put above/below this one.
+        Box(Modifier.weight(1f)) {
+            if (rows.isEmpty()) {
+                EmptyStateTips(Modifier.fillMaxSize())
+            } else {
+                val listState = rememberLazyListState()
+                val isAtBottom by remember {
+                    derivedStateOf {
+                        val last = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1
+                        last >= listState.layoutInfo.totalItemsCount - 2
+                    }
+                }
+                var stickToBottom by remember { mutableStateOf(true) }
+                LaunchedEffect(isAtBottom) { stickToBottom = isAtBottom }
+                LaunchedEffect(rows.size) {
+                    if (rows.isNotEmpty() && stickToBottom) listState.animateScrollToItem(rows.size - 1)
+                }
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                ) {
+                    items(rows, key = { it.key }) { row ->
+                        when (row) {
+                            is DeckRow.Header -> DateHeader(dateLabel(row.epochMs))
+                            is DeckRow.Unread -> UnreadDivider()
+                            is DeckRow.Msg -> when (val item = row.item) {
+                                is ChatItem.Final -> if (item.entry.alert) {
+                                    AlertCard(
+                                        entry = item.entry,
+                                        durationSeconds = voiceNoteDurations[item.entry.id],
+                                        isFresh = item.entry.id in freshAlertIds,
+                                        onReplay = { TalkService.instance?.onReplay(item.entry.id) },
+                                    )
+                                } else {
+                                    MessageCard(
+                                        entry = item.entry,
+                                        metrics = metrics.find { it.id == item.entry.id && it.direction == item.entry.direction },
+                                        speaking = speakingId == item.entry.id,
+                                        durationSeconds = voiceNoteDurations[item.entry.id],
+                                        rttMs = rttMs,
+                                        onReplay = { TalkService.instance?.onReplay(item.entry.id) },
+                                    )
+                                }
+                                is ChatItem.Live -> LivePartialRow(item.entry)
+                            }
                         }
-                        is ChatItem.Live -> LivePartialRow(item.entry)
                     }
                 }
             }
+
+            SosButton(
+                onClick = { sosSheetOpen = true },
+                modifier = Modifier.align(Alignment.BottomStart).padding(start = 14.dp, bottom = 10.dp),
+            )
         }
 
         Composer(
@@ -177,7 +259,22 @@ fun ChatScreen(onOpenModels: () -> Unit) {
             micLevel = micLevel,
         )
     }
+
+    if (nearbySheetOpen) {
+        NearbyDevicesSheet(linkState = linkState, rttMs = rttMs, onDismiss = { nearbySheetOpen = false })
+    }
+    if (sosSheetOpen) {
+        SosSheet(onDismiss = { sosSheetOpen = false })
+    }
 }
+
+@Composable
+private fun dateLabel(epochMs: Long): String =
+    if (dayKeyOf(epochMs) == dayKeyOf(System.currentTimeMillis())) {
+        stringResource(R.string.time_today)
+    } else {
+        SimpleDateFormat("d MMM", Locale.getDefault()).format(Date(epochMs))
+    }
 
 @Composable
 private fun EngineWarningBanner(sttReady: Boolean, ttsReady: Boolean, onOpenModels: () -> Unit) {
@@ -193,13 +290,13 @@ private fun EngineWarningBanner(sttReady: Boolean, ttsReady: Boolean, onOpenMode
         Column(Modifier.padding(start = 10.dp).weight(1f)) {
             MonoText(
                 buildString {
-                    if (!sttReady) append("STT MISSING  ")
-                    if (!ttsReady) append("TTS MISSING")
+                    if (!sttReady) append(stringResource(R.string.stt_missing) + "  ")
+                    if (!ttsReady) append(stringResource(R.string.tts_missing))
                 },
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium,
             )
-            Text("Tap to open Models", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.tap_open_models), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
     HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
@@ -211,16 +308,18 @@ private fun PeerTalkingBanner() {
         Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer).padding(horizontal = 14.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        MonoText("PEER TALKING", color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Medium)
+        MonoText(stringResource(R.string.label_peer_talking), color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Medium)
     }
 }
 
 @Composable
-private fun AlertCard(entry: LogEntry, durationSeconds: Float?, onReplay: () -> Unit) {
+private fun AlertCard(entry: LogEntry, durationSeconds: Float?, isFresh: Boolean, onReplay: () -> Unit) {
+    val flashAlpha = rememberAlertFlash(play = isFresh && entry.direction == Direction.RECEIVED)
     Row(
         Modifier
             .fillMaxWidth()
             .padding(vertical = 5.dp)
+            .alpha(flashAlpha)
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.error)
             .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -268,20 +367,25 @@ private fun telemetryLine(m: MessageMetrics): String = buildString {
     m.endToEndMs?.let { if (isNotEmpty()) append(" · "); append("E2E ${fmtMs(it)}") }
 }
 
-/** Friendly message card: sender-initials avatar, native-script language chip, time, an optional
- * replay control, and latency telemetry revealed on tap — replaces the old field-radio-instrument
- * transcript row. */
+/** Friendly message card: sender-initials avatar, native-script language chip, time, delivery
+ * ticks on my own messages, an optional replay control, and a long-press menu (copy / replay /
+ * latency) — replaces the old field-radio-instrument transcript row. */
 @Composable
 private fun MessageCard(
     entry: LogEntry,
     metrics: MessageMetrics?,
     speaking: Boolean,
     durationSeconds: Float?,
+    rttMs: Long?,
     onReplay: () -> Unit,
 ) {
     val sent = entry.direction == Direction.SENT
     val accent = if (sent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
     var expanded by remember { mutableStateOf(false) }
+    var menuOpen by remember { mutableStateOf(false) }
+    val clipboard = LocalClipboardManager.current
+    val copiedLabel = stringResource(R.string.copied_text)
+    val toastContext = LocalContext.current
 
     Row(
         Modifier
@@ -290,37 +394,73 @@ private fun MessageCard(
         horizontalArrangement = if (sent) Arrangement.End else Arrangement.Start,
     ) {
         if (!sent) Avatar(sent = false, accent = accent)
-        Column(
-            Modifier
-                .padding(horizontal = 8.dp)
-                .weight(1f, fill = false)
-                .clip(RoundedCornerShape(16.dp))
-                .background(if (sent) accent.copy(alpha = 0.14f) else MaterialTheme.colorScheme.surfaceContainer)
-                .then(if (metrics != null) Modifier.clickable { expanded = !expanded } else Modifier)
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                LangChip(entry.lang, accent)
-                Spacer(Modifier.width(8.dp))
-                Text(timeOf(entry.timestamp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (speaking) {
+        Box(Modifier.padding(horizontal = 8.dp).weight(1f, fill = false)) {
+            Column(
+                Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (sent) accent.copy(alpha = 0.14f) else MaterialTheme.colorScheme.surfaceContainer)
+                    .combinedClickable(
+                        onClick = { if (metrics != null) expanded = !expanded },
+                        onLongClick = { menuOpen = true },
+                        onClickLabel = stringResource(R.string.cd_message_options),
+                    )
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    LangChip(entry.lang, accent)
                     Spacer(Modifier.width(8.dp))
-                    LevelGlyph(color = accent)
+                    Text(timeOf(entry.timestamp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (speaking) {
+                        Spacer(Modifier.width(8.dp))
+                        LevelGlyph(color = accent)
+                        Text(
+                            stringResource(R.string.disabled_playing),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = accent,
+                            modifier = Modifier.padding(start = 4.dp),
+                        )
+                    }
+                    if (sent) {
+                        Spacer(Modifier.width(8.dp))
+                        DeliveryTicksRow(
+                            sentAtMs = entry.timestamp,
+                            metrics = metrics,
+                            rttMs = rttMs,
+                            onRetry = {
+                                val prev = AppRepository.alertNext.value
+                                AppRepository.alertNext.value = entry.alert
+                                TalkService.instance?.onTextSend(entry.text, entry.lang, entry.ssml)
+                                AppRepository.alertNext.value = prev
+                            },
+                        )
+                    }
+                }
+                Text(
+                    entry.text,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+                if (!sent && durationSeconds != null) {
+                    Spacer(Modifier.height(4.dp))
+                    ReplayButton(durationSeconds, tint = MaterialTheme.colorScheme.secondary, onClick = onReplay)
+                }
+                if (expanded && metrics != null) {
+                    MonoText(telemetryLine(metrics), color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
                 }
             }
-            Text(
-                entry.text,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(top = 4.dp),
+            MessageOptionsMenu(
+                expanded = menuOpen,
+                onDismiss = { menuOpen = false },
+                showReplay = !sent && durationSeconds != null,
+                showLatency = metrics != null,
+                onCopy = {
+                    clipboard.setText(AnnotatedString(entry.text))
+                    android.widget.Toast.makeText(toastContext, copiedLabel, android.widget.Toast.LENGTH_SHORT).show()
+                },
+                onReplay = onReplay,
+                onShowLatency = { expanded = true },
             )
-            if (!sent && durationSeconds != null) {
-                Spacer(Modifier.height(4.dp))
-                ReplayButton(durationSeconds, tint = MaterialTheme.colorScheme.secondary, onClick = onReplay)
-            }
-            if (expanded && metrics != null) {
-                MonoText(telemetryLine(metrics), color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
-            }
         }
         if (sent) Avatar(sent = true, accent = accent)
     }
@@ -431,11 +571,11 @@ private fun Composer(
                     )
                     composerOpen -> TextComposerRow(language = language, onClose = { composerOpen = false })
                     else -> Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                        PttKey(
+                        TalkButton(
                             language = language,
                             held = pttHeld,
-                            enabled = !ttsPlaying && !peerTalking,
-                            disabledLabel = if (ttsPlaying || peerTalking) "RX · SPEAKING" else null,
+                            peerTalking = peerTalking,
+                            ttsPlaying = ttsPlaying,
                             micLevel = micLevel,
                             onPress = { TalkService.instance?.onPttPressed() },
                             onRelease = { TalkService.instance?.onPttReleased() },
@@ -492,9 +632,9 @@ private fun ModeSegment(mode: Mode) {
             .clip(RoundedCornerShape(8.dp))
             .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp)),
     ) {
-        SegmentButton("PTT", selected = mode == Mode.PTT) { TalkService.instance?.onModeChanged(Mode.PTT) }
+        SegmentButton(stringResource(R.string.mode_ptt), selected = mode == Mode.PTT) { TalkService.instance?.onModeChanged(Mode.PTT) }
         Box(Modifier.width(1.dp).height(30.dp).background(MaterialTheme.colorScheme.outline))
-        SegmentButton("CALL", selected = mode == Mode.PHONE) { TalkService.instance?.onModeChanged(Mode.PHONE) }
+        SegmentButton(stringResource(R.string.mode_call), selected = mode == Mode.PHONE) { TalkService.instance?.onModeChanged(Mode.PHONE) }
     }
 }
 
@@ -525,7 +665,7 @@ private fun AlertToggle(armed: Boolean) {
             .clickable { AppRepository.alertNext.value = !armed }
             .padding(horizontal = 14.dp, vertical = 7.dp),
     ) {
-        MonoText("ALERT", color = color, fontWeight = if (armed) FontWeight.Medium else FontWeight.Normal)
+        MonoText(stringResource(R.string.alert_toggle), color = color, fontWeight = if (armed) FontWeight.Medium else FontWeight.Normal)
     }
 }
 
@@ -538,7 +678,7 @@ private fun TextComposerRow(language: Lang, onClose: () -> Unit) {
             OutlinedTextField(
                 value = typedText,
                 onValueChange = { typedText = it },
-                placeholder = { Text(if (ssml) "SSML…" else "Message…") },
+                placeholder = { Text(if (ssml) stringResource(R.string.composer_placeholder_ssml) else stringResource(R.string.composer_placeholder)) },
                 modifier = Modifier.weight(1f),
                 maxLines = 4,
             )
@@ -555,7 +695,7 @@ private fun TextComposerRow(language: Lang, onClose: () -> Unit) {
             }
         }
         Row(Modifier.padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-            MonoText("SSML", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            MonoText(stringResource(R.string.label_ssml), color = MaterialTheme.colorScheme.onSurfaceVariant)
             Switch(
                 checked = ssml,
                 onCheckedChange = { ssml = it },
@@ -585,10 +725,10 @@ private fun CallBar(ttsPlaying: Boolean, peerTalking: Boolean, micLevel: Float, 
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        MonoText("CALL %02d:%02d".format(elapsedSec / 60, elapsedSec % 60), fontWeight = FontWeight.Medium)
+        MonoText("${stringResource(R.string.mode_call)} %02d:%02d".format(elapsedSec / 60, elapsedSec % 60), fontWeight = FontWeight.Medium)
         VuBars(level = if (ttsPlaying) 0f else micLevel, color = if (ttsPlaying) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary)
         MonoText(
-            if (ttsPlaying) "RX" else if (peerTalking) "RX" else "TX",
+            if (ttsPlaying || peerTalking) stringResource(R.string.label_rx) else stringResource(R.string.label_tx),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         IconButton(
@@ -608,86 +748,6 @@ private fun VuBars(level: Float, color: Color, bars: Int = 12) {
             val active = level >= threshold * 0.9f
             val h by animateFloatAsState(if (active) 1f else 0.22f, label = "bar$i")
             Box(Modifier.width(3.dp).fillMaxHeight(h).background(color.copy(alpha = if (active) 1f else 0.3f)))
-        }
-    }
-}
-
-/** Big hold-to-talk key, captioned in the conversation language ([Labels.pttOf]) rather than a
- * fixed English string, since this is the single most important control in the app. */
-@Composable
-private fun PttKey(
-    language: Lang,
-    held: Boolean,
-    enabled: Boolean,
-    disabledLabel: String?,
-    micLevel: Float,
-    onPress: () -> Unit,
-    onRelease: () -> Unit,
-) {
-    val haptics = LocalHapticFeedback.current
-    var elapsedSec by remember { mutableStateOf(0) }
-    LaunchedEffect(held) {
-        if (held) {
-            elapsedSec = 0
-            while (true) {
-                delay(1000)
-                elapsedSec++
-            }
-        }
-    }
-    val corner by animateDpAsState(if (held) 32.dp else 20.dp, label = "corner")
-    val bg = when {
-        !enabled -> MaterialTheme.colorScheme.surfaceContainerHigh
-        held -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.surfaceContainerHigh
-    }
-    val border = if (!held) MaterialTheme.colorScheme.outline else Color.Transparent
-    val pttLabel = Labels.pttOf(language)
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .fillMaxWidth(0.62f)
-            .height(112.dp)
-            .clip(RoundedCornerShape(corner))
-            .background(bg)
-            .border(1.dp, border, RoundedCornerShape(corner))
-            .semantics { contentDescription = pttLabel }
-            .then(
-                if (enabled) {
-                    Modifier
-                        .pointerInput(Unit) {
-                            detectTapGestures(
-                                onPress = {
-                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    onPress()
-                                    tryAwaitRelease()
-                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    onRelease()
-                                },
-                            )
-                        }
-                } else {
-                    Modifier
-                },
-            ),
-    ) {
-        if (held) {
-            MonoText("TX %02d:%02d".format(elapsedSec / 60, elapsedSec % 60), color = Color.White, fontWeight = FontWeight.Medium)
-            Spacer(Modifier.height(8.dp))
-            VuBars(level = micLevel, color = Color.White)
-        } else if (disabledLabel != null) {
-            MonoText(disabledLabel, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium)
-        } else {
-            Text(
-                pttLabel,
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 12.dp),
-            )
         }
     }
 }

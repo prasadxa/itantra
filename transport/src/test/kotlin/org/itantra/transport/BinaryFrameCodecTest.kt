@@ -26,10 +26,14 @@ class BinaryFrameCodecTest {
         emotion: Emotion? = Emotion.URGENT,
         ssml: Boolean = false,
         lang: Lang = Lang.HI,
+        lat: Double? = null,
+        lon: Double? = null,
+        accuracyM: Float? = null,
     ) = Frame.Msg(
         VoiceMessage(
             id = uuid(), from = "device-${uuid().take(8)}", lang = lang, text = text,
             priority = priority, emotion = emotion, ssml = ssml, sentAt = System.currentTimeMillis(),
+            lat = lat, lon = lon, accuracyM = accuracyM,
         ),
     )
 
@@ -88,6 +92,61 @@ class BinaryFrameCodecTest {
         assertEquals(frame.from, decoded.from)
         assertEquals(frame.lang, decoded.lang)
         assertEquals(frame.text, decoded.text)
+    }
+
+    // ---- SOS location (FLAG_LOCATION) ----
+
+    @Test
+    fun `msg with no location round-trips lat, lon, accuracy as null`() {
+        val frame = sampleMsg()
+        val decoded = BinaryFrameCodec.decode(BinaryFrameCodec.encode(frame)) as Frame.Msg
+        assertNull(decoded.message.lat)
+        assertNull(decoded.message.lon)
+        assertNull(decoded.message.accuracyM)
+    }
+
+    @Test
+    fun `msg with location round-trips lat, lon and accuracy within microdegree precision`() {
+        val frame = sampleMsg(lat = 12.9716, lon = 77.5946, accuracyM = 15f)
+        val decoded = BinaryFrameCodec.decode(BinaryFrameCodec.encode(frame)) as Frame.Msg
+        assertNotNull(decoded.message.lat)
+        assertNotNull(decoded.message.lon)
+        assertEquals(12.9716, decoded.message.lat!!, 1e-5)
+        assertEquals(77.5946, decoded.message.lon!!, 1e-5)
+        assertEquals(15f, decoded.message.accuracyM!!, 0.1f)
+    }
+
+    @Test
+    fun `msg location survives without accuracy`() {
+        val frame = sampleMsg(lat = -33.87, lon = 151.21, accuracyM = null)
+        val decoded = BinaryFrameCodec.decode(BinaryFrameCodec.encode(frame)) as Frame.Msg
+        assertEquals(-33.87, decoded.message.lat!!, 1e-5)
+        assertEquals(151.21, decoded.message.lon!!, 1e-5)
+        assertNull(decoded.message.accuracyM)
+    }
+
+    @Test
+    fun `msg location survives alongside encryption and ALERT signing`() {
+        val identity = DeviceIdentity.generate()
+        val peer = DeviceIdentity.generate()
+        val session = SecureSession.establish(identity, peer.pairingInfo("peer-1"))
+        val trustStore = AlertTrustStore().apply {
+            trust(BinaryFrameCodec.registerSender("device-signer"), peer.ed25519PublicKey)
+        }
+        val frame = Frame.Msg(
+            VoiceMessage(
+                id = uuid(), from = "device-signer", lang = Lang.EN, text = "Trapped on the third floor",
+                priority = Priority.ALERT, sentAt = System.currentTimeMillis(),
+                lat = 28.6139, lon = 77.2090, accuracyM = 8f,
+            ),
+        )
+        val encoded = BinaryFrameCodec.encode(frame, session = session, signWith = peer)
+        val decoded = BinaryFrameCodec.decodeDetailed(encoded, session = session, trustStore = trustStore)
+        val m = (decoded.frame as Frame.Msg).message
+        assertEquals(28.6139, m.lat!!, 1e-5)
+        assertEquals(77.2090, m.lon!!, 1e-5)
+        assertEquals(8f, m.accuracyM!!, 0.1f)
+        assertFalse(decoded.alertDowngraded)
     }
 
     @Test

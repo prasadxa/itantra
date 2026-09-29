@@ -66,4 +66,29 @@ class IndicTextPipelineTest {
         assertEquals(Lang.HI, plan.lang)
         assertEquals(Priority.ALERT, plan.priority)
     }
+
+    @Test
+    fun `a message with a GPS fix gets an extra spoken location segment`() {
+        val withLocation = VoiceMessage(
+            id = "1", from = "a", lang = Lang.EN, text = "Need rescue", priority = Priority.ALERT,
+            lat = 12.9716, lon = 77.5946, accuracyM = 15f,
+        )
+        val plan = pipeline.plan(withLocation)
+        assertEquals(2, plan.segments.size)
+        assertEquals("Need rescue", plan.segments[0].text)
+        // Numbers are spelled by IndicNormalizer just like any other number in the message body.
+        assertTrue(plan.segments[1].text.contains("twelve"))
+        assertTrue(plan.segments[1].text.contains("north"))
+        assertTrue(plan.segments[1].text.contains("seventy seven"))
+        assertTrue(plan.segments[1].text.contains("east"))
+        assertTrue(plan.segments[1].text.contains("accuracy"))
+        // The location segment inherits the same URGENT styling as the rest of an ALERT message.
+        assertEquals(Emotion.URGENT, plan.segments[1].emotion)
+    }
+
+    @Test
+    fun `a message without lat or lon gets no extra segment`() {
+        val plan = pipeline.plan(msg("Need rescue", priority = Priority.ALERT))
+        assertEquals(1, plan.segments.size)
+    }
 }
