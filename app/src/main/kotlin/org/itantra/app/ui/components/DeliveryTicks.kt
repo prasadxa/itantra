@@ -53,7 +53,7 @@ fun deliveryStateOf(sentAtMs: Long, metrics: MessageMetrics?, rttMs: Long?, nowM
 
 /**
  * ✓ sent / ✓✓ delivered / ✓✓ (teal) played / retry-on-failure row for a SENT [org.itantra.app.LogEntry].
- * Ticks over a 1s timer only while the state is still pending (SENDING/SENT/DELIVERED) — resolved
+ * Ticks over a 1s timer only while the state can still time out (SENDING/SENT) — resolved
  * states (PLAYED/FAILED) stop the timer so this costs nothing once a message has settled.
  */
 @Composable
@@ -61,7 +61,10 @@ fun DeliveryTicksRow(sentAtMs: Long, metrics: MessageMetrics?, rttMs: Long?, onR
     var now by remember(sentAtMs) { mutableStateOf(System.currentTimeMillis()) }
     val state = deliveryStateOf(sentAtMs, metrics, rttMs, now)
     LaunchedEffect(sentAtMs, metrics?.endToEndMs, state) {
-        while (state == DeliveryState.SENDING || state == DeliveryState.SENT || state == DeliveryState.DELIVERED) {
+        // Only SENDING/SENT change with time (15 s failure timeout). DELIVERED→PLAYED arrives via
+        // [metrics] (a key above), so ticking there would run forever for peers that never play
+        // audio (e.g. the control-room gateway) and cost idle CPU.
+        while (state == DeliveryState.SENDING || state == DeliveryState.SENT) {
             delay(1000)
             now = System.currentTimeMillis()
         }

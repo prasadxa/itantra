@@ -47,6 +47,10 @@
     <string name="sos_medical">ଚିକିତ୍ସା ଜରୁରୀ</string>
     <string name="sos_safe">ସୁରକ୍ଷିତ</string>
     <string name="sos_supplies">ପାଣି/ଖାଦ୍ୟ ଦରକାର</string>
+    <string name="sos_chip_need_help">ସାହାଯ୍ୟ</string>
+    <string name="sos_chip_medical">ଚିକିତ୍ସା</string>
+    <string name="sos_chip_safe">ସୁରକ୍ଷିତ</string>
+    <string name="sos_chip_supplies">ପାଣି/ଖାଦ୍ୟ</string>
 
     <string name="about_title">iTantra ବିଷୟରେ</string>
     <string name="about_version">ସଂସ୍କରଣ %1$s</string>
@@ -72,6 +76,7 @@
     <string name="time_today">ଆଜି</string>
     <string name="unread_divider">ଅପଠିତ ବାର୍ତ୍ତା</string>
     <string name="nearby_devices_title">ନିକଟସ୍ଥ ଡିଭାଇସ୍</string>
+    <string name="metrics_measuring">ମାପାଯାଉଛି…</string>
     <string name="cd_sos_launch">ଜରୁରୀକାଳୀନ SOS</string>
     <string name="cd_peer_card">ସଂଯୋଗ ସ୍ଥିତି, ନିକଟସ୍ଥ ଡିଭାଇସ୍ ପାଇଁ ଟାପ୍ କରନ୍ତୁ</string>
     <string name="cd_message_options">ବାର୍ତ୍ତା ବିକଳ୍ପ</string>
@@ -137,4 +142,37 @@
     <string name="pairing_no_devices">ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ଡିଭାଇସ୍ ପେୟାର୍ ହୋଇନାହିଁ</string>
     <string name="pairing_remove">ହଟାନ୍ତୁ</string>
     <string name="pairing_device_id">ଡିଭାଇସ୍ %1$s</string>
+    <string name="settings_message_text_size">ବାର୍ତ୍ତା ପାଠ୍ୟ ଆକାର</string>
+    <string name="settings_message_text_size_desc">କେବଳ ଚାଟ୍ ବାର୍ତ୍ତା ପାଠ୍ୟ ଏବଂ ଲାଇଭ୍ କ୍ୟାପ୍ସନରେ ପ୍ରଯୁଜ୍ୟ</string>
+    <string name="settings_message_text_size_preview">ନମସ୍କାର, ଉଦ୍ଧାର ଦଳ ଆସୁଛି।</string>
+
+    <!-- Added: missing translations (SOS sheet, talk-screen v2 labels/links, history screen, tile) -->
+    <string name="sos_title">SOS</string>
+    <string name="sos_subtitle">ଏକ ଟାପ୍‌ରେ ଆପଣଙ୍କ ଲୋକେସନ୍ ସତର୍କତା ସହିତ ପଠାଯାଏ।</string>
+    <string name="sos_location_fetching">ଆପଣଙ୍କ ଲୋକେସନ୍ ନିଆଯାଉଛି…</string>
+    <string name="sos_location_unknown">ଲୋକେସନ୍ ଅଜ୍ଞାତ</string>
+    <string name="sos_accuracy_label">ସଠିକତା</string>
+    <string name="sos_satellites_label">ଉପଗ୍ରହ</string>
+    <string name="sos_refresh_location">ଲୋକେସନ୍ ରିଫ୍ରେସ୍ କରନ୍ତୁ</string>
+    <string name="sos_note_hint">ଏକ ଛୋଟ ନୋଟ୍ ଯୋଡନ୍ତୁ (ଇଚ୍ଛାଧୀନ)</string>
+    <string name="sos_permission_needed">ଲୋକେସନ୍ ଅନୁମତି ଦିଆଯାଇ ନାହିଁ — SOS ତାହା ବିନା ପଠାଯିବ।</string>
+    <string name="sos_status_sending">ପଠାଯାଉଛି…</string>
+    <string name="sos_status_sent">ପଠାଗଲା — ଡେଲିଭରୀ ନିଶ୍ଚିତତା ପାଇଁ ଅପେକ୍ଷା କରାଯାଉଛି</string>
+    <string name="sos_status_delivered">ପହଞ୍ଚିଗଲା</string>
+    <string name="cd_sos_close">SOS ବନ୍ଦ କରନ୍ତୁ</string>
+    <string name="label_rx">RX</string>
+    <string name="label_tx">TX</string>
+    <string name="label_ssml">SSML</string>
+    <string name="composer_placeholder_ssml">SSML…</string>
+    <string name="link_wifi_direct">Wi‑Fi Direct</string>
+    <string name="link_lan">LAN</string>
+    <string name="link_bluetooth">Bluetooth</string>
+    <string name="history_search_hint">ସନ୍ଦେଶ ଖୋଜନ୍ତୁ…</string>
+    <string name="history_filter_alerts">କେବଳ ସତର୍କତା</string>
+    <string name="history_filter_language">ଭାଷା</string>
+    <string name="history_filter_all_languages">ସମସ୍ତ ଭାଷା</string>
+    <string name="history_export">ଏକ୍ସପୋର୍ଟ କରନ୍ତୁ</string>
+    <string name="history_empty">ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ସନ୍ଦେଶ ନାହିଁ।</string>
+    <string name="cd_history_search">ଇତିହାସ ଖୋଜନ୍ତୁ</string>
+    <string name="tile_ptt_label">iTantra PTT/SOS</string>
 </resources>

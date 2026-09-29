@@ -1,5 +1,6 @@
 package org.itantra.app
 
+import org.itantra.core.Lang
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import java.io.File
@@ -53,7 +54,11 @@ object EngineFactory {
             FallbackTtsEngine(context, paths, numThreads = numThreads, preferFast = true, idleUnloadMs = idleUnloadMs)
                 // LITE keeps idle RAM low: nothing is preloaded; the first message in a language
                 // pays the load once, and the idle unload returns the memory afterwards.
-                .also { if (profile == Profile.FULL) it.warmUp(listOf(AppRepository.language.value)) }
+                .also {
+                    // FULL warms both engines (Mio via HI, VITS via TA) so the first message in any
+                    // language skips the cold load (measured ~10 s for a cold VITS start).
+                    if (profile == Profile.FULL) it.warmUp(listOf(AppRepository.language.value, Lang.HI, Lang.TA))
+                }
         } catch (t: Throwable) {
             ttsError = t.message ?: t.toString(); null
         }

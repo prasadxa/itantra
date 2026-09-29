@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import org.itantra.core.Lang
 import org.itantra.core.LinkState
+import org.itantra.transport.LinkVia
 
 /**
  * Process-wide singleton holding UI state, updated by [TalkService]/[Orchestrator] and observed by
@@ -12,6 +13,9 @@ import org.itantra.core.LinkState
 object AppRepository {
     val serviceRunning = MutableStateFlow(false)
     val linkState = MutableStateFlow<LinkState>(LinkState.Idle)
+    /** Additive detail on [linkState]'s [org.itantra.core.LinkKind.WIFI] links — see [LinkVia]. Null
+     * when the active transport isn't a [org.itantra.transport.TransportManager] (e.g. tests/[NullTransport]). */
+    val linkVia = MutableStateFlow<LinkVia?>(null)
     val mode = MutableStateFlow(Mode.PTT)
     val language = MutableStateFlow(Lang.HI)
     val alertNext = MutableStateFlow(false)

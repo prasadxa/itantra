@@ -46,6 +46,10 @@
     <string name="sos_medical">மருத்துவ அவசரநிலை</string>
     <string name="sos_safe">பாதுகாப்பாக உள்ளேன்</string>
     <string name="sos_supplies">தண்ணீர்/உணவு தேவை</string>
+    <string name="sos_chip_need_help">உதவி</string>
+    <string name="sos_chip_medical">மருத்துவம்</string>
+    <string name="sos_chip_safe">பாதுகாப்பு</string>
+    <string name="sos_chip_supplies">தண்ணீர்/உணவு</string>
 
     <string name="about_title">iTantra பற்றி</string>
     <string name="about_version">பதிப்பு %1$s</string>
@@ -71,6 +75,7 @@
     <string name="time_today">இன்று</string>
     <string name="unread_divider">படிக்காத செய்திகள்</string>
     <string name="nearby_devices_title">அருகிலுள்ள சாதனங்கள்</string>
+    <string name="metrics_measuring">அளவிடுகிறது…</string>
     <string name="cd_sos_launch">அவசர SOS</string>
     <string name="cd_peer_card">இணைப்பு நிலை, அருகிலுள்ள சாதனங்களுக்கு தட்டவும்</string>
     <string name="cd_message_options">செய்தி விருப்பங்கள்</string>
@@ -136,4 +141,37 @@
     <string name="pairing_no_devices">இதுவரை சாதனங்கள் பேர் செய்யப்படவில்லை</string>
     <string name="pairing_remove">அகற்று</string>
     <string name="pairing_device_id">சாதனம் %1$s</string>
+    <string name="settings_message_text_size">செய்தி உரை அளவு</string>
+    <string name="settings_message_text_size_desc">அரட்டை செய்தி உரை மற்றும் நேரலை வசனங்களுக்கு மட்டும் பொருந்தும்</string>
+    <string name="settings_message_text_size_preview">வணக்கம், மீட்புக் குழு வருகிறது.</string>
+
+    <!-- Added: missing translations (SOS sheet, talk-screen v2 labels/links, history screen, tile) -->
+    <string name="sos_title">SOS</string>
+    <string name="sos_subtitle">ஒரு தட்டலில் உங்கள் இருப்பிடம் எச்சரிக்கையுடன் அனுப்பப்படும்.</string>
+    <string name="sos_location_fetching">உங்கள் இருப்பிடத்தைப் பெறுகிறது…</string>
+    <string name="sos_location_unknown">இருப்பிடம் தெரியவில்லை</string>
+    <string name="sos_accuracy_label">துல்லியம்</string>
+    <string name="sos_satellites_label">செயற்கைக்கோள்கள்</string>
+    <string name="sos_refresh_location">இருப்பிடத்தைப் புதுப்பிக்கவும்</string>
+    <string name="sos_note_hint">ஒரு குறுகிய குறிப்பைச் சேர்க்கவும் (விருப்பம்)</string>
+    <string name="sos_permission_needed">இருப்பிட அனுமதி வழங்கப்படவில்லை — அது இல்லாமலேயே SOS அனுப்பப்படும்.</string>
+    <string name="sos_status_sending">அனுப்புகிறது…</string>
+    <string name="sos_status_sent">அனுப்பப்பட்டது — டெலிவரி உறுதிப்படுத்தலுக்காக காத்திருக்கிறது</string>
+    <string name="sos_status_delivered">சேர்ந்தது</string>
+    <string name="cd_sos_close">SOS-ஐ மூடு</string>
+    <string name="label_rx">RX</string>
+    <string name="label_tx">TX</string>
+    <string name="label_ssml">SSML</string>
+    <string name="composer_placeholder_ssml">SSML…</string>
+    <string name="link_wifi_direct">Wi‑Fi Direct</string>
+    <string name="link_lan">LAN</string>
+    <string name="link_bluetooth">Bluetooth</string>
+    <string name="history_search_hint">செய்திகளைத் தேடு…</string>
+    <string name="history_filter_alerts">எச்சரிக்கைகள் மட்டும்</string>
+    <string name="history_filter_language">மொழி</string>
+    <string name="history_filter_all_languages">எல்லா மொழிகளும்</string>
+    <string name="history_export">ஏற்றுமதி செய்யவும்</string>
+    <string name="history_empty">இதுவரை செய்திகள் இல்லை.</string>
+    <string name="cd_history_search">வரலாற்றைத் தேடு</string>
+    <string name="tile_ptt_label">iTantra PTT/SOS</string>
 </resources>

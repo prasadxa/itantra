@@ -1,5 +1,6 @@
 package org.itantra.transport
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -61,27 +62,37 @@ class WifiDirectHelper(
         groupFormed = false
     }
 
+    @SuppressLint("MissingPermission") // runtime permission may be revoked; SecurityException handled
     fun discoverPeers() {
         val ch = channel ?: return
-        manager.discoverPeers(ch, object : WifiP2pManager.ActionListener {
-            override fun onSuccess() {}
-            override fun onFailure(reason: Int) {
-                Log.w(TAG, "discoverPeers failed: $reason")
-            }
-        })
+        try {
+            manager.discoverPeers(ch, object : WifiP2pManager.ActionListener {
+                override fun onSuccess() {}
+                override fun onFailure(reason: Int) {
+                    Log.w(TAG, "discoverPeers failed: $reason")
+                }
+            })
+        } catch (e: SecurityException) {
+            Log.w(TAG, "Wi-Fi Direct permission missing", e)
+        }
     }
 
+    @SuppressLint("MissingPermission") // runtime permission may be revoked; SecurityException handled
     fun connect(device: WifiP2pDevice) {
         val ch = channel ?: return
         connecting = true
         val config = WifiP2pConfig().apply { deviceAddress = device.deviceAddress }
-        manager.connect(ch, config, object : WifiP2pManager.ActionListener {
-            override fun onSuccess() {}
-            override fun onFailure(reason: Int) {
-                connecting = false
-                Log.w(TAG, "connect failed: $reason")
-            }
-        })
+        try {
+            manager.connect(ch, config, object : WifiP2pManager.ActionListener {
+                override fun onSuccess() {}
+                override fun onFailure(reason: Int) {
+                    connecting = false
+                    Log.w(TAG, "connect failed: $reason")
+                }
+            })
+        } catch (e: SecurityException) {
+            Log.w(TAG, "Wi-Fi Direct permission missing", e)
+        }
     }
 
     /** Feed the `WIFI_P2P_CONNECTION_CHANGED_ACTION` broadcast's connection info here. */
@@ -157,20 +168,25 @@ class WifiDirectHelper(
         myAddress = device?.deviceAddress
     }
 
+    @SuppressLint("MissingPermission") // runtime permission may be revoked; SecurityException handled
     private fun onPeersChanged() {
         val ch = channel ?: return
         if (groupFormed || connecting) return
-        manager.requestPeers(ch) { peers: WifiP2pDeviceList ->
-            if (groupFormed || connecting) return@requestPeers
-            val candidate = peers.deviceList
-                .filter { it.status != WifiP2pDevice.CONNECTED }
-                .minByOrNull { it.deviceAddress }
-                ?: return@requestPeers
-            // Deterministic dial, mirroring WifiTransport's NSD rule: only the side whose own
-            // address sorts lower initiates connect(), so both peers don't race each other.
-            val mine = myAddress
-            if (mine != null && mine > candidate.deviceAddress) return@requestPeers
-            connect(candidate)
+        try {
+            manager.requestPeers(ch) { peers: WifiP2pDeviceList ->
+                if (groupFormed || connecting) return@requestPeers
+                val candidate = peers.deviceList
+                    .filter { it.status != WifiP2pDevice.CONNECTED }
+                    .minByOrNull { it.deviceAddress }
+                    ?: return@requestPeers
+                // Deterministic dial, mirroring WifiTransport's NSD rule: only the side whose own
+                // address sorts lower initiates connect(), so both peers don't race each other.
+                val mine = myAddress
+                if (mine != null && mine > candidate.deviceAddress) return@requestPeers
+                connect(candidate)
+            }
+        } catch (e: SecurityException) {
+            Log.w(TAG, "Wi-Fi Direct permission missing", e)
         }
     }
 

@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.itantra.app.R
 
@@ -23,16 +24,16 @@ import org.itantra.app.R
  * in-deck quick-reply chips. Opens [org.itantra.app.ui.sos.SosSheet]. Red is reserved for
  * ALERT/emergency per the brand rule, so this is the one place a solid-red circular control belongs. */
 @Composable
-fun SosButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun SosButton(onClick: () -> Unit, modifier: Modifier = Modifier, size: Dp = 56.dp) {
     Box(
         modifier
-            .size(56.dp)
+            .size(size)
             .shadow(4.dp, CircleShape)
             .clip(CircleShape)
             .background(MaterialTheme.colorScheme.error)
             .clickable(onClickLabel = stringResource(R.string.cd_sos_launch), onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(Icons.Filled.Sos, contentDescription = stringResource(R.string.cd_sos_launch), tint = Color.White, modifier = Modifier.size(28.dp))
+        Icon(Icons.Filled.Sos, contentDescription = stringResource(R.string.cd_sos_launch), tint = Color.White, modifier = Modifier.size(size * 0.5f))
     }
 }

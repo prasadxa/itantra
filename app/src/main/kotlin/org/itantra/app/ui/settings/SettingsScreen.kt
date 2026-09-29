@@ -80,6 +80,7 @@ fun SettingsScreen(onOpenPairing: () -> Unit, onOpenModels: () -> Unit, onOpenAb
     var speechRate by remember { mutableStateOf(SettingsPrefs.getSpeechRate(context)) }
     var playbackMode by remember { mutableStateOf(SettingsPrefs.getPlaybackMode(context)) }
     var largeText by remember { mutableStateOf(SettingsPrefs.largeText(context).value) }
+    var messageTextScale by remember { mutableStateOf(SettingsPrefs.messageTextScaleFlow(context).value) }
     var themeMode by remember { mutableStateOf(SettingsPrefs.getThemeMode(context)) }
     var profileOverride by remember { mutableStateOf(ProfileManager.getOverride(context)) }
     var alertTestResult by remember { mutableStateOf<String?>(null) }
@@ -179,6 +180,10 @@ fun SettingsScreen(onOpenPairing: () -> Unit, onOpenModels: () -> Unit, onOpenAb
                     subtitle = stringResource(R.string.settings_large_text_desc),
                     checked = largeText,
                     onCheckedChange = { largeText = it; SettingsPrefs.setLargeText(context, it) },
+                )
+                MessageTextSizeRow(
+                    scale = messageTextScale,
+                    onSelect = { messageTextScale = it; SettingsPrefs.setMessageTextScale(context, it) },
                 )
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
                     Text(stringResource(R.string.settings_theme), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 8.dp))
@@ -301,6 +306,48 @@ private fun ProfileOverrideRow(override: ProfileOverride, onSelect: (ProfileOver
                     shape = SegmentedButtonDefaults.itemShape(i, ProfileOverride.entries.size),
                 ) { Text(opt.name) }
             }
+        }
+    }
+}
+
+/** S/M/L/XL chips for [SettingsPrefs.messageTextScaleFlow], with a live preview message card at the
+ * selected scale (in the current conversation language's sample text) — four named steps map
+ * directly onto how people already think about text size, unlike a bare 0–100 slider with no
+ * obviously-correct default tick. */
+@Composable
+private fun MessageTextSizeRow(scale: Float, onSelect: (Float) -> Unit) {
+    val steps = SettingsPrefs.MESSAGE_TEXT_SCALE_STEPS
+    val labels = listOf("S", "M", "L", "XL")
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+        Text(stringResource(R.string.settings_message_text_size), style = MaterialTheme.typography.bodyLarge)
+        Text(
+            stringResource(R.string.settings_message_text_size_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 8.dp, top = 2.dp),
+        )
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            steps.forEachIndexed { i, step ->
+                SegmentedButton(
+                    selected = scale == step,
+                    onClick = { onSelect(step) },
+                    shape = SegmentedButtonDefaults.itemShape(i, steps.size),
+                ) { Text(labels[i]) }
+            }
+        }
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+        ) {
+            Text(
+                stringResource(R.string.settings_message_text_size_preview),
+                style = MaterialTheme.typography.bodyLarge.let { it.copy(fontSize = it.fontSize * scale, lineHeight = it.lineHeight * scale) },
+                color = MaterialTheme.colorScheme.onSurface,
+            )
         }
     }
 }

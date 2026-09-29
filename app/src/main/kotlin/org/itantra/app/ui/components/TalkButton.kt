@@ -1,6 +1,5 @@
 package org.itantra.app.ui.components
 
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,11 +9,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,12 +45,17 @@ import org.itantra.app.ui.theme.MonoText
 import org.itantra.app.ui.theme.Labels
 import org.itantra.core.Lang
 
+private val TALK_BUTTON_CORNER = 20.dp
+
 /**
- * The big hold-to-talk key — saffron fill (transmit colour, per brand rule), large rounded shape,
- * captioned in the *conversation* language via [Labels.pttOf]. While held it shows a live mic
+ * The big hold-to-talk key — filled saffron (primary/transmit colour per brand rule) at rest, so
+ * it unambiguously reads as *the* main action rather than a secondary/outlined control, captioned
+ * in the *conversation* language via [Labels.pttOf] with a mic glyph. No idle animation — it only
+ * moves in response to an actual state change (held/gated). While held it shows a live mic
  * waveform driven by [micLevel] (itself only updated while [org.itantra.app.MicCapture] is
  * running, so this costs nothing while idle) plus a TX timer, and haptics fire on press/release.
  * When gated (peer talking / our own TTS playing) it goes visibly flat/disabled and explains why.
+ * Sizing (width/height) is the caller's job (see the bottom deck's row 3 in [org.itantra.app.ui.Composer]).
  */
 @Composable
 fun TalkButton(
@@ -73,24 +80,20 @@ fun TalkButton(
             }
         }
     }
-    val corner by animateDpAsState(if (held) 36.dp else 24.dp, label = "talkCorner")
     val bg = when {
         held -> MaterialTheme.colorScheme.primary // saffron = transmit
         !enabled -> MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f)
-        else -> MaterialTheme.colorScheme.surfaceContainerHigh
+        else -> MaterialTheme.colorScheme.primary // filled saffron at rest — the main action
     }
-    val border = if (!held && enabled) MaterialTheme.colorScheme.primary.copy(alpha = 0.4f) else Color.Transparent
+    val restContent = if (enabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
     val pttLabel = Labels.pttOf(language)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = modifier
-            .fillMaxWidth(0.62f)
-            .height(116.dp)
-            .clip(RoundedCornerShape(corner))
+            .clip(RoundedCornerShape(TALK_BUTTON_CORNER))
             .background(bg)
-            .border(1.5.dp, border, RoundedCornerShape(corner))
             .semantics { contentDescription = pttLabel }
             .then(
                 if (enabled) {
@@ -118,14 +121,17 @@ fun TalkButton(
             }
             ttsPlaying -> GatedLabel(stringResource(R.string.disabled_playing))
             peerTalking -> GatedLabel(stringResource(R.string.label_peer_talking))
-            else -> Text(
-                pttLabel,
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 12.dp),
-            )
+            else -> Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp)) {
+                Icon(Icons.Filled.Mic, contentDescription = null, tint = restContent, modifier = Modifier.size(22.dp))
+                Text(
+                    pttLabel,
+                    color = restContent,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
         }
     }
 }

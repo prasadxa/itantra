@@ -3,13 +3,7 @@ package org.itantra.app.ui
 import android.app.Activity
 import android.content.Context
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.Image
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -36,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -50,7 +45,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -64,13 +58,13 @@ import org.itantra.app.R
 import org.itantra.app.TalkService
 import org.itantra.app.ui.history.HistoryScreen
 import org.itantra.app.ui.pairing.PairingScreen
+import org.itantra.app.ui.settings.LocalMessageTextScale
 import org.itantra.app.ui.settings.SettingsPrefs
 import org.itantra.app.ui.settings.SettingsScreen
+import org.itantra.app.ui.settings.effectiveMessageTextScale
 import org.itantra.app.ui.theme.MonoText
 import org.itantra.app.ui.theme.TricolourHairline
-import org.itantra.app.ui.theme.rememberReducedMotion
 import org.itantra.core.Lang
-import org.itantra.core.LinkKind
 import org.itantra.core.LinkState
 
 /** [TALK]/[HISTORY]/[METRICS]/[SETTINGS] are the four bottom-nav destinations; [ABOUT]/[MODELS]/
@@ -91,7 +85,6 @@ tailrec fun Context.findActivity(): Activity? = when (this) {
 fun AppRoot() {
     var screen by rememberSaveable { mutableStateOf(Screen.TALK) }
     val linkState by AppRepository.linkState.collectAsState()
-    val rttMs by AppRepository.rttMs.collectAsState()
     val language by AppRepository.language.collectAsState()
     val context = LocalContext.current
     val largeText by SettingsPrefs.largeText(context).collectAsState()
@@ -105,8 +98,15 @@ fun AppRoot() {
     val scaledDensity = remember(baseDensity, largeText) {
         Density(baseDensity.density, fontScale = baseDensity.fontScale * (if (largeText) 1.25f else 1f))
     }
+    // "Message text size" setting (S/M/L/XL, see SettingsScreen) — combined with the system font
+    // scale (not `scaledDensity`'s, so it isn't compounded with the largeText toggle above) and
+    // clamped, so ChatScreen's message cards/live captions can read it without a restart.
+    val messageTextScale by SettingsPrefs.messageTextScaleFlow(context).collectAsState()
+    val effectiveMessageTextScale = remember(messageTextScale, baseDensity.fontScale) {
+        effectiveMessageTextScale(messageTextScale, baseDensity.fontScale)
+    }
 
-    CompositionLocalProvider(LocalDensity provides scaledDensity) {
+    CompositionLocalProvider(LocalDensity provides scaledDensity, LocalMessageTextScale provides effectiveMessageTextScale) {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
@@ -122,9 +122,6 @@ fun AppRoot() {
                     linkState = linkState,
                     onBack = { screen = Screen.SETTINGS },
                 )
-                if (screen == Screen.TALK) {
-                    StatusCard(linkState = linkState, rttMs = rttMs)
-                }
                 Box(Modifier.weight(1f)) {
                     when (screen) {
                         Screen.TALK -> ChatScreen(onOpenModels = { screen = Screen.MODELS })
@@ -147,30 +144,43 @@ fun AppRoot() {
 
 @Composable
 private fun BottomNavBar(screen: Screen, onSelect: (Screen) -> Unit) {
+    // Neutral-grey selected pill with a saffron icon/label, rather than the Material-default
+    // secondaryContainer tonal pill (which would pull in an unwanted purple tint).
+    val navColors = NavigationBarItemDefaults.colors(
+        selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        indicatorColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
     NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
         NavigationBarItem(
             selected = screen == Screen.TALK,
             onClick = { onSelect(Screen.TALK) },
             icon = { Icon(Icons.Filled.Chat, contentDescription = null) },
             label = { Text(stringResource(R.string.nav_talk)) },
+            colors = navColors,
         )
         NavigationBarItem(
             selected = screen == Screen.HISTORY,
             onClick = { onSelect(Screen.HISTORY) },
             icon = { Icon(Icons.Filled.History, contentDescription = null) },
             label = { Text(stringResource(R.string.nav_history)) },
+            colors = navColors,
         )
         NavigationBarItem(
             selected = screen == Screen.METRICS,
             onClick = { onSelect(Screen.METRICS) },
             icon = { Icon(Icons.Filled.Insights, contentDescription = null) },
             label = { Text(stringResource(R.string.menu_metrics)) },
+            colors = navColors,
         )
         NavigationBarItem(
             selected = screen == Screen.SETTINGS,
             onClick = { onSelect(Screen.SETTINGS) },
             icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
             label = { Text(stringResource(R.string.nav_settings)) },
+            colors = navColors,
         )
     }
 }
@@ -272,7 +282,7 @@ private fun TopBar(
 
 /** Compact peer-connection indicator for the top bar (a coloured dot, +peer name once connected) —
  * always visible so "is anyone even nearby" is answerable from every screen, not just Talk (which
- * additionally shows the full [StatusCard]). */
+ * additionally shows the full connection card — see [org.itantra.app.ui.components.PeerCard]). */
 @Composable
 private fun PeerStatusPill(linkState: LinkState) {
     val connected = linkState is LinkState.Connected
@@ -315,70 +325,3 @@ private fun LangButton(language: Lang, onClick: () -> Unit) {
     }
 }
 
-/**
- * Big, friendly connection-status card — the "is this thing on" answer at a glance, replacing the
- * old instrument-style mono status line. Uses tertiary (India-green) only when actually connected,
- * per the design spec's "ready/connected only" rule for that colour.
- */
-@Composable
-private fun StatusCard(linkState: LinkState, rttMs: Long?) {
-    val connected = linkState is LinkState.Connected
-    val searching = linkState is LinkState.Searching
-    val failed = linkState is LinkState.Failed
-    val reducedMotion = rememberReducedMotion()
-
-    val (title, subtitle) = when (linkState) {
-        is LinkState.Connected -> {
-            val kind = if (linkState.kind == LinkKind.WIFI) "Wi‑Fi Direct" else "Bluetooth"
-            stringResource(R.string.status_connected, linkState.peerName, kind) to rttMs?.let { "RTT ${it}ms" }
-        }
-        is LinkState.Searching -> stringResource(R.string.status_searching) to null
-        is LinkState.Idle -> stringResource(R.string.status_idle) to null
-        is LinkState.Failed -> stringResource(R.string.status_failed) to null
-    }
-
-    val dotColor = when {
-        connected -> MaterialTheme.colorScheme.tertiary
-        failed -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 10.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        PulsingDot(color = dotColor, animate = searching && !reducedMotion)
-        Column(Modifier.padding(start = 12.dp).weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
-            if (subtitle != null) {
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-    }
-}
-
-@Composable
-private fun PulsingDot(color: androidx.compose.ui.graphics.Color, animate: Boolean) {
-    // Idle CPU is judged: an infinite transition keeps Compose and RenderThread drawing every frame
-    // (~50% of a core on a Snapdragon 870). Pulse a few times when the state changes, then rest.
-    val alpha = remember { androidx.compose.animation.core.Animatable(1f) }
-    LaunchedEffect(animate) {
-        if (!animate) { alpha.snapTo(1f); return@LaunchedEffect }
-        repeat(4) {
-            alpha.animateTo(0.35f, tween(750))
-            alpha.animateTo(1f, tween(750))
-        }
-    }
-    Box(
-        Modifier
-            .size(14.dp)
-            .alpha(alpha.value)
-            .clip(CircleShape)
-            .background(color),
-    )
-}

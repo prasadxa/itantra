@@ -23,6 +23,15 @@ private const val WIFI_DIRECT_FALLBACK_DELAY_MS = 4_000L
 private const val BLE_FALLBACK_DELAY_MS = 8_000L
 
 /**
+ * Additive detail alongside [LinkKind]: which concrete radio path a [LinkKind.WIFI] link actually
+ * used. Both same-LAN/hotspot (NSD/mDNS) and Wi-Fi Direct connections surface as plain
+ * [LinkKind.WIFI] to existing code (see [WifiTransport.attach] — a Wi-Fi Direct socket is handed
+ * into the same [LinkKind.WIFI] link), so this is exposed only via [TransportManager.via] for UI
+ * that wants to show the correct label (e.g. "LAN" vs "Wi‑Fi Direct") without changing [LinkState].
+ */
+enum class LinkVia { LAN, WIFI_DIRECT, BLUETOOTH }
+
+/**
  * App-facing [Transport]: starts Wi-Fi ([WifiTransport], NSD/LAN); if it hasn't connected within
  * ~4s also starts Wi-Fi Direct ([WifiDirectHelper]) so two phones with no shared router/hotspot
  * can still find each other (a connected P2P socket is handed back into [WifiTransport.attach],
@@ -41,11 +50,21 @@ class TransportManager(
     private val wifi = WifiTransport(context, deviceId, deviceName, scope)
     private val ble = BleTransport(context, deviceId, deviceName, scope)
     private val wifiDirect = WifiDirectHelper(context, scope) { socket ->
+        pendingViaWifiDirect = true
         wifi.attach(socket, peerName = "wifi-direct-peer")
     }
 
     private val _state = MutableStateFlow<LinkState>(LinkState.Idle)
     override val state: StateFlow<LinkState> = _state.asStateFlow()
+
+    // Set right before the Wi-Fi Direct handoff above attaches its socket, consumed (and reset) the
+    // next time a WIFI link comes up in onLinkState; any other WIFI connection (plain NSD accept/
+    // dial in WifiTransport) never touches this flag, so it defaults to LAN.
+    @Volatile private var pendingViaWifiDirect = false
+
+    private val _via = MutableStateFlow(LinkVia.LAN)
+    /** Which radio path the current/most recent [LinkKind.WIFI] link used — see [LinkVia]. */
+    val via: StateFlow<LinkVia> = _via.asStateFlow()
 
     private val _incoming = MutableSharedFlow<Frame>(extraBufferCapacity = 64)
     override val incoming: SharedFlow<Frame> = _incoming.asSharedFlow()
@@ -131,6 +150,11 @@ class TransportManager(
             if (activeKind == null || source == LinkKind.WIFI) {
                 activeKind = source
                 _state.value = newState
+                _via.value = when (source) {
+                    LinkKind.WIFI -> if (pendingViaWifiDirect) LinkVia.WIFI_DIRECT else LinkVia.LAN
+                    LinkKind.BLE -> LinkVia.BLUETOOTH
+                }
+                pendingViaWifiDirect = false
                 send(Frame.Hello(deviceId, deviceName, protocol = PROTOCOL_BINARY_CAPABLE))
                 // A LAN/NSD (or already-attached Wi-Fi Direct) socket is now the active link;
                 // no need to keep hunting for a second Wi-Fi Direct peer.

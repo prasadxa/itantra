@@ -11,7 +11,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,7 +27,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -43,6 +41,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -67,8 +66,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -92,11 +94,13 @@ import org.itantra.app.ui.components.TalkButton
 import org.itantra.app.ui.components.UnreadDivider
 import org.itantra.app.ui.components.rememberAlertFlash
 import org.itantra.app.ui.components.vibrateAlert
+import org.itantra.app.ui.settings.LocalMessageTextScale
 import org.itantra.app.ui.sos.SosSheet
 import org.itantra.app.ui.theme.Labels
 import org.itantra.app.ui.theme.MonoText
 import org.itantra.core.Lang
 import org.itantra.core.LinkState
+import org.itantra.transport.LinkVia
 
 private sealed interface ChatItem {
     val id: String
@@ -154,6 +158,7 @@ fun ChatScreen(onOpenModels: () -> Unit) {
     val micLevel by AppRepository.micLevel.collectAsState()
     val voiceNoteDurations by AppRepository.voiceNoteDurations.collectAsState()
     val linkState by AppRepository.linkState.collectAsState()
+    val linkVia by AppRepository.linkVia.collectAsState()
     val rttMs by AppRepository.rttMs.collectAsState()
 
     val context = LocalContext.current
@@ -184,15 +189,12 @@ fun ChatScreen(onOpenModels: () -> Unit) {
     LaunchedEffect(freshAlertIds) { if (freshAlertIds.isNotEmpty()) vibrateAlert(context) }
 
     Column(Modifier.fillMaxSize()) {
-        PeerCard(linkState = linkState, rttMs = rttMs, language = language, onTap = { nearbySheetOpen = true })
+        PeerCard(linkState = linkState, rttMs = rttMs, via = linkVia, language = language, onTap = { nearbySheetOpen = true })
         if (engineStatus != null && (engineStatus!!.sttReady == false || engineStatus!!.ttsReady == false)) {
             EngineWarningBanner(engineStatus!!.sttReady, engineStatus!!.ttsReady, onOpenModels)
         }
         if (peerTalking) PeerTalkingBanner()
 
-        // The SOS button floats bottom-left of the message deck, pinned just above the composer —
-        // the usual chat-app FAB placement — rather than a magic-number offset from the full screen,
-        // so it stays put regardless of what other agents' screens put above/below this one.
         Box(Modifier.weight(1f)) {
             if (rows.isEmpty()) {
                 EmptyStateTips(Modifier.fillMaxSize())
@@ -242,11 +244,6 @@ fun ChatScreen(onOpenModels: () -> Unit) {
                     }
                 }
             }
-
-            SosButton(
-                onClick = { sosSheetOpen = true },
-                modifier = Modifier.align(Alignment.BottomStart).padding(start = 14.dp, bottom = 10.dp),
-            )
         }
 
         Composer(
@@ -257,11 +254,12 @@ fun ChatScreen(onOpenModels: () -> Unit) {
             peerTalking = peerTalking,
             ttsPlaying = ttsPlaying,
             micLevel = micLevel,
+            onSosClick = { sosSheetOpen = true },
         )
     }
 
     if (nearbySheetOpen) {
-        NearbyDevicesSheet(linkState = linkState, rttMs = rttMs, onDismiss = { nearbySheetOpen = false })
+        NearbyDevicesSheet(linkState = linkState, rttMs = rttMs, via = linkVia, onDismiss = { nearbySheetOpen = false })
     }
     if (sosSheetOpen) {
         SosSheet(onDismiss = { sosSheetOpen = false })
@@ -273,7 +271,7 @@ private fun dateLabel(epochMs: Long): String =
     if (dayKeyOf(epochMs) == dayKeyOf(System.currentTimeMillis())) {
         stringResource(R.string.time_today)
     } else {
-        SimpleDateFormat("d MMM", Locale.getDefault()).format(Date(epochMs))
+        SimpleDateFormat("d MMM", androidx.compose.ui.platform.LocalConfiguration.current.locales[0]).format(Date(epochMs))
     }
 
 @Composable
@@ -359,6 +357,14 @@ private fun timeOf(epochMs: Long): String =
 
 private fun fmtMs(ms: Long): String = if (ms >= 1000) "%.1fs".format(ms / 1000f) else "${ms}ms"
 
+/** Applies the "Message text size" setting (see [LocalMessageTextScale]/Settings) to message-card
+ * body text and live partial captions — the only two places that setting is meant to reach. */
+@Composable
+private fun TextStyle.scaledByMessageTextSize(): TextStyle {
+    val scale = LocalMessageTextScale.current
+    return copy(fontSize = fontSize * scale, lineHeight = lineHeight * scale)
+}
+
 private fun telemetryLine(m: MessageMetrics): String = buildString {
     m.sttLatencyMs?.let { append("STT ${fmtMs(it)}") }
     m.rtf?.let { if (isNotEmpty()) append(" · "); append("RTF %.2f".format(it)) }
@@ -437,7 +443,7 @@ private fun MessageCard(
                 }
                 Text(
                     entry.text,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyLarge.scaledByMessageTextSize(),
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(top = 4.dp),
                 )
@@ -511,7 +517,7 @@ private fun LivePartialRow(entry: PartialEntry) {
             Row {
                 Text(
                     entry.text.ifBlank { "…" },
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyLarge.scaledByMessageTextSize(),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     modifier = Modifier.alpha(0.85f),
                 )
@@ -536,6 +542,23 @@ private fun LevelGlyph(color: Color) {
 // Bottom deck
 // ---------------------------------------------------------------------------------------------
 
+private val DECK_GUTTER = 16.dp
+private val DECK_GAP = 8.dp
+
+/**
+ * The bottom deck, laid out as a strict 3-row grid with [DECK_GUTTER] side margins and [DECK_GAP]
+ * gaps throughout (fixes the old ad-hoc `SpaceBetween`/`Spacer` layout, which left the talk button
+ * at ~60% width with a big empty gap before the keyboard icon, a cramped mode segment, an
+ * Alert toggle floating far right, and SOS chips clipped off-screen), sized compactly so the
+ * message list keeps most of the screen:
+ *  - Row 1: Talk|Call segment (weight 1f) + Alert toggle (weight ~0.45f), 40dp tall visually, with
+ *    a [minimumInteractiveComponentSize] touch target so the smaller pill doesn't shrink tappability.
+ *  - Row 2 (PTT mode, composer closed only): quick SOS chips, one per line-fraction (equal-width,
+ *    [Arrangement.spacedBy]) rather than clipping/scrolling off-screen — always exactly one line.
+ *  - Row 3: round SOS button (52dp), the main talk button (56dp tall, fills the remaining width),
+ *    and a square keyboard button (52dp) — replaces the old floating SOS FAB, which used to overlap
+ *    the message list.
+ */
 @Composable
 private fun Composer(
     mode: Mode,
@@ -545,22 +568,26 @@ private fun Composer(
     peerTalking: Boolean,
     ttsPlaying: Boolean,
     micLevel: Float,
+    onSosClick: () -> Unit,
 ) {
     var composerOpen by remember { mutableStateOf(false) }
 
     Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.fillMaxWidth()) {
             HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
-            Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    ModeSegment(mode)
-                    AlertToggle(alertNext)
+            Column(Modifier.padding(horizontal = DECK_GUTTER, vertical = 8.dp)) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(DECK_GAP),
+                ) {
+                    ModeSegment(mode, Modifier.weight(1f))
+                    AlertToggle(alertNext, Modifier.weight(0.45f))
                 }
                 if (mode == Mode.PTT && !composerOpen) {
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(DECK_GAP))
                     SosChipsRow(language)
                 }
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(DECK_GAP))
 
                 when {
                     mode == Mode.PHONE -> CallBar(
@@ -570,7 +597,12 @@ private fun Composer(
                         onHangUp = { TalkService.instance?.onModeChanged(Mode.PTT) },
                     )
                     composerOpen -> TextComposerRow(language = language, onClose = { composerOpen = false })
-                    else -> Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                    else -> Row(
+                        Modifier.fillMaxWidth().height(56.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(DECK_GAP),
+                    ) {
+                        SosButton(onClick = onSosClick, size = 52.dp)
                         TalkButton(
                             language = language,
                             held = pttHeld,
@@ -579,10 +611,9 @@ private fun Composer(
                             micLevel = micLevel,
                             onPress = { TalkService.instance?.onPttPressed() },
                             onRelease = { TalkService.instance?.onPttReleased() },
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
                         )
-                        IconButton(onClick = { composerOpen = true }, modifier = Modifier.size(48.dp)) {
-                            Icon(Icons.Filled.Keyboard, contentDescription = stringResource(R.string.cd_type_message), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
+                        KeyboardButton(onClick = { composerOpen = true })
                     }
                 }
             }
@@ -590,61 +621,100 @@ private fun Composer(
     }
 }
 
-/** Quick-reply SOS chips — localized to the current conversation language via [Labels.sosOf];
- * "Need help"/"Medical emergency" go out as ALERT priority, "Safe"/"Water‑food needed" as a
- * normal message, restoring whatever the alert-arm toggle was set to beforehand. */
+@Composable
+private fun KeyboardButton(onClick: () -> Unit) {
+    Box(
+        Modifier
+            .size(52.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .border(1.5.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(18.dp))
+            .clickable(onClickLabel = stringResource(R.string.cd_type_message), onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(Icons.Filled.Keyboard, contentDescription = stringResource(R.string.cd_type_message), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
+    }
+}
+
+/** Quick-reply SOS chips — always one line, equal-width ([Arrangement.spacedBy] + `weight(1f)`
+ * each), with short display labels ([R.string.sos_chip_need_help] etc., translated per language)
+ * so long phrasings ("Medical emergency") don't force wrapping or a scrollable row. The *sent*
+ * message text is still the full phrase from [Labels.sosOf] — only the chip's own caption is
+ * shortened. "Need help"/"Medical emergency" go out as ALERT priority, "Safe"/"Water‑food needed"
+ * as a normal message, restoring whatever the alert-arm toggle was set to beforehand. */
 @Composable
 private fun SosChipsRow(language: Lang) {
     val set = Labels.sosOf(language)
-    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        SosChip(set.needHelp, urgent = true, language = language)
-        SosChip(set.medical, urgent = true, language = language)
-        SosChip(set.safe, urgent = false, language = language)
-        SosChip(set.supplies, urgent = false, language = language)
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        SosChip(stringResource(R.string.sos_chip_need_help), sendText = set.needHelp, urgent = true, language = language, modifier = Modifier.weight(1f))
+        SosChip(stringResource(R.string.sos_chip_medical), sendText = set.medical, urgent = true, language = language, modifier = Modifier.weight(1f))
+        SosChip(stringResource(R.string.sos_chip_safe), sendText = set.safe, urgent = false, language = language, modifier = Modifier.weight(1f))
+        SosChip(stringResource(R.string.sos_chip_supplies), sendText = set.supplies, urgent = false, language = language, modifier = Modifier.weight(1f))
     }
 }
 
 @Composable
-private fun SosChip(label: String, urgent: Boolean, language: Lang) {
+private fun SosChip(displayLabel: String, sendText: String, urgent: Boolean, language: Lang, modifier: Modifier = Modifier) {
     val color = if (urgent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary
     Row(
-        Modifier
-            .height(48.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .border(1.dp, color.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
+        modifier
+            .height(36.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .border(1.dp, color.copy(alpha = 0.6f), RoundedCornerShape(18.dp))
             .clickable {
                 val prev = AppRepository.alertNext.value
                 AppRepository.alertNext.value = urgent
-                TalkService.instance?.onTextSend(label, language, false)
+                TalkService.instance?.onTextSend(sendText, language, false)
                 AppRepository.alertNext.value = prev
             }
-            .padding(horizontal = 14.dp),
+            .padding(horizontal = 6.dp),
+        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, style = MaterialTheme.typography.labelLarge, color = color, fontWeight = FontWeight.Medium)
+        Text(
+            displayLabel,
+            style = MaterialTheme.typography.labelMedium.copy(fontSize = 13.sp),
+            color = color,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
+/** Row 1 of the bottom deck's grid (see [Composer]): equal Talk/Call halves + the Alert toggle, 40dp
+ * tall visually — [minimumInteractiveComponentSize] pads the actual touch/layout target back up to
+ * the platform's 48dp minimum (extra invisible space around the pill) without growing what's drawn. */
 @Composable
-private fun ModeSegment(mode: Mode) {
+private fun ModeSegment(mode: Mode, modifier: Modifier = Modifier) {
     Row(
-        Modifier
+        modifier
+            .minimumInteractiveComponentSize()
+            .height(40.dp)
             .clip(RoundedCornerShape(8.dp))
             .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp)),
     ) {
-        SegmentButton(stringResource(R.string.mode_ptt), selected = mode == Mode.PTT) { TalkService.instance?.onModeChanged(Mode.PTT) }
-        Box(Modifier.width(1.dp).height(30.dp).background(MaterialTheme.colorScheme.outline))
-        SegmentButton(stringResource(R.string.mode_call), selected = mode == Mode.PHONE) { TalkService.instance?.onModeChanged(Mode.PHONE) }
+        SegmentButton(
+            stringResource(R.string.mode_ptt),
+            selected = mode == Mode.PTT,
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+        ) { TalkService.instance?.onModeChanged(Mode.PTT) }
+        Box(Modifier.width(1.dp).fillMaxHeight().background(MaterialTheme.colorScheme.outline))
+        SegmentButton(
+            stringResource(R.string.mode_call),
+            selected = mode == Mode.PHONE,
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+        ) { TalkService.instance?.onModeChanged(Mode.PHONE) }
     }
 }
 
 @Composable
-private fun SegmentButton(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun SegmentButton(label: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(
-        Modifier
+        modifier
             .background(if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f) else Color.Transparent)
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 7.dp),
+            .padding(horizontal = 10.dp),
+        contentAlignment = Alignment.Center,
     ) {
         MonoText(
             label,
@@ -655,15 +725,18 @@ private fun SegmentButton(label: String, selected: Boolean, onClick: () -> Unit)
 }
 
 @Composable
-private fun AlertToggle(armed: Boolean) {
+private fun AlertToggle(armed: Boolean, modifier: Modifier = Modifier) {
     val color = if (armed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
     Box(
-        Modifier
+        modifier
+            .minimumInteractiveComponentSize()
+            .height(40.dp)
             .clip(RoundedCornerShape(8.dp))
             .border(1.dp, if (armed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
             .background(if (armed) MaterialTheme.colorScheme.error.copy(alpha = 0.14f) else Color.Transparent)
             .clickable { AppRepository.alertNext.value = !armed }
-            .padding(horizontal = 14.dp, vertical = 7.dp),
+            .padding(horizontal = 10.dp),
+        contentAlignment = Alignment.Center,
     ) {
         MonoText(stringResource(R.string.alert_toggle), color = color, fontWeight = if (armed) FontWeight.Medium else FontWeight.Normal)
     }

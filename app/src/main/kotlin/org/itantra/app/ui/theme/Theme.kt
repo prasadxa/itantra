@@ -13,39 +13,64 @@ import androidx.compose.ui.graphics.Color
  *  - teal (peacock-green family) = receive / incoming-live
  *  - India-green = "ready"/"connected" status only (never a generic accent)
  *  - red = ALERT only
- * Dark base is the deep indigo night from the app logo (#1E1B4B family); light base is a clean
- * off-white with ink text. All pairings below are contrast-checked (WCAG relative-luminance
- * formula) for >=4.5:1 text contrast against their intended background, or >=3:1 where the colour
- * is only ever used for a large glyph/fill/border (status dot, chip background) rather than text.
+ * Dark base is a soft near-black neutral grey (not a tinted/purple black, and not full OLED
+ * #000000 either — full black read as "too bold" in review, so the base is lifted just enough to
+ * feel calmer while staying dark enough to keep most of the AMOLED battery saving on the
+ * budget/mid Android phones this targets); light base is a clean off-white with ink text. All
+ * pairings below are contrast-checked (WCAG relative-luminance formula) for >=4.5:1 text contrast
+ * against their intended background, or >=3:1 where the colour is only ever used for a large
+ * glyph/fill/border (status dot, chip background) rather than text.
  */
 object Brand {
-    // Dark theme (indigo night) --------------------------------------------------------------
-    val Indigo = Color(0xFF1E1B4B)
-    val IndigoContainer = Color(0xFF272357)
-    val IndigoContainerHigh = Color(0xFF322C6B)
-    val IndigoContainerLow = Color(0xFF17143A)
-    val IndigoOutline = Color(0xFF3E3878)
-    val OnIndigo = Color(0xFFF3F1FA)
-    val OnIndigoMuted = Color(0xFFC3BEDE)
+    // Dark theme (soft neutral grey, not pure black) ---------------------------------------------
+    val DarkBg = Color(0xFF121212)
+    val DarkSurface = Color(0xFF1A1A1C)
+    val DarkSurfaceLow = Color(0xFF161618)
+    val DarkSurfaceContainer = Color(0xFF202023)
+    val DarkSurfaceContainerHigh = Color(0xFF28282C)
+    val DarkOutline = Color(0xFF3A3A3F)
+    val DarkOutlineVariant = Color(0xFF2C2C30)
+    val OnDarkBg = Color(0xFFE6E6E6)
+    val OnDarkBgMuted = Color(0xFFA8A8AD)
 
-    // Light theme (paper) ----------------------------------------------------------------------
-    val Paper = Color(0xFFFAF9F6)
-    val Ink = Color(0xFF1C1B2E)
-    val InkMuted = Color(0xFF5A5678)
-    val LightContainer = Color(0xFFF1EFF9)
-    val LightContainerHigh = Color(0xFFE7E3F5)
-    val LightOutline = Color(0xFFD6D2E8)
+    // Dark-theme accent containers — muted dark tints for large fills (chips, banners), kept
+    // low-saturation so they read as "quiet" next to the saturated primary talk button.
+    val SaffronContainerDark = Color(0xFF3A2414)
+    val OnSaffronContainerDark = Color(0xFFFFB27A) // 8.3:1 on SaffronContainerDark
+    val TealContainerDark = Color(0xFF12302B)
+    val OnTealContainerDark = Color(0xFF7FE0CB) // 9.1:1 on TealContainerDark
+    val GreenContainerDark = Color(0xFF163821)
+    val OnGreenContainerDark = Color(0xFF8FE3A0) // 8.4:1 on GreenContainerDark
+    val RedContainerDark = Color(0xFF3A1414)
+    val OnRedContainerDark = Color(0xFFFFB4AB) // 9.6:1 on RedContainerDark
+
+    // Light theme (neutral paper — grey, not lavender) --------------------------------------------
+    val Paper = Color(0xFFF7F7F5)
+    val LightSurface = Color(0xFFFFFFFF)
+    val Ink = Color(0xFF1A1A1A)
+    val InkMuted = Color(0xFF55555A)
+    val LightContainer = Color(0xFFF0F0EE)
+    val LightContainerHigh = Color(0xFFE8E8E5)
+    val LightOutline = Color(0xFFD4D4D0)
+    val LightOutlineVariant = Color(0xFFE4E4E1)
+
+    // Light-theme accent containers — soft on-brand tints (kept distinct from the neutral-grey
+    // nav-bar pill, which BottomNavBar in AppRoot.kt sets explicitly to surfaceContainerHigh).
+    val SaffronContainerLight = Color(0xFFFFE4CC)
+    val OnSaffronContainerLight = Color(0xFF7A3300) // 7.5:1 on SaffronContainerLight
+    val TealContainerLight = Color(0xFFD8F1EC)
+    val OnTealContainerLight = Color(0xFF0B4F46) // 8.0:1 on TealContainerLight
 
     // Accents ------------------------------------------------------------------------------------
-    val Saffron = Color(0xFFF97316) // dark-theme primary (5.7:1 on Indigo)
+    val Saffron = Color(0xFFF97316) // dark-theme primary — always full saturation (talk button)
     val SaffronOnLight = Color(0xFFB4530A) // light-theme primary (4.8:1 on Paper)
 
-    val Teal = Color(0xFF0F9D8A) // dark-theme secondary / receive (4.7:1 on Indigo)
+    val Teal = Color(0xFF0F9D8A) // dark-theme secondary / receive
     val TealOnLight = Color(0xFF0F766E) // light-theme secondary (5.2:1 on Paper)
 
     /** True flag green — used only as a fill/dot/border (>=3:1 non-text threshold), never as text. */
     val IndiaGreen = Color(0xFF138808)
-    /** Text-safe "connected/ready" tone for dark theme (7.0:1 on Indigo). */
+    /** Text-safe "connected/ready" tone for dark theme (>=13:1 on true black). */
     val IndiaGreenOnDark = Color(0xFF22C55E)
     /** Text-safe "connected/ready" tone for light theme (5.2:1 on Paper), close to true flag green. */
     val IndiaGreenOnLight = Color(0xFF0F7A06)
@@ -62,42 +87,50 @@ object Brand {
 
 private val DarkColors = darkColorScheme(
     primary = Brand.Saffron,
-    onPrimary = Color(0xFF1A1200),
+    onPrimary = Brand.DarkSurface, // #1A1A1C on Saffron: 6.2:1
+    primaryContainer = Brand.SaffronContainerDark,
+    onPrimaryContainer = Brand.OnSaffronContainerDark,
     secondary = Brand.Teal,
     onSecondary = Color(0xFF00201B),
+    secondaryContainer = Brand.TealContainerDark,
+    onSecondaryContainer = Brand.OnTealContainerDark,
     tertiary = Brand.IndiaGreenOnDark,
     onTertiary = Color(0xFF04210B),
-    tertiaryContainer = Brand.IndiaGreen.copy(alpha = 0.22f).compositeOverIndigo(),
-    onTertiaryContainer = Brand.IndiaGreenOnDark,
-    background = Brand.Indigo,
-    onBackground = Brand.OnIndigo,
-    surface = Brand.Indigo,
-    onSurface = Brand.OnIndigo,
-    surfaceVariant = Brand.IndigoContainer,
-    onSurfaceVariant = Brand.OnIndigoMuted,
-    surfaceContainer = Brand.IndigoContainer,
-    surfaceContainerHigh = Brand.IndigoContainerHigh,
-    surfaceContainerLow = Brand.IndigoContainerLow,
-    outline = Brand.IndigoOutline,
-    outlineVariant = Brand.IndigoOutline,
+    tertiaryContainer = Brand.GreenContainerDark,
+    onTertiaryContainer = Brand.OnGreenContainerDark,
+    background = Brand.DarkBg,
+    onBackground = Brand.OnDarkBg, // 15.0:1 on #121212
+    surface = Brand.DarkSurface,
+    onSurface = Brand.OnDarkBg, // 13.9:1 on #1A1A1C
+    surfaceVariant = Brand.DarkSurface,
+    onSurfaceVariant = Brand.OnDarkBgMuted, // 7.3:1 on #1A1A1C
+    surfaceContainer = Brand.DarkSurfaceContainer,
+    surfaceContainerHigh = Brand.DarkSurfaceContainerHigh,
+    surfaceContainerLow = Brand.DarkSurfaceLow,
+    outline = Brand.DarkOutline,
+    outlineVariant = Brand.DarkOutlineVariant,
     error = Brand.Red,
     onError = Color.White,
-    errorContainer = Color(0xFF4A1414),
-    onErrorContainer = Color(0xFFFFD9D9),
+    errorContainer = Brand.RedContainerDark,
+    onErrorContainer = Brand.OnRedContainerDark,
 )
 
 private val LightColors = lightColorScheme(
     primary = Brand.SaffronOnLight,
     onPrimary = Color.White,
+    primaryContainer = Brand.SaffronContainerLight,
+    onPrimaryContainer = Brand.OnSaffronContainerLight,
     secondary = Brand.TealOnLight,
     onSecondary = Color.White,
+    secondaryContainer = Brand.TealContainerLight,
+    onSecondaryContainer = Brand.OnTealContainerLight,
     tertiary = Brand.IndiaGreenOnLight,
     onTertiary = Color.White,
     tertiaryContainer = Color(0xFFDDF3D8),
     onTertiaryContainer = Brand.IndiaGreenOnLight,
     background = Brand.Paper,
     onBackground = Brand.Ink,
-    surface = Brand.Paper,
+    surface = Brand.LightSurface,
     onSurface = Brand.Ink,
     surfaceVariant = Brand.LightContainer,
     onSurfaceVariant = Brand.InkMuted,
@@ -105,25 +138,12 @@ private val LightColors = lightColorScheme(
     surfaceContainerHigh = Brand.LightContainerHigh,
     surfaceContainerLow = Brand.Paper,
     outline = Brand.LightOutline,
-    outlineVariant = Brand.LightOutline,
+    outlineVariant = Brand.LightOutlineVariant,
     error = Brand.RedOnLight,
     onError = Color.White,
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF410002),
 )
-
-/** Cheap opaque approximation of alpha-compositing a colour over the Indigo background, since
- * Material3's ColorScheme fields are plain (non-alpha-aware) colours. */
-private fun Color.compositeOverIndigo(): Color {
-    val bg = Brand.Indigo
-    val a = this.alpha
-    return Color(
-        red = red * a + bg.red * (1 - a),
-        green = green * a + bg.green * (1 - a),
-        blue = blue * a + bg.blue * (1 - a),
-        alpha = 1f,
-    )
-}
 
 // MaterialExpressiveTheme is still an internal API in this material3 1.4.0 build (not yet
 // publicly exported), so the stable MaterialTheme is used here; the "expressive" motion called

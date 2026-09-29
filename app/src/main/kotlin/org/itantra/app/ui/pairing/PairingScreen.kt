@@ -80,17 +80,19 @@ fun PairingScreen() {
     var tab by remember { mutableStateOf(PairingTab.MY_CODE) }
     var pairedDevices by remember { mutableStateOf(PairedDevicesStore.list(context)) }
     var toast by remember { mutableStateOf<String?>(null) }
+    val invalidMsg = stringResource(R.string.pairing_invalid)
+    val addedMsg = stringResource(R.string.pairing_added)
 
     fun acceptCode(raw: String) {
         val info = runCatching { PairingInfo.fromQrString(raw.trim()) }.getOrNull()
         if (info == null || info.deviceId == DeviceIdentityHolder.deviceId(context)) {
-            toast = context.getString(R.string.pairing_invalid)
+            toast = invalidMsg
             return
         }
         PairedDevicesStore.add(context, info)
         TalkService.instance?.pairWith(DeviceIdentityHolder.identity(context), info)
         pairedDevices = PairedDevicesStore.list(context)
-        toast = context.getString(R.string.pairing_added)
+        toast = addedMsg
         tab = PairingTab.PAIRED
     }
 

@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,7 @@ import org.itantra.app.Direction
 import org.itantra.app.ExpectedModelFiles
 import org.itantra.app.MessageMetrics
 import org.itantra.app.Profile
+import org.itantra.app.R
 import org.itantra.app.ui.charts.BarSeg
 import org.itantra.app.ui.charts.ChartLegend
 import org.itantra.app.ui.charts.Sparkline
@@ -81,13 +83,19 @@ fun MetricsScreen() {
     var exportMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
+        // The first CPU sample used the same 10s window as every later one, so the tile just sat on
+        // "…" for a full 10 seconds after opening this screen. Take that first sample over a shorter
+        // 3s window instead — still a real measurement, just sooner — then fall back to the full 10s
+        // window (the judging spec's "idle CPU% over the last 10s") for every sample after.
+        var firstSample = true
         while (true) {
             pssKb = Debug.getPss().toInt()
             val runtime = Runtime.getRuntime()
             javaHeapKb = (runtime.totalMemory() - runtime.freeMemory()) / 1024
             nativeHeapKb = Debug.getNativeHeapAllocatedSize() / 1024
             thermalStatus = readThermalStatus(context)
-            cpuPercent10s = CpuSampler.samplePercent(10_000)
+            cpuPercent10s = CpuSampler.samplePercent(if (firstSample) 3_000L else 10_000L)
+            firstSample = false
         }
     }
 
@@ -277,7 +285,12 @@ private fun SummaryTilesGrid(
 ) {
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SummaryTile("CPU (10s)", cpuPercent10s?.let { "%.1f%%".format(it) } ?: "…", Modifier.weight(1f))
+            SummaryTile(
+                "CPU (10s)",
+                cpuPercent10s?.let { "%.1f%%".format(it) } ?: stringResource(R.string.metrics_measuring),
+                Modifier.weight(1f),
+                isCaption = cpuPercent10s == null,
+            )
             SummaryTile("APP RAM", ramMb?.let { "${it}MB" } ?: "…", Modifier.weight(1f))
             SummaryTile("MODEL SIZE", "${modelMb}MB", Modifier.weight(1f))
         }
@@ -290,8 +303,12 @@ private fun SummaryTilesGrid(
     }
 }
 
+/** [isCaption]: true while a tile has no value yet (currently just the CPU tile before its first
+ * sample lands — see [MetricsScreen]'s `firstSample` 3s warm-up) — renders [value] as a small,
+ * unemphasized caption ("measuring…") rather than the normal bold reading, so it reads as "still
+ * working on it" instead of a blank/placeholder "…". */
 @Composable
-private fun SummaryTile(label: String, value: String, modifier: Modifier = Modifier) {
+private fun SummaryTile(label: String, value: String, modifier: Modifier = Modifier, isCaption: Boolean = false) {
     Column(
         modifier
             .clip(RoundedCornerShape(12.dp))
@@ -299,7 +316,11 @@ private fun SummaryTile(label: String, value: String, modifier: Modifier = Modif
             .padding(horizontal = 10.dp, vertical = 8.dp),
     ) {
         MonoText(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp)
-        MonoText(value, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium, fontSize = 17.sp, modifier = Modifier.padding(top = 2.dp))
+        if (isCaption) {
+            MonoText(value, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Normal, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+        } else {
+            MonoText(value, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium, fontSize = 17.sp, modifier = Modifier.padding(top = 2.dp))
+        }
     }
 }
 

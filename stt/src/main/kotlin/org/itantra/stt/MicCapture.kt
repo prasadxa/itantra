@@ -49,6 +49,12 @@ class MicCapture(private val context: Context) {
         // A few chunks deep so the reader thread never underruns.
         val bufferBytes = maxOf(minBufferBytes, CHUNK_SAMPLES * 2 * 4)
 
+        // Permission can be revoked while the service runs; fail with a clear error instead of crashing.
+        if (context.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
+            != android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            throw SecurityException("RECORD_AUDIO permission not granted")
+        }
         val record = AudioRecord(
             audioSource,
             SAMPLE_RATE,

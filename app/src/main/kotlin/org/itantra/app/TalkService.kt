@@ -125,6 +125,9 @@ class TalkService : LifecycleService() {
         }
 
         lifecycleScope.launch { transport.state.collect { AppRepository.linkState.value = it } }
+        (transport as? TransportManager)?.let { tm ->
+            lifecycleScope.launch { tm.via.collect { AppRepository.linkVia.value = it } }
+        }
         lifecycleScope.launch { transport.start() }
         orchestrator.start()
         startResourceMetricsLoop()
@@ -224,7 +227,8 @@ class TalkService : LifecycleService() {
 
     private fun startMic(mode: CaptureMode) {
         val mic = engines.micCapture ?: return
-        if (!mic.isRunning) {
+        if (mic.isRunning) return
+        try {
             mic.start(mode) { samples ->
                 // Runs on MicCapture's dedicated audio thread - the only thread allowed to touch
                 // SttEngine (see [pendingSttReset]).
@@ -239,6 +243,9 @@ class TalkService : LifecycleService() {
                     orchestrator.onAudioSamples(samples)
                 }
             }
+        } catch (e: Exception) {
+            // Mic permission revoked or the recorder is busy: keep the service alive; text chat still works.
+            android.util.Log.w("TalkService", "microphone unavailable", e)
         }
     }
 

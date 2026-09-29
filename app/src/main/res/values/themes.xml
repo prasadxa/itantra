@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Cold-start splash (androidx core-splashscreen): logo on indigo night, matching the
-         Brand.Indigo base defined in ui/theme/Theme.kt. Hands off to Theme.Itantra once Compose
-         takes over in MainActivity (installSplashScreen() + setContent {}). -->
+    <!-- Cold-start splash (androidx core-splashscreen): logo on the soft near-black base, matching
+         the Brand.DarkBg base defined in ui/theme/Theme.kt. Hands off to Theme.Itantra once
+         Compose takes over in MainActivity (installSplashScreen() + setContent {}). -->
     <style name="Theme.Itantra.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/brand_indigo</item>
+        <item name="windowSplashScreenBackground">@color/brand_black</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/brand_logo</item>
         <item name="postSplashScreenTheme">@style/Theme.Itantra</item>
     </style>
 
     <style name="Theme.Itantra" parent="android:Theme.Material.NoActionBar">
-        <item name="android:windowBackground">@color/brand_indigo</item>
+        <item name="android:windowBackground">@color/brand_black</item>
     </style>
 </resources>

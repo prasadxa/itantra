@@ -48,6 +48,10 @@
     <string name="sos_medical">Medical emergency</string>
     <string name="sos_safe">Safe</string>
     <string name="sos_supplies">Water/food needed</string>
+    <string name="sos_chip_need_help">Help</string>
+    <string name="sos_chip_medical">Medical</string>
+    <string name="sos_chip_safe">Safe</string>
+    <string name="sos_chip_supplies">Water/Food</string>
 
     <!-- About -->
     <string name="about_title">About iTantra</string>
@@ -95,7 +99,9 @@
     <string name="unread_divider">Unread messages</string>
     <string name="nearby_devices_title">Nearby devices</string>
     <string name="link_wifi_direct">Wi‑Fi Direct</string>
+    <string name="link_lan">LAN</string>
     <string name="link_bluetooth">Bluetooth</string>
+    <string name="metrics_measuring">measuring…</string>
     <string name="cd_sos_launch">Emergency SOS</string>
     <string name="cd_peer_card">Peer connection, tap for nearby devices</string>
     <string name="cd_message_options">Message options</string>
@@ -176,4 +182,7 @@
     <string name="pairing_no_devices">No devices paired yet</string>
     <string name="pairing_remove">Remove</string>
     <string name="pairing_device_id">Device %1$s</string>
+    <string name="settings_message_text_size">Message text size</string>
+    <string name="settings_message_text_size_desc">Applies to chat message text and live captions only</string>
+    <string name="settings_message_text_size_preview">Hello, rescue team is arriving.</string>
 </resources>

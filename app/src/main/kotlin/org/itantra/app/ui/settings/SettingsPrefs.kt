@@ -25,9 +25,22 @@ object SettingsPrefs {
     private const val KEY_LARGE_TEXT = "large_text"
     private const val KEY_THEME_MODE = "theme_mode"
     private const val KEY_DEVICE_NAME = "device_name"
+    private const val KEY_MESSAGE_TEXT_SCALE = "message_text_scale"
 
     const val PLAYBACK_SMOOTH = "smooth"
     const val PLAYBACK_FAST = "fast"
+
+    /** S/M/L/XL steps for the "Message text size" setting — applied only to chat message text (and
+     * live partial captions) via [org.itantra.app.ui.settings.LocalMessageTextScale], not the whole
+     * app's fontScale (that's [largeText]'s job). */
+    val MESSAGE_TEXT_SCALE_STEPS = listOf(0.85f, 1.0f, 1.25f, 1.5f)
+    const val MESSAGE_TEXT_SCALE_DEFAULT = 1.0f
+
+    /** Snaps an arbitrary float onto the nearest entry in [MESSAGE_TEXT_SCALE_STEPS] — guards a
+     * corrupted/pre-migration persisted value (or a future steps-list change) from producing an
+     * off-step scale the settings UI's segmented buttons can't represent as "selected". */
+    fun coerceMessageTextScale(raw: Float): Float =
+        MESSAGE_TEXT_SCALE_STEPS.minByOrNull { kotlin.math.abs(it - raw) } ?: MESSAGE_TEXT_SCALE_DEFAULT
 
     const val SPEECH_RATE_MIN = 0.8f
     const val SPEECH_RATE_MAX = 1.3f
@@ -87,6 +100,24 @@ object SettingsPrefs {
         prefs(context).edit().putBoolean(KEY_LARGE_TEXT, enabled).apply()
         largeText(context) // ensures largeTextFlow is seeded before we push into it
         largeTextFlow?.value = enabled
+    }
+
+    private var messageTextScaleFlowRef: MutableStateFlow<Float>? = null
+
+    /** Reactive so [org.itantra.app.ui.ChatScreen] (message cards + live captions) picks up a
+     * change immediately, without a service/activity restart — see [speechRateFlow]. */
+    fun messageTextScaleFlow(context: Context): StateFlow<Float> {
+        val flow = messageTextScaleFlowRef
+            ?: MutableStateFlow(coerceMessageTextScale(prefs(context).getFloat(KEY_MESSAGE_TEXT_SCALE, MESSAGE_TEXT_SCALE_DEFAULT)))
+                .also { messageTextScaleFlowRef = it }
+        return flow.asStateFlow()
+    }
+
+    fun setMessageTextScale(context: Context, scale: Float) {
+        val clamped = coerceMessageTextScale(scale)
+        prefs(context).edit().putFloat(KEY_MESSAGE_TEXT_SCALE, clamped).apply()
+        messageTextScaleFlow(context) // ensures messageTextScaleFlowRef is seeded before we push into it
+        messageTextScaleFlowRef?.value = clamped
     }
 
     fun getThemeMode(context: Context): ThemeMode {

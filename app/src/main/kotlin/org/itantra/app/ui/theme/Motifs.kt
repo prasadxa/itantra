@@ -33,7 +33,7 @@ fun KolamMotif(
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.onSurface,
     spacing: Dp = 30.dp,
-    alpha: Float = 0.07f,
+    alpha: Float = 0.05f,
 ) {
     val lineColor = color
     Canvas(modifier) {

@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#1E1B4B</color>
-    <!-- Deep indigo night — dark theme base and splash background (see Brand.Indigo in
-         ui/theme/Theme.kt, kept in sync with this value). -->
-    <color name="brand_indigo">#1E1B4B</color>
+    <color name="ic_launcher_background">#121212</color>
+    <!-- Soft near-black neutral grey — dark theme base and splash/launcher background (see
+         Brand.DarkBg in ui/theme/Theme.kt, kept in sync with this value). Deliberately lifted off
+         full #000000 so it reads as calm rather than stark, while staying dark enough to keep
+         most of the AMOLED battery saving on budget/mid Android phones. -->
+    <color name="brand_black">#121212</color>
 </resources>
