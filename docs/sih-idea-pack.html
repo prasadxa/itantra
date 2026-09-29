@@ -2,6 +2,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
 <style>
+/* Layout: sticky contents rail + one reading column; TX (saffron) marks slides, RX (teal) marks system detail */
 :root{
   --bg:#FAFAF8; --surface:#FFFFFF; --sunk:#F1F1EE; --ink:#16181D; --muted:#5B606B; --line:#DEDFE3;
   --tx:#C2410C; --tx-soft:#FFF1E8; --rx:#0F766E; --rx-soft:#E6F4F2; --alert:#B91C1C; --alert-soft:#FDECEC; --ok:#15803D;
@@ -32,19 +33,22 @@ h3{font:600 19px/1.3 var(--display);margin:28px 0 10px;letter-spacing:.01em}
 h4{font:600 15px/1.4 var(--body);margin:18px 0 6px}
 p,li{max-width:72ch}
 .lede{font-size:18px;color:var(--muted);max-width:68ch}
+.stamp{font:500 12px/1.5 var(--mono);color:var(--muted);margin-top:14px}
 section{padding-block:44px 8px;border-bottom:1px solid var(--line)}
 .slideno{display:inline-block;font:500 12px/1 var(--mono);letter-spacing:.08em;color:var(--tx);border:1px solid var(--tx);padding:5px 8px;border-radius:3px;margin-bottom:12px}
 .slideno.sys{color:var(--rx);border-color:var(--rx)}
+.slideno.st{color:var(--ok);border-color:var(--ok)}
 .hint{font-size:14px;color:var(--muted);border-left:2px solid var(--line);padding-left:12px;margin:10px 0 18px}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 @media (max-width:760px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px}
-.panel h4{margin-top:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px;min-width:0}
+.panel h4{margin-top:0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .panel ul{margin:0;padding-left:18px}
 .kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;font-size:15px}
 .kv dt{font:500 13px/1.6 var(--mono);color:var(--muted)}
 .kv dd{margin:0}
+@media (max-width:560px){.kv{grid-template-columns:minmax(0,1fr)} .kv dd{margin-bottom:8px}}
 .slidebox{background:var(--sunk);border:1px dashed var(--line);border-radius:6px;padding:16px 18px;margin:14px 0}
 .slidebox .cap{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
 .slidebox ul{margin:0;padding-left:18px}
@@ -57,25 +61,29 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var
 code,.mono{font-family:var(--mono);font-size:.92em}
 .tag{display:inline-block;font:500 11px/1 var(--mono);padding:4px 6px;border-radius:3px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .tag.done{color:var(--ok);border-color:var(--ok)}
+.tag.part{color:var(--tx);border-color:var(--tx);border-style:dashed}
 .tag.next{color:var(--tx);border-color:var(--tx)}
 .tag.future{color:var(--rx);border-color:var(--rx)}
 .tag.risk{color:var(--alert);border-color:var(--alert)}
-.diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;margin:12px 0 20px}
+.diagram{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;margin:12px 0 20px;min-width:0}
 .diagram .cap{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 pre.mermaid{margin:0;background:transparent;min-width:640px}
 .bars{display:grid;gap:10px;margin:14px 0 6px}
-.bar{display:grid;grid-template-columns:minmax(150px,220px) 1fr minmax(92px,auto);gap:12px;align-items:center;font-size:14px}
+.bar{display:grid;grid-template-columns:minmax(150px,240px) 1fr minmax(92px,auto);gap:12px;align-items:center;font-size:14px}
 .bar .track{height:14px;background:var(--sunk);border-radius:2px;position:relative}
 .bar .fill{position:absolute;inset:0 auto 0 0;background:var(--muted);border-radius:2px}
 .bar.txt .fill{background:var(--tx)}
 .bar .v{font:500 13px/1 var(--mono);text-align:right;font-variant-numeric:tabular-nums}
 @media (max-width:560px){.bar{grid-template-columns:minmax(0,1fr) minmax(80px,auto)} .bar .track{grid-column:1/-1;order:3}}
-.stat{display:grid;gap:2px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:18px 0}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{display:grid;gap:2px;background:var(--surface);padding:14px 16px;align-content:start}
 .stat .n{font:600 28px/1.1 var(--display);font-variant-numeric:tabular-nums}
 .stat .l{font-size:13px;color:var(--muted)}
 .callout{border-left:3px solid var(--tx);background:var(--tx-soft);padding:12px 16px;border-radius:0 6px 6px 0;margin:16px 0}
 .callout.rx{border-left-color:var(--rx);background:var(--rx-soft)}
 .callout.al{border-left-color:var(--alert);background:var(--alert-soft)}
+.callout ul{margin:6px 0 0;padding-left:18px}
 a{color:var(--tx)}
 a:focus-visible{outline:2px solid var(--tx);outline-offset:2px}
 .refs li{margin-bottom:6px}
@@ -85,6 +93,8 @@ a:focus-visible{outline:2px solid var(--tx);outline-offset:2px}
 
 <div class="wrap">
 <nav class="toc" aria-label="Contents">
+  <div class="grp">Status</div>
+  <a href="#status">Build status</a>
   <div class="grp">Slides</div>
   <a href="#s1">1 · Title</a>
   <a href="#s2">2 · Idea</a>
@@ -111,14 +121,69 @@ a:focus-visible{outline:2px solid var(--tx);outline-offset:2px}
 <header class="top">
   <div class="eyebrow">SIH 2026 · PS 26173 · ISRO · Software · Smart Automation</div>
   <h1>iTantra: speech in, text over the air, speech out</h1>
-  <p class="lede">Everything needed to write the six-slide idea deck, plus the full system plan behind it. Numbers marked <span class="tag done">measured</span> come from our working prototype on a OnePlus 12; everything else is a design target or estimate and is labelled as such.</p>
+  <p class="lede">Everything needed to write the six-slide idea deck, plus the full system plan behind it. Numbers marked <span class="tag done">measured</span> come from the working prototype on a Snapdragon 870 (vivo I2202) and a Snapdragon 8 Gen 3 (OnePlus 12). Everything else is a design target or estimate and is labelled as such.</p>
+  <p class="stamp">Updated 29 Sep 2026 · matches repo commit a95e874 (11 commits, 6 modules)</p>
 </header>
+
+<!-- ============ STATUS ============ -->
+<section id="status">
+  <span class="slideno st">BUILD STATUS · 29 SEP 2026</span>
+  <h2>Where the build stands</h2>
+  <p>Since the last version of this page, the efficiency pack, compact binary packets, encryption with signed alerts, SOS with location, gapless playback, the control-room gateway and the LoRa bridge firmware have all landed. The status tags further down have been updated to match.</p>
+
+  <div class="stats">
+    <div class="stat"><span class="n">62 B</span><span class="l">median bytes per sentence, binary + dictionary (unit test on 310 FLEURS sentences)</span></div>
+    <div class="stat"><span class="n">688 MB</span><span class="l">LITE profile idle memory (PSS), down from 1.9 GB</span></div>
+    <div class="stat"><span class="n">0.3–1.6%</span><span class="l">idle CPU in push-to-talk mode, down from 67%</span></div>
+    <div class="stat"><span class="n">0</span><span class="l">audio underruns, 5 languages, Snapdragon 870</span></div>
+  </div>
+
+  <div class="grid3">
+    <div class="panel"><h4><span class="tag done">built</span> Working now</h4><ul>
+      <li>10-language STT and TTS, PTT and call modes, live captions</li>
+      <li>Wi-Fi LAN → Wi-Fi Direct → BLE fallback</li>
+      <li>Compact binary frames, negotiated per peer</li>
+      <li>X25519 + ChaCha20-Poly1305, Ed25519-signed ALERTs, QR pairing, Keystore identity</li>
+      <li>One-tap SOS (6 templates) with GNSS/NavIC location</li>
+      <li>LITE/FULL profiles, lazy engine load/unload, WavLM removed, F16 codec</li>
+      <li>Gapless playback, clause streaming for VITS, speech-rate setting</li>
+      <li>Metrics charts (p50/p95, thermal), history, Quick Settings tile</li>
+      <li>UI in 10 languages, text size S–XL</li>
+      <li>Control-room gateway with dashboard and CAP 1.2 parser</li>
+    </ul></div>
+    <div class="panel"><h4><span class="tag part">partial</span> Started, with gaps</h4><ul>
+      <li>ESP32-S3 + SX1262 bridge: firmware compiles, never flashed or range-tested</li>
+      <li>Mesh relay: firmware floods with TTL 3 and dedupe; the app ignores TTL and does not relay</li>
+      <li>Encryption covers binary mode only after pairing; partials and the JSON path are not covered</li>
+      <li>Keyword boosting: engine support exists, not yet wired in</li>
+      <li>Accessibility: alert vibration, large text; no TalkBack pass yet</li>
+      <li>Gateway talks to phones over Wi-Fi only; no LoRa link or live SACHET feed</li>
+    </ul></div>
+    <div class="panel"><h4><span class="tag future">not started</span> Still planned</h4><ul>
+      <li>Small VITS voices for hi/gu/or/en</li>
+      <li>Per-language LITE STT model</li>
+      <li>On-device translation (IndicTrans2)</li>
+      <li>Sender-voice embedding</li>
+      <li>Emotion from pitch and energy (today: text keywords only)</li>
+      <li>Wake word, user-facing loopback mode, offline gazetteer</li>
+    </ul></div>
+  </div>
+
+  <div class="callout al"><strong>Fix before submission.</strong>
+    <ul>
+      <li>The STT word error rate (5.9%) is still from 1 clip per language. The 30-clip harness and FLEURS manifests are ready, but the last on-device run stopped with "models missing" and produced no scores. Re-run it on the vivo.</li>
+      <li>TTS intelligibility and end-to-end p50/p95 have not been run yet (<code>docs/eval-results.md</code> shows "Not run").</li>
+      <li>Showcase slide 6 prints the STT RTF as "≈05"; it should read ≈0.05.</li>
+      <li>The showcase says the gateway re-broadcasts a <em>signed</em> ALERT. It sends unsigned JSON today. Either sign it in the gateway or change the wording.</li>
+    </ul>
+  </div>
+</section>
 
 <!-- ============ SLIDE 1 ============ -->
 <section id="s1">
   <span class="slideno">SLIDE 1 · TITLE PAGE</span>
   <h2>Title page</h2>
-  <p class="hint">Fill the template's text box exactly; keep the tagline to one line under the title.</p>
+  <p class="hint">Fill the template's text box exactly; keep the tagline to one line under the title. A draft exists as <code>docs/showcase/images/slide_00_title.png</code>.</p>
   <div class="slidebox"><div class="cap">Paste into slide</div>
     <dl class="kv">
       <dt>Problem Statement ID</dt><dd>26173</dd>
@@ -127,7 +192,7 @@ a:focus-visible{outline:2px solid var(--tx);outline-offset:2px}
       <dt>PS Category</dt><dd>Software</dd>
       <dt>Team ID</dt><dd>(from SIH portal)</dd>
       <dt>Team Name</dt><dd>(as registered on portal)</dd>
-      <dt>Tagline (optional)</dt><dd>Speak in any of 10 Indian languages. Send a few hundred bytes. Hear it spoken on the other side, fully offline.</dd>
+      <dt>Tagline (optional)</dt><dd>Speak in any of 10 Indian languages. Send about 60 bytes. Hear it spoken on the other side, fully offline.</dd>
     </dl>
   </div>
 </section>
@@ -146,23 +211,25 @@ a:focus-visible{outline:2px solid var(--tx);outline-offset:2px}
     <div class="panel"><h4>Proposed solution</h4><ul>
       <li>Android app with on-device STT and TTS for Hindi, Gujarati, Marathi, Kannada, Malayalam, Tamil, Telugu, Odia, Bengali and English.</li>
       <li>Sender: push-to-talk, pause detection cuts a sentence, STT turns it into text.</li>
-      <li>Only the text (≈100–300 bytes per sentence) goes over Wi-Fi, Wi-Fi Direct or Bluetooth LE.</li>
+      <li>Only the text goes over Wi-Fi, Wi-Fi Direct or Bluetooth LE: a median of 62 bytes per sentence in compact binary form.</li>
       <li>Receiver: speaks it as a voice note; alerts play at maximum volume on the alarm channel and cannot be interrupted.</li>
+      <li>One-tap SOS sends a spoken request with GNSS/NavIC coordinates.</li>
       <li>PTT off = phone-call mode (hands-free, both directions).</li>
     </ul></div>
     <div class="panel"><h4>How it addresses the problem</h4><ul>
-      <li>Voice is data-heavy; text of the same sentence is ~800× smaller than raw audio and ~40× smaller than Opus voice.</li>
-      <li>Fits links that cannot carry voice: BLE, congested Wi-Fi, future LoRa bridges (~0.3–5 kbps).</li>
+      <li>Voice is data-heavy. A 3-second sentence is about 96 KB as raw audio and 4.5 KB as Opus; iTantra sends about 62 bytes.</li>
+      <li>Fits links that cannot carry voice: BLE, congested Wi-Fi, LoRa bridges (~0.3–5 kbps).</li>
       <li>Output is still speech, so people who cannot read are included.</li>
       <li>Everything runs offline on the phone: no tower, no internet, no cloud API.</li>
       <li>Open-source models and runtimes only.</li>
     </ul></div>
     <div class="panel"><h4>Innovation and uniqueness</h4><ul>
       <li>Speech → text → speech as a "semantic codec" for low-bitrate radio.</li>
-      <li>Expressive alerts: urgency and emotion travel as a 1-byte tag and are re-voiced on arrival.</li>
+      <li>Per-script dictionary compression: 524-byte JSON frames shrink to 62 bytes.</li>
+      <li>Trusted alerts: ALERTs are Ed25519-signed; an unsigned ALERT from an unpaired phone plays as a normal message.</li>
       <li>Live captions on both phones while the speaker is still talking.</li>
-      <li>Self-healing link: LAN → Wi-Fi Direct → BLE fallback, same packet format for an ESP32/LoRa bridge.</li>
-      <li>Planned: sender-voice rendering from a 512-byte voice embedding, and on-device translation so a Tamil speaker hears a Hindi message in Tamil.</li>
+      <li>Self-healing link: LAN → Wi-Fi Direct → BLE, with the same packets reaching an ESP32/LoRa bridge.</li>
+      <li>Planned: on-device translation so a Tamil listener hears a Hindi message in Tamil, and sender-voice rendering.</li>
     </ul></div>
   </div>
 
@@ -171,10 +238,10 @@ a:focus-visible{outline:2px solid var(--tx);outline-offset:2px}
 flowchart LR
   A([Speaker]) --> B[Mic + VAD<br/>sentence cut at pause]
   B --> C[On-device STT<br/>SraVaani 10 languages]
-  C --> D[[Text packet<br/>~150 B]]
-  D -- Wi-Fi / Wi-Fi Direct / BLE --> E[On-device TTS<br/>VITS / Indic-Mio]
+  C --> D[[Text packet<br/>median 62 B]]
+  D -- Wi-Fi / Wi-Fi Direct / BLE / LoRa bridge --> E[On-device TTS<br/>VITS / Indic-Mio]
   E --> F([Listener hears speech])
-  D -. ALERT flag .-> G[Alarm channel<br/>max volume, non-interruptible]
+  D -. signed ALERT .-> G[Alarm channel<br/>max volume, non-interruptible]
 </pre>
   </div>
 </section>
@@ -188,27 +255,35 @@ flowchart LR
   <div class="slidebox"><div class="cap">Technologies (slide-sized)</div>
     <div class="tbl"><table>
       <tr><th>Layer</th><th>Technology</th></tr>
-      <tr><td>App</td><td>Kotlin 2.4, Jetpack Compose (Material 3 Expressive), foreground service, minSdk 26</td></tr>
+      <tr><td>App</td><td>Kotlin 2.4, Jetpack Compose (Material 3), foreground service, minSdk 26 / targetSdk 36, UI in 10 languages</td></tr>
       <tr><td>Speech detection</td><td>Silero VAD (0.6 MB) via sherpa-onnx</td></tr>
-      <tr><td>STT</td><td>SraVaani-1.0 (ARTPARK-IISc, MIT) FastConformer TDT, int8 ONNX, sherpa-onnx runtime, keyword boosting</td></tr>
-      <tr><td>TTS</td><td>AI4Bharat VITS Rasa (bn/kn/ml/mr/ta/te, emotion styles); SPRINGLab Indic-Mio 0.6B Q4 + MioCodec (hi/gu/or/en) via llama.cpp</td></tr>
-      <tr><td>Text pipeline</td><td>Indic number/date/currency normaliser, SSML subset parser, alert-keyword style classifier (pure Kotlin)</td></tr>
-      <tr><td>Transport</td><td>TCP over Wi-Fi LAN + mDNS discovery, Wi-Fi Direct, BLE GATT (Nordic UART profile); length-prefixed JSON frames</td></tr>
+      <tr><td>STT</td><td>SraVaani-1.0 (ARTPARK-IISc, MIT) FastConformer TDT, int8 ONNX, sherpa-onnx runtime</td></tr>
+      <tr><td>TTS</td><td>AI4Bharat VITS Rasa (bn/kn/ml/mr/ta/te, emotion styles, clause streaming); SPRINGLab Indic-Mio 0.6B Q4 + F16 MioCodec (hi/gu/or/en) via llama.cpp; gapless playback queue</td></tr>
+      <tr><td>Text pipeline</td><td>Indic number/date/currency normaliser, SSML subset parser, alert-keyword style classifier, coordinate speller (pure Kotlin)</td></tr>
+      <tr><td>Transport</td><td>TCP over Wi-Fi LAN + mDNS, Wi-Fi Direct, BLE GATT (Nordic UART); length-prefixed frames, compact binary with per-script dictionaries (JSON for debugging)</td></tr>
+      <tr><td>Security</td><td>X25519 + HKDF, ChaCha20-Poly1305, Ed25519-signed ALERTs (BouncyCastle); QR pairing; Keystore-wrapped identity</td></tr>
+      <tr><td>Hardware + gateway</td><td>ESP32-S3 + SX1262 LoRa bridge (NimBLE, RadioLib); Python control-room gateway with live dashboard and CAP 1.2 parser</td></tr>
       <tr><td>Native</td><td>C++17, Android NDK 28, ONNX Runtime, ggml (ARM dotprod kernels)</td></tr>
-      <tr><td>Tooling</td><td>Python export/quantisation (NeMo → ONNX, HF → GGUF Q4_0), evaluation harness, Mac peer simulator</td></tr>
+      <tr><td>Tooling</td><td>Python export/quantisation (NeMo → ONNX, HF → GGUF Q4_0), FLEURS evaluation harness, Mac peer simulator</td></tr>
     </table></div>
   </div>
 
   <h3>Methodology (six steps)</h3>
   <ol>
     <li><strong>Model selection</strong> against three hard limits: covers all 10 languages, open licence, runs on a phone CPU.</li>
-    <li><strong>Conversion</strong>: export to ONNX/GGUF, quantise (int8 STT, Q4_0 TTS), verify on desktop.</li>
-    <li><strong>On-device pipeline</strong>: VAD-gated STT, text pipeline, TTS with streaming playback.</li>
-    <li><strong>Transport</strong>: discovery, tie-break, framing, acknowledgements, fallback order.</li>
-    <li><strong>Measurement</strong>: debug hooks log STT/TTS latency, RTF, memory and CPU as JSON; FLEURS-based WER harness.</li>
-    <li><strong>Iteration</strong>: fix what the numbers show (examples below).</li>
+    <li><strong>Conversion</strong>: export to ONNX/GGUF, quantise (int8 STT, Q4_0 TTS, F16 codec), verify on desktop.</li>
+    <li><strong>On-device pipeline</strong>: VAD-gated STT, text pipeline, TTS with streaming, gapless playback.</li>
+    <li><strong>Transport</strong>: discovery, tie-break, framing, format negotiation, encryption, fallback order.</li>
+    <li><strong>Measurement</strong>: debug hooks log STT/TTS latency, RTF, memory, CPU and underruns; FLEURS-based WER harness.</li>
+    <li><strong>Iteration</strong>: fix what the numbers show. Idle CPU went from 67% to 0.3–1.6% and LITE memory from 1.9 GB to 688 MB this way.</li>
   </ol>
-  <div class="callout"><strong>Prototype evidence to show on the slide:</strong> app screenshots (transcript with live caption, PTT key, alert band), the metrics screen, and a short table of measured numbers from <a href="#s4">slide 4</a>.</div>
+  <div class="callout"><strong>Prototype evidence to show on the slide</strong> (all in the repo):
+    <ul>
+      <li>Screens: <code>docs/brand/screens/</code> (talk, alerts + SOS, metrics, settings, language picker, pairing) and <code>docs/showcase/images/01_alert_card.png</code> … <code>09_onboarding_credits.png</code></li>
+      <li>Exported diagrams: <code>docs/showcase/images/diagram_*.png</code></li>
+      <li>Video: <code>docs/showcase/iTantra_explainer.mp4</code> (1:58, narrated, captions) and 8 phone clips in <code>docs/showcase/clips/</code></li>
+    </ul>
+  </div>
 </section>
 
 <!-- ============ SLIDE 4 ============ -->
@@ -218,53 +293,59 @@ flowchart LR
   <p class="hint">Template pointers: feasibility analysis, challenges and risks, strategies. Lead with the working-prototype numbers; then a two-column risk → mitigation table.</p>
 
   <h3>Feasibility: it already runs on two phones</h3>
-  <p class="small">Snapdragon 870 (vivo I2202, 2021 chip, cool) and Snapdragon 8 Gen 3 (OnePlus 12). All values <span class="tag done">measured</span> with the app's own logging unless marked.</p>
+  <p class="small">Snapdragon 870 (vivo I2202, 2021 chip, cool) and Snapdragon 8 Gen 3 (OnePlus 12, no longer available for testing). All values <span class="tag done">measured</span> with the app's own logging unless marked.</p>
   <div class="tbl"><table>
     <tr><th>Metric</th><th class="num">Snapdragon 870</th><th class="num">Snapdragon 8 Gen 3</th><th>Note</th></tr>
     <tr><td>STT word error rate (10 langs)</td><td class="num">5.9%</td><td class="num">5.9%</td><td>10 FLEURS clips, 1 per language: preliminary</td></tr>
     <tr><td>STT real-time factor</td><td class="num">0.044–0.056</td><td class="num">0.06–0.13</td><td>18–22× faster than speech on the 870</td></tr>
     <tr><td>Speech end → text ready</td><td class="num">0.4–0.9 s</td><td class="num">0.6–1.7 s</td><td>8 Gen 3 figure taken while throttled</td></tr>
-    <tr><td>TTS Indic-Mio (hi/gu/en) first audio</td><td class="num">0.63–0.73 s</td><td class="num">0.6–0.95 s</td><td>RTF ≈1.0 on the 870</td></tr>
-    <tr><td>TTS VITS (bn/ta) RTF</td><td class="num">0.56–0.62</td><td class="num">≈0.5</td><td>first audio 1.1 s: whole-sentence render, being split into clauses</td></tr>
+    <tr><td>TTS Indic-Mio (hi/gu/en) first audio</td><td class="num">0.63–0.73 s</td><td class="num">0.6–0.95 s</td><td>RTF 1.0–1.46 on the 870; covered by adaptive pre-roll</td></tr>
+    <tr><td>TTS VITS (bn/ta) RTF</td><td class="num">0.56–0.62</td><td class="num">≈0.5</td><td>now streams clause by clause instead of whole sentences</td></tr>
+    <tr><td>Audio underruns (hi/en/gu/ta/bn)</td><td class="num">0</td><td class="num">—</td><td>gapless producer/consumer playback</td></tr>
     <tr><td>Message → ACK over Wi-Fi</td><td class="num">—</td><td class="num">41 ms</td><td>Mac peer ↔ phone</td></tr>
     <tr><td>Alert on alarm stream</td><td class="num">—</td><td class="num">16/16, exclusive focus</td><td>verified from audio service state</td></tr>
-    <tr><td>App memory, all models loaded</td><td class="num">2.5 GB</td><td class="num">≈640 MB (STT only)</td><td><span class="tag risk">weak spot</span> being cut with lazy loading</td></tr>
+    <tr><td>Idle CPU, PTT mode</td><td class="num" colspan="2">0.3–1.6%</td><td>was 67% (animation and timer bugs fixed)</td></tr>
+    <tr><td>App memory, LITE idle (PSS)</td><td class="num" colspan="2">688 MB</td><td>was 1.9 GB; engines load on demand and unload after 60 s</td></tr>
+    <tr><td>Median bytes per sentence</td><td class="num" colspan="2">62 B</td><td>JVM unit test on the build machine, 310 FLEURS sentences; JSON 524 B, binary without dictionary 287 B. The binary format runs in the app; the size was not logged on a phone</td></tr>
   </table></div>
   <h3>Per-language STT result (prototype, 1 clip each)</h3>
   <div class="tbl"><table>
     <tr><th>Lang</th><th class="num">hi</th><th class="num">gu</th><th class="num">mr</th><th class="num">kn</th><th class="num">ml</th><th class="num">ta</th><th class="num">te</th><th class="num">or</th><th class="num">bn</th><th class="num">en</th></tr>
     <tr><td>WER</td><td class="num">0%</td><td class="num">0%</td><td class="num">8%</td><td class="num">7%</td><td class="num">21%</td><td class="num">13%</td><td class="num">2%</td><td class="num">3%</td><td class="num">0%</td><td class="num">14%</td></tr>
+    <tr><td>Bytes/sentence</td><td class="num">74</td><td class="num">69</td><td class="num">66</td><td class="num">55</td><td class="num">54</td><td class="num">61</td><td class="num">58</td><td class="num">63</td><td class="num">60</td><td class="num">67</td></tr>
   </table></div>
-  <p class="small">Replace with the 30-clips-per-language harness results before submission (<a href="#eval">evaluation plan</a>).</p>
+  <p class="small">Replace the WER row with the 30-clips-per-language harness results before submission (<a href="#eval">evaluation plan</a>). Bytes per sentence are medians with dictionary compression.</p>
 
   <h3>Resource footprint</h3>
   <div class="tbl"><table>
     <tr><th>Component</th><th class="num">Size on disk</th><th>Notes</th></tr>
-    <tr><td>APK (arm64)</td><td class="num">57 MB</td><td>Native runtimes; models are side-loaded, not bundled</td></tr>
-    <tr><td>STT SraVaani int8</td><td class="num">≈490 MB</td><td>Encoder 476 MB + decoder/joiner/tokens</td></tr>
+    <tr><td>APK (arm64)</td><td class="num">60 MB</td><td>Native runtimes + BouncyCastle; models are side-loaded, not bundled</td></tr>
+    <tr><td>STT SraVaani int8</td><td class="num">≈487 MB</td><td>Encoder 476 MB + decoder 6 MB + joiner 4 MB + tokens</td></tr>
     <tr><td>VAD Silero</td><td class="num">0.6 MB</td><td></td></tr>
-    <tr><td>TTS VITS Rasa</td><td class="num">118 MB</td><td>6 languages, 14 styles</td></tr>
-    <tr><td>TTS Indic-Mio Q4_0</td><td class="num">392 MB</td><td>+ MioCodec 370 MB, WavLM 90 MB (droppable, see upgrades)</td></tr>
-    <tr><td>App memory, FULL profile</td><td class="num">≈640 MB</td><td>PSS with STT loaded <span class="tag done">measured</span></td></tr>
+    <tr><td>TTS VITS Rasa</td><td class="num">123 MB</td><td>6 languages, 14 styles</td></tr>
+    <tr><td>TTS Indic-Mio Q4_0</td><td class="num">392 MB</td><td>+ MioCodec F16 194 MB (was 388 MB F32; output correlation 0.99998). WavLM 94 MB no longer loaded</td></tr>
+    <tr><td>App memory, LITE idle</td><td class="num">688 MB</td><td>PSS <span class="tag done">measured</span></td></tr>
   </table></div>
 
   <h3>Challenges, risks and strategies</h3>
   <div class="tbl"><table>
     <tr><th>Risk</th><th>Why it matters</th><th>Strategy</th></tr>
-    <tr><td>Low/mid-range phones (3–6 GB RAM)</td><td>Hard requirement in the PS</td><td>LITE profile auto-selected under 6 GB: 2 threads, VITS-first, no live partials, unload idle models; next: smaller STT (per-language 130 MB) and drop WavLM at runtime</td></tr>
-    <tr><td>Indic-Mio slower than real time on some phones</td><td>Stutter or late audio for hi/gu/or/en</td><td>Q4_0 + i8mm + streaming first chunk (done); prefer VITS where it has a voice; roadmap: train small VITS voices for hi/gu/or/en from open studio data</td></tr>
-    <tr><td>Thermal throttling during long use</td><td>RTF rises 2–4× on a hot phone</td><td>Idle = VAD only; synthesise per sentence; cap threads; measure and report thermal state with every benchmark</td></tr>
-    <tr><td>Echo: phone transcribing its own speaker</td><td>Loops and false messages</td><td>Half-duplex mic gating during playback + AEC in call mode; ignore own device ID (done)</td></tr>
-    <tr><td>Noisy field audio, accents, code-mixing</td><td>WER rises</td><td>Keyword boosting for alert and place-name vocabulary; VAD tuning; SSML/text entry as fallback</td></tr>
-    <tr><td>Wi-Fi Direct / BLE vary by vendor</td><td>Link may not form</td><td>Three-tier fallback with the same packet format; acknowledgements and retry; clear link status in UI</td></tr>
+    <tr><td>Low/mid-range phones (3–6 GB RAM)</td><td>Hard requirement in the PS</td><td>Done: LITE profile auto-selected under 6 GB (2 threads, no live partials), engines load per language and unload after 60 s, WavLM removed, F16 codec. Next: per-language STT (~130 MB) and a test on a real 4 GB phone</td></tr>
+    <tr><td>Indic-Mio slower than real time on some phones</td><td>Stutter or late audio for hi/gu/or/en</td><td>Done: Q4_0 + ARM dotprod, streaming first chunk, gapless queue with adaptive pre-roll (0 underruns on the 870). i8mm dropped after SIGILL on the 870. Next: small VITS voices for hi/gu/or/en</td></tr>
+    <tr><td>Thermal throttling during long use</td><td>RTF rises 2–4× on a hot phone</td><td>Idle = VAD only; synthesise per clause; cap threads; the metrics screen shows thermal state next to every number</td></tr>
+    <tr><td>Echo: phone transcribing its own speaker</td><td>Loops and false messages</td><td>Done: mic gated during playback + 400 ms tail; AEC and noise suppression in call mode; own device ID and address ignored</td></tr>
+    <tr><td>Noisy field audio, accents, code-mixing</td><td>WER rises</td><td>Keyword boosting for alert and place names (engine support built, to be wired in); VAD tuning; typed text and SOS templates as fallback</td></tr>
+    <tr><td>Spoofed or tampered alerts</td><td>A fake evacuation order is dangerous</td><td>Done: Ed25519-signed ALERTs from paired devices, AEAD covers the header, replay guard; unsigned ALERT plays as normal. Gap: JSON path and partials are not yet covered</td></tr>
+    <tr><td>Wi-Fi Direct / BLE vary by vendor</td><td>Link may not form</td><td>Three-tier fallback with the same packet format; ACKs; link type shown in UI</td></tr>
+    <tr><td>LoRa bridge untested on hardware</td><td>Range and airtime are still computed, not measured</td><td>Firmware compiles for Heltec LoRa 32 V3 (RAM 9.3%, flash 17.2%); flash it and run an SF7/SF9/SF12 range test before the finale</td></tr>
     <tr><td>Licences</td><td>Judges require open source</td><td>MIT / Apache-2.0 / CC-BY-4.0 models, Apache/MIT runtimes; no paid APIs in training or runtime</td></tr>
   </table></div>
 
   <h3>Viability</h3>
   <ul>
-    <li><strong>Cost to deploy:</strong> runs on phones people already own; no network, server or licence fees.</li>
+    <li><strong>Cost to deploy:</strong> runs on phones people already own; no network, server or licence fees. A LoRa bridge node costs about ₹1,900–3,200 (BOM estimate).</li>
     <li><strong>Maintainable:</strong> models are files; swapping a better open model needs no app rewrite (engine interfaces).</li>
-    <li><strong>Scalable:</strong> same packet format works for phone ↔ phone, phone ↔ ESP32 bridge, and multi-hop relays.</li>
+    <li><strong>Scalable:</strong> the same packet format works for phone ↔ phone, phone ↔ ESP32 bridge, phone ↔ control-room gateway, and multi-hop relays.</li>
   </ul>
 </section>
 
@@ -280,7 +361,7 @@ flowchart LR
     <div class="panel"><h4>Coastal fishing communities</h4><p>Boat-to-shore and boat-to-boat alerts in the local language over long-range low-bitrate links.</p></div>
     <div class="panel"><h4>Rural and low-literacy users</h4><p>Census 2011 literacy was about 74%; spoken output reaches people a text alert would miss.</p></div>
     <div class="panel"><h4>Remote field staff</h4><p>Forest, border, mining, rail track and power-line crews in poor-coverage areas.</p></div>
-    <div class="panel"><h4>Hearing-impaired users</h4><p>Every message is also shown as large text, with live captions while the sender speaks.</p></div>
+    <div class="panel"><h4>Hearing-impaired users</h4><p>Every message is also shown as text (size S to XL), with live captions while the sender speaks and vibration on alerts.</p></div>
     <div class="panel"><h4>Events and crowds</h4><p>Melas, pilgrimages and stadiums where the cellular network saturates.</p></div>
   </div>
 
@@ -290,19 +371,20 @@ flowchart LR
       <li>Alerts in the listener's own language, spoken aloud.</li>
       <li>The 10 languages cover roughly 85% of Indians by mother tongue (Census 2011), plus English.</li>
       <li>Works for people who cannot read or cannot see a screen.</li>
+      <li>SOS carries location, so rescuers know where to go.</li>
     </ul></div>
     <div class="panel"><h4>Economic</h4><ul>
-      <li>No new hardware for phone-to-phone use; ESP32/LoRa bridge costs a few hundred rupees per node (estimate).</li>
+      <li>No new hardware for phone-to-phone use; a LoRa bridge node is about ₹1,900–3,200 (estimate).</li>
       <li>No airtime or data charges; no cloud or licence fees.</li>
       <li>Open-source stack can be adopted by state disaster agencies without vendor lock-in.</li>
     </ul></div>
     <div class="panel"><h4>Environmental</h4><ul>
-      <li>Hundreds of bytes per sentence instead of tens of kilobytes: less radio time, lower battery drain on phones and relays.</li>
+      <li>About 60 bytes per sentence instead of tens of kilobytes: less radio time, lower battery drain on phones and relays.</li>
       <li>Solar-powered low-power relay nodes become practical.</li>
       <li>No data-centre inference.</li>
     </ul></div>
   </div>
-  <div class="callout rx"><strong>Alignment:</strong> supports disaster-risk reduction and inclusive early warning (UN Early Warnings for All, SDG 11 and SDG 13) and India's CAP-based public alerting ecosystem (NDMA SACHET), which iTantra can receive from in a later phase.</div>
+  <div class="callout rx"><strong>Alignment:</strong> supports disaster-risk reduction and inclusive early warning (UN Early Warnings for All, SDG 11 and SDG 13) and India's CAP-based public alerting ecosystem (NDMA SACHET). The control-room gateway already parses CAP 1.2 alerts; connecting it to the live SACHET feed is the next step.</div>
 </section>
 
 <!-- ============ SLIDE 6 ============ -->
@@ -327,8 +409,9 @@ flowchart LR
       <li>sherpa-onnx (k2-fsa), Apache-2.0 — <a href="https://github.com/k2-fsa/sherpa-onnx">github.com/k2-fsa/sherpa-onnx</a></li>
       <li>llama.cpp / ggml, MIT — <a href="https://github.com/ggml-org/llama.cpp">github.com/ggml-org/llama.cpp</a></li>
       <li>mio-tts-cpp, MIT — <a href="https://github.com/mmnga/mio-tts-cpp">github.com/mmnga/mio-tts-cpp</a></li>
+      <li>Bouncy Castle (X25519, Ed25519, ChaCha20-Poly1305), MIT — <a href="https://www.bouncycastle.org/">bouncycastle.org</a></li>
+      <li>RadioLib (SX1262 LoRa driver), MIT — <a href="https://github.com/jgromes/RadioLib">github.com/jgromes/RadioLib</a></li>
       <li>NVIDIA NeMo (model export) — <a href="https://github.com/NVIDIA/NeMo">github.com/NVIDIA/NeMo</a></li>
-      <li>ONNX Runtime — <a href="https://onnxruntime.ai/">onnxruntime.ai</a></li>
     </ul></div>
     <div class="panel"><h4>Standards and context</h4><ul class="refs">
       <li>Android Wi-Fi Direct, BLE, audio focus documentation — <a href="https://developer.android.com/develop/connectivity">developer.android.com</a></li>
@@ -344,7 +427,7 @@ flowchart LR
 <section id="arch">
   <span class="slideno sys">FULL SYSTEM · ARCHITECTURE</span>
   <h2>System architecture</h2>
-  <p>The same app runs on every phone; each phone is both transmitter and receiver. The optional bridge node carries the same packets over long-range radio.</p>
+  <p>The same app runs on every phone; each phone is both transmitter and receiver. The bridge node carries the same packets over long-range radio and looks like one more BLE peer to the phone.</p>
 
   <div class="diagram"><div class="cap">Block diagram: one phone, both directions</div>
 <pre class="mermaid">
@@ -354,36 +437,39 @@ flowchart TB
     subgraph TX["Transmit path"]
       MIC[Microphone<br/>16 kHz mono] --> GATE{Half-duplex gate<br/>playing? drop}
       GATE --> VAD[Silero VAD<br/>sentence at 0.5 s pause]
-      VAD --> STT[SraVaani STT<br/>int8, keyword boosting]
-      STT --> PART[Live partials<br/>every 0.5 s]
+      VAD --> STT[SraVaani STT<br/>int8]
+      STT --> PART[Live partials<br/>every 0.5 s, FULL only]
       STT --> MSG[VoiceMessage<br/>id, lang, text, priority, emotion, timestamps]
+      SOS[SOS sheet<br/>6 templates + GNSS/NavIC] --> MSG
     end
     subgraph LINK["Transport manager"]
       direction LR
-      L1[Wi-Fi LAN TCP<br/>mDNS] --> L2[Wi-Fi Direct] --> L3[BLE GATT<br/>NUS]
+      WC[Wire codec<br/>binary + dictionary or JSON<br/>ChaCha20-Poly1305 when paired] --> L1[Wi-Fi LAN TCP<br/>mDNS]
+      L1 --> L2[Wi-Fi Direct] --> L3[BLE GATT<br/>NUS, MTU 517]
     end
     subgraph RX["Receive path"]
-      IN[Frame decoder<br/>dedupe, ACK] --> TP[Text pipeline<br/>normaliser, SSML, style]
-      TP --> ENG{Engine select}
-      ENG -->|bn kn ml mr ta te| VITS[VITS Rasa<br/>emotion id]
-      ENG -->|hi gu or en| MIO[Indic-Mio Q4<br/>+ MioCodec]
-      VITS --> OUT[Speech output]
+      IN[Frame decoder<br/>decrypt, verify ALERT signature, ACK] --> TP[Text pipeline<br/>normaliser, SSML, style, coordinates]
+      TP --> ENG{Engine select<br/>lazy load, idle unload}
+      ENG -->|bn kn ml mr ta te| VITS[VITS Rasa<br/>emotion id, clause streaming]
+      ENG -->|hi gu or en| MIO[Indic-Mio Q4<br/>+ MioCodec F16]
+      VITS --> OUT[Gapless playback queue<br/>adaptive pre-roll]
       MIO --> OUT
       OUT -->|NORMAL| VN[Voice note<br/>media stream, replay cache]
-      OUT -->|ALERT| AL[Alarm stream<br/>max volume, exclusive focus]
+      OUT -->|ALERT| AL[Alarm stream<br/>max volume, exclusive focus, vibration]
     end
-    UI[Compose UI<br/>transcript, PTT key, metrics] --- MSG
+    UI[Compose UI<br/>talk, history, metrics, pairing] --- MSG
     UI --- IN
   end
-  MSG --> LINK
-  PART --> LINK
+  MSG --> WC
+  PART --> WC
   LINK --> IN
   LINK <--> PEER[(Peer phone)]
-  LINK <-.-> BRIDGE[(ESP32 bridge<br/>BLE ⇄ LoRa)]
+  LINK <--> BRIDGE[(ESP32 bridge<br/>BLE ⇄ LoRa)]
+  LINK <--> GW[(Control-room gateway<br/>Wi-Fi LAN)]
 </pre>
   </div>
 
-  <div class="diagram"><div class="cap">Full deployment (target system)</div>
+  <div class="diagram"><div class="cap">Full deployment (target system; dashed links not built yet)</div>
 <pre class="mermaid">
 flowchart LR
   subgraph FIELD["Field"]
@@ -393,11 +479,13 @@ flowchart LR
     N2 <-- LoRa --> N3[ESP32 node]
     N3 <-- BLE --> P3[Phone C<br/>boat / village]
   end
-  subgraph CR["Control room (optional, offline LAN)"]
-    GW[Gateway node] --> DASH[Dashboard<br/>message log, map, broadcast]
-    CAP[CAP / SACHET alert feed] --> DASH
+  subgraph CR["Control room (offline LAN)"]
+    GW[Gateway<br/>SQLite log] --> DASH[Dashboard<br/>peers, map, broadcast]
+    CAP[CAP 1.2 alert file] --> GW
+    SACHET[SACHET live feed] -.-> CAP
   end
-  N2 <-- LoRa --> GW
+  P2 <-- Wi-Fi LAN --> GW
+  N2 <-. LoRa .-> GW
   DASH -- broadcast ALERT --> GW
 </pre>
   </div>
@@ -422,26 +510,30 @@ flowchart TD
   E -- no --> P
   E -- yes --> R[Final STT decode]
   R --> K{Alert toggle or<br/>alert keyword?}
-  K -- yes --> A[priority = ALERT]
+  K -- yes --> A[priority = ALERT<br/>sign with Ed25519]
   K -- no --> N[priority = NORMAL]
-  A --> X[Build packet<br/>id, lang, text, times]
+  A --> X[Build packet<br/>binary + dictionary<br/>encrypt if paired]
   N --> X
-  X --> L[Send on best link<br/>retry until ACK]
+  X --> L[Send on best link<br/>Wi-Fi, then BLE]
   L --> M[Show latency when ACK arrives]
 </pre>
   </div>
   <div class="diagram"><div class="cap">Receiver</div>
 <pre class="mermaid" style="min-width:420px">
 flowchart TD
-  I([Packet arrives]) --> D{Own device ID<br/>or duplicate id?}
+  I([Packet arrives]) --> D{Own device ID?}
   D -- yes --> Z[Drop]
-  D -- no --> Q[Show text in transcript<br/>send ACK received]
-  Q --> N[Normalise numbers, dates, ₹<br/>parse SSML if present]
+  D -- no --> DC[Decrypt, replay check]
+  DC --> SG{ALERT with valid<br/>trusted signature?}
+  SG -- no --> DN[Treat as NORMAL]
+  SG -- yes --> Q
+  DN --> Q[Show text in transcript<br/>send ACK received]
+  Q --> N[Normalise numbers, dates, ₹<br/>coordinates, SSML]
   N --> S[Pick style<br/>explicit, alert keyword, neutral]
   S --> P{Priority}
-  P -- ALERT --> A[Pre-empt current audio<br/>alarm stream to max<br/>exclusive focus]
+  P -- ALERT --> A[Pre-empt current audio<br/>alarm stream to max<br/>vibrate]
   P -- NORMAL --> Qn[Queue as voice note]
-  A --> T[Synthesize per sentence<br/>stream first chunk]
+  A --> T[Synthesize per clause<br/>gapless queue]
   Qn --> T
   T --> G[Gate mic while playing]
   G --> K[Send ACK with play time]
@@ -449,6 +541,7 @@ flowchart TD
 </pre>
   </div>
   </div>
+  <p class="small">The signature check applies to binary frames from paired devices. JSON frames (peer simulator, gateway) keep their ALERT priority today.</p>
 
   <div class="diagram"><div class="cap">Link selection and fallback</div>
 <pre class="mermaid">
@@ -457,9 +550,9 @@ stateDiagram-v2
   LAN: Wi-Fi LAN (mDNS + TCP)
   WFD: Wi-Fi Direct group
   BLE: Bluetooth LE GATT
-  LORA: LoRa via ESP32 bridge (planned)
+  LORA: LoRa via ESP32 bridge (seen as a BLE peer)
   LAN --> Connected: peer found
-  LAN --> WFD: none after 4 s
+  LAN --> WFD: no Wi-Fi after 4 s
   WFD --> Connected: group formed
   WFD --> BLE: none after 8 s
   BLE --> Connected: GATT link
@@ -485,7 +578,7 @@ sequenceDiagram
   B->>B: normalise + TTS first chunk
   B->>L: audio starts (t4)
   B->>A: ACK play-started (t4)
-  Note over A,B: End-to-end = t4 − t0, clock offset from ping/pong
+  Note over A,B: End-to-end = t4 − t0, clock offset from ping/pong every 5 s
 </pre>
   </div>
 </section>
@@ -496,21 +589,24 @@ sequenceDiagram
   <h2>Tech stack in detail</h2>
   <div class="tbl"><table>
     <tr><th>Area</th><th>Choice</th><th>Why this one</th><th>Licence</th><th>Status</th></tr>
-    <tr><td>Language / UI</td><td>Kotlin 2.4, Jetpack Compose, Material 3 Expressive</td><td>Native audio, BLE, Wi-Fi Direct and JNI without a bridge layer</td><td>Apache-2.0</td><td><span class="tag done">built</span></td></tr>
-    <tr><td>Build</td><td>Gradle 9.7, AGP 9.4, NDK 28, CMake</td><td>16 KB page alignment, arm64 native builds</td><td>Apache-2.0</td><td><span class="tag done">built</span></td></tr>
+    <tr><td>Language / UI</td><td>Kotlin 2.4.20, Jetpack Compose (BOM 2026.09), Material 3 with hand-built expressive motion</td><td>Native audio, BLE, Wi-Fi Direct and JNI without a bridge layer. MaterialExpressiveTheme is still internal in material3 1.4</td><td>Apache-2.0</td><td><span class="tag done">built</span></td></tr>
+    <tr><td>Build</td><td>Gradle 9.7.1, AGP 9.4.1, NDK 28.2, CMake 3.22; compileSdk 37, targetSdk 36</td><td>16 KB page alignment, arm64 native builds</td><td>Apache-2.0</td><td><span class="tag done">built</span></td></tr>
     <tr><td>VAD</td><td>Silero VAD in sherpa-onnx</td><td>0.6 MB, accurate on Indian speech, cheap enough for idle listening</td><td>MIT</td><td><span class="tag done">built</span></td></tr>
     <tr><td>STT</td><td>SraVaani-1.0, FastConformer hybrid TDT-CTC, int8</td><td>Only small permissive model covering all 10 languages incl. Odia and English</td><td>MIT</td><td><span class="tag done">built</span></td></tr>
-    <tr><td>STT runtime</td><td>sherpa-onnx 1.13.8 (ONNX Runtime)</td><td>Android AAR, VAD + ASR + TTS in one library, hotword biasing</td><td>Apache-2.0</td><td><span class="tag done">built</span></td></tr>
-    <tr><td>TTS (fast)</td><td>AI4Bharat VITS Rasa 13</td><td>Non-autoregressive, RTF ≈0.5, 14 emotion/styles</td><td>CC-BY-4.0</td><td><span class="tag done">built</span></td></tr>
-    <tr><td>TTS (expressive)</td><td>Indic-Mio 0.6B Q4_0 + MioCodec 24 kHz</td><td>All 10 languages, emotion tags and word stress</td><td>Apache-2.0 / MIT</td><td><span class="tag done">built</span></td></tr>
-    <tr><td>LLM runtime</td><td>llama.cpp / ggml via mio-tts-cpp, JNI</td><td>ARM dotprod kernels, Q4_0 weights; i8mm disabled after it crashed on a Snapdragon 870</td><td>MIT</td><td><span class="tag done">built</span></td></tr>
-    <tr><td>Text</td><td>Indic normaliser, SSML subset, alert classifier</td><td>TTS reads characters; numbers and dates must become words per language</td><td>own code</td><td><span class="tag done">built</span></td></tr>
-    <tr><td>Transport</td><td>TCP + NSD, WifiP2pManager, BLE GATT (NUS UUIDs)</td><td>No Google Play Services; ESP32-compatible</td><td>platform</td><td><span class="tag done">built</span></td></tr>
-    <tr><td>Serialisation</td><td>kotlinx.serialization JSON; planned compact binary + deflate dictionary</td><td>Readable now, smaller for LoRa later</td><td>Apache-2.0</td><td><span class="tag next">next</span></td></tr>
-    <tr><td>Security</td><td>X25519 key exchange + ChaCha20-Poly1305 (libsodium / Tink)</td><td>Private channels, tamper-proof alerts</td><td>ISC / Apache-2.0</td><td><span class="tag future">planned</span></td></tr>
-    <tr><td>Bridge firmware</td><td>ESP32-S3 + SX1262 LoRa, ESP-IDF / Arduino, NimBLE</td><td>Cheap long-range low-bitrate hop</td><td>Apache-2.0</td><td><span class="tag future">planned</span></td></tr>
+    <tr><td>STT runtime</td><td>sherpa-onnx 1.13.8 (ONNX Runtime)</td><td>Android AAR, VAD + ASR + TTS in one library, hotword biasing (supported, not yet wired in)</td><td>Apache-2.0</td><td><span class="tag done">built</span></td></tr>
+    <tr><td>TTS (fast)</td><td>AI4Bharat VITS Rasa 13, clause splitter</td><td>Non-autoregressive, RTF ≈0.5, 14 emotion/styles</td><td>CC-BY-4.0</td><td><span class="tag done">built</span></td></tr>
+    <tr><td>TTS (expressive)</td><td>Indic-Mio 0.6B Q4_0 + MioCodec F16 24 kHz, fixed per-language voice embeddings</td><td>All 10 languages, emotion tags and word stress</td><td>Apache-2.0 / MIT</td><td><span class="tag done">built</span></td></tr>
+    <tr><td>LLM runtime</td><td>llama.cpp / ggml via mio-tts-cpp, JNI</td><td>ARM dotprod kernels, Q4_0 weights; i8mm removed after SIGILL on a Snapdragon 870</td><td>MIT</td><td><span class="tag done">built</span></td></tr>
+    <tr><td>Playback</td><td>Producer/consumer chunk queue, adaptive pre-roll, 8 ms fades, underrun counter</td><td>No gaps even when a model runs near real time</td><td>own code</td><td><span class="tag done">built</span></td></tr>
+    <tr><td>Text</td><td>Indic normaliser, SSML subset, alert classifier, coordinate speller</td><td>TTS reads characters; numbers, dates and locations must become words per language</td><td>own code</td><td><span class="tag done">built</span></td></tr>
+    <tr><td>Transport</td><td>TCP + NSD, WifiP2pManager, BLE GATT (NUS UUIDs, 3-byte fragment header)</td><td>No Google Play Services; ESP32-compatible</td><td>platform</td><td><span class="tag done">built</span></td></tr>
+    <tr><td>Serialisation</td><td>Compact binary frames + per-script static dictionaries (~100 KB total), negotiated in Hello; kotlinx.serialization JSON for debugging</td><td>Median 62 B per sentence; fits LoRa</td><td>Apache-2.0</td><td><span class="tag done">built</span></td></tr>
+    <tr><td>Security</td><td>BouncyCastle 1.86: X25519 + HKDF-SHA256, ChaCha20-Poly1305 (8-byte tag), Ed25519 on ALERTs, 512-nonce replay guard; QR pairing (ZXing + CameraX); identity wrapped with Android Keystore AES-GCM</td><td>Private channels, tamper-proof alerts</td><td>MIT / Apache-2.0</td><td><span class="tag part">binary mode, after pairing</span></td></tr>
+    <tr><td>Location</td><td>Framework LocationManager (GNSS, NavIC where supported), 11-byte location field</td><td>SOS tells rescuers where to go</td><td>platform</td><td><span class="tag done">built</span></td></tr>
+    <tr><td>Bridge firmware</td><td>ESP32-S3 + SX1262 (Heltec LoRa 32 V3 / LilyGO T3-S3), PlatformIO, NimBLE-Arduino 1.4.3, RadioLib 6.6.0</td><td>Cheap long-range low-bitrate hop</td><td>Apache-2.0 / MIT</td><td><span class="tag part">compiled, not flashed</span></td></tr>
+    <tr><td>Control-room gateway</td><td>Python: mDNS peer, SQLite log, dashboard on :8787 with server-sent events, CAP 1.2 parser (XXE-guarded)</td><td>One laptop sees every message and can broadcast alerts</td><td>own code</td><td><span class="tag done">built</span></td></tr>
     <tr><td>Translation</td><td>IndicTrans2 distilled, CTranslate2 or ONNX int8</td><td>Speak Hindi, hear Tamil</td><td>MIT</td><td><span class="tag future">planned</span></td></tr>
-    <tr><td>Evaluation</td><td>Python harness: FLEURS/IndicVoices WER, ASR round-trip CER for TTS, latency via peer simulator</td><td>Reproducible numbers for the judges' metrics</td><td>own code</td><td><span class="tag done">built</span></td></tr>
+    <tr><td>Evaluation</td><td>Python harness: FLEURS (30 clips/language) WER, ASR round-trip CER for TTS, latency via peer simulator</td><td>Reproducible numbers for the judges' metrics</td><td>own code</td><td><span class="tag part">built, not yet run</span></td></tr>
   </table></div>
 </section>
 
@@ -518,17 +614,19 @@ sequenceDiagram
 <section id="protocol">
   <span class="slideno sys">FULL SYSTEM · PACKET AND BANDWIDTH</span>
   <h2>Packet format and bandwidth</h2>
-  <p>A typical spoken sentence lasts about 3 s. The bars compare what it costs to send that sentence in different forms (log scale).</p>
+  <p>The bars compare what it costs to send one spoken sentence, assuming it lasts about 3 s (log scale). The three iTantra rows use median frame sizes from a unit test over 310 FLEURS sentences, before encryption, signature and link headers.</p>
   <div class="bars" role="img" aria-label="Bits per second needed, log scale">
     <div class="bar"><span>Raw PCM 16 kHz 16-bit</span><span class="track"><span class="fill" style="width:98%"></span></span><span class="v">256 kbps</span></div>
     <div class="bar"><span>Opus voice (speech mode)</span><span class="track"><span class="fill" style="width:74%"></span></span><span class="v">≈12 kbps</span></div>
     <div class="bar"><span>Codec2 (robotic, 1.2 kbps mode)</span><span class="track"><span class="fill" style="width:56%"></span></span><span class="v">1.2 kbps</span></div>
-    <div class="bar txt"><span>iTantra text, JSON</span><span class="track"><span class="fill" style="width:46%"></span></span><span class="v">≈320 bps</span></div>
-    <div class="bar txt"><span>iTantra text, compact binary (planned)</span><span class="track"><span class="fill" style="width:40%"></span></span><span class="v">≈160 bps</span></div>
+    <div class="bar txt"><span>iTantra JSON frame (524 B)</span><span class="track"><span class="fill" style="width:57%"></span></span><span class="v">≈1.4 kbps</span></div>
+    <div class="bar txt"><span>iTantra binary, raw text (287 B)</span><span class="track"><span class="fill" style="width:52%"></span></span><span class="v">≈770 bps</span></div>
+    <div class="bar txt"><span>iTantra binary + dictionary (62 B)</span><span class="track"><span class="fill" style="width:40%"></span></span><span class="v">≈165 bps</span></div>
   </div>
-  <p class="small">Scale: bar length = log10(bps) / 5.5. Text estimate: ~13 characters per second of speech, 3 bytes per Indic character in UTF-8, plus header. LoRa at SF12/125 kHz carries roughly 250–300 bps and SF7 about 5.5 kbps, so text fits even the slowest setting while voice does not.</p>
+  <p class="small">Scale: bar length = log10(bps) / 5.5. JSON carries readable field names and millisecond timestamps, so it is only a debugging format; binary is used between phones that negotiate it. LoRa at SF12/125 kHz carries roughly 250–300 bps and SF7 about 5.5 kbps, so the compressed frame fits even the slowest setting while voice does not.</p>
 
-  <h3>Current frame (JSON, length-prefixed over TCP; 3-byte fragment header over BLE)</h3>
+  <h3>Frames on the wire</h3>
+  <p>TCP uses a 4-byte big-endian length prefix. BLE splits frames into chunks with a 3-byte <code>[seq, index, count]</code> header. The first byte tells the formats apart: <code>{</code> for JSON, <code>0x1X</code> for binary. Hello is always JSON and announces protocol 2 (binary capable).</p>
 <pre class="diagram" style="font:13px/1.5 var(--mono);white-space:pre;overflow-x:auto">{ "type": "msg",
   "message": { "id": "7f3c…", "from": "device-A", "lang": "HI",
                "text": "बाढ़ का पानी बढ़ रहा है, ऊँचे स्थान पर जाएँ",
@@ -536,18 +634,20 @@ sequenceDiagram
                "speechEndAt": 1790621234567, "sttDoneAt": …, "sentAt": … } }
 other types: hello · partial · ack(receivedAt, playStartedAt) · ptt(talking) · ping/pong</pre>
 
-  <h3>Planned compact binary frame (for LoRa and slow BLE)</h3>
+  <h3>Compact binary Msg frame <span class="tag done">built</span></h3>
   <div class="tbl"><table>
     <tr><th>Field</th><th class="num">Bytes</th><th>Notes</th></tr>
     <tr><td>Version + type</td><td class="num">1</td><td>4 bits each</td></tr>
-    <tr><td>Flags</td><td class="num">1</td><td>priority, SSML, encrypted, fragment</td></tr>
-    <tr><td>Message id</td><td class="num">4</td><td>random; de-duplication across relays</td></tr>
-    <tr><td>Sender short id</td><td class="num">2</td><td>hash of device key</td></tr>
+    <tr><td>Flags</td><td class="num">1</td><td>ALERT, SSML, encrypted, fragment, emotion present, signed, location</td></tr>
+    <tr><td>Message id</td><td class="num">4</td><td>stable hash of the message id</td></tr>
+    <tr><td>Sender short id</td><td class="num">2</td><td>stable hash of the device id</td></tr>
     <tr><td>Language + emotion</td><td class="num">1</td><td>4 bits each</td></tr>
-    <tr><td>Hop count / TTL</td><td class="num">1</td><td>mesh relay</td></tr>
-    <tr><td>Timestamp</td><td class="num">4</td><td>seconds, for latency and ordering</td></tr>
-    <tr><td>Text</td><td class="num">≈40–120</td><td>per-script static-dictionary compression (shared vocabulary of common words)</td></tr>
-    <tr><td>MAC</td><td class="num">8</td><td>truncated Poly1305 when encrypted</td></tr>
+    <tr><td>Hop count / TTL</td><td class="num">1</td><td>written as 8; the app does not act on it yet</td></tr>
+    <tr><td>Timestamp</td><td class="num">6</td><td>epoch seconds + milliseconds</td></tr>
+    <tr><td>Compression scheme</td><td class="num">1</td><td>raw UTF-8 or per-script dictionary</td></tr>
+    <tr><td>Payload length + text</td><td class="num">≈40–75</td><td>varint length, then compressed text; when encrypted: 12-byte nonce + ciphertext + 8-byte tag, with the header as associated data</td></tr>
+    <tr><td>Location (optional)</td><td class="num">11</td><td>SOS: lat/lon in microdegrees + accuracy</td></tr>
+    <tr><td>Signature (optional)</td><td class="num">64</td><td>Ed25519 over header and text; required for an ALERT to stay an ALERT</td></tr>
   </table></div>
 </section>
 
@@ -558,10 +658,11 @@ other types: hello · partial · ack(receivedAt, playStartedAt) · ptt(talking) 
   <div class="tbl"><table>
     <tr><th>Stage</th><th class="num">Target</th><th class="num">Prototype</th><th>Lever</th></tr>
     <tr><td>End-of-speech detection (VAD silence)</td><td class="num">500 ms</td><td class="num">500 ms</td><td>Tune to 300–400 ms; PTT release ends immediately</td></tr>
-    <tr><td>STT final decode</td><td class="num">&lt; 300 ms</td><td class="num">0.06–0.13 RTF</td><td>int8, 4 threads; partials already streamed</td></tr>
-    <tr><td>Network (Wi-Fi / BLE)</td><td class="num">&lt; 100 ms</td><td class="num">≈41 ms ACK</td><td>TCP_NODELAY, BLE MTU 517</td></tr>
+    <tr><td>STT final decode</td><td class="num">&lt; 300 ms</td><td class="num">0.044–0.13 RTF</td><td>int8, 4 threads (FULL) or 2 (LITE); partials already streamed</td></tr>
+    <tr><td>Network (Wi-Fi / BLE)</td><td class="num">&lt; 100 ms</td><td class="num">≈41 ms ACK</td><td>TCP_NODELAY, BLE MTU 517, 62-byte frames</td></tr>
+    <tr><td>Network (LoRa bridge, 80 B)</td><td class="num">&lt; 1 s</td><td class="num">144 ms SF7 · 452 ms SF9</td><td>Computed airtime, not measured; SF12 takes 3.3 s</td></tr>
     <tr><td>Text pipeline</td><td class="num">&lt; 10 ms</td><td class="num">≈1–2 ms</td><td>pure Kotlin</td></tr>
-    <tr><td>TTS time to first audio</td><td class="num">&lt; 600 ms</td><td class="num">0.6–0.95 s Mio · faster on VITS</td><td>stream first chunk, warm models, VITS-first</td></tr>
+    <tr><td>TTS time to first audio</td><td class="num">&lt; 600 ms</td><td class="num">0.6–0.95 s Mio · faster on VITS</td><td>Stream first chunk and clauses; FULL keeps both engines warm (a cold VITS start was ~10 s)</td></tr>
     <tr><td><strong>End to end</strong></td><td class="num"><strong>≈1.5 s</strong></td><td class="num">≈1.5–2.5 s (estimate)</td><td>Report p50/p95 from the harness</td></tr>
   </table></div>
 </section>
@@ -571,37 +672,40 @@ other types: hello · partial · ack(receivedAt, playStartedAt) · ptt(talking) 
   <span class="slideno sys">FULL SYSTEM · EVALUATION PLAN</span>
   <h2>How we measure the judges' metrics</h2>
   <div class="tbl"><table>
-    <tr><th>Metric (weight)</th><th>What we report</th><th>How</th></tr>
-    <tr><td>Accuracy (40%) · STT</td><td>WER and CER per language, overall</td><td>30+ FLEURS test clips per language plus IndicVoices/Kathbath; Indic-aware normalisation; run on the phone through the real STT path</td></tr>
-    <tr><td>Accuracy (40%) · TTS</td><td>Intelligibility CER, naturalness MOS</td><td>Synthesise 20 sentences per language, transcribe back with STT (CER); 5 native listeners per language rate 1–5 (MOS)</td></tr>
-    <tr><td>Latency (20%)</td><td>STT latency, TTS time-to-first-audio, RTF, end-to-end p50/p95</td><td>Timestamps in every packet; ACK with play time; ping/pong clock offset; peer simulator for scripted runs</td></tr>
-    <tr><td>Efficiency (20%)</td><td>APK size, model sizes, RAM (PSS), idle CPU %</td><td>Metrics screen and periodic resource log; test on a 4 GB and a 6 GB phone in LITE and FULL profiles</td></tr>
+    <tr><th>Metric (weight)</th><th>What we report</th><th>How</th><th>Status</th></tr>
+    <tr><td>Accuracy (40%) · STT</td><td>WER and CER per language, overall</td><td>30 FLEURS test clips per language (manifests fetched) plus IndicVoices/Kathbath; Indic-aware normalisation; run on the phone through the real STT path</td><td><span class="tag risk">run failed: models missing on phone</span></td></tr>
+    <tr><td>Accuracy (40%) · TTS</td><td>Intelligibility CER, naturalness MOS</td><td>Synthesise 20 sentences per language, transcribe back with STT (CER); 5 native listeners per language rate 1–5 (MOS)</td><td><span class="tag next">not run</span></td></tr>
+    <tr><td>Latency (20%)</td><td>STT latency, TTS time-to-first-audio, RTF, end-to-end p50/p95</td><td>Timestamps in every packet; ACK with play time; ping/pong clock offset; peer simulator for scripted runs; p50/p95 on the metrics screen</td><td><span class="tag next">bench not run</span></td></tr>
+    <tr><td>Efficiency (20%)</td><td>APK size, model sizes, RAM (PSS), idle CPU %</td><td>Metrics screen with CSV export and a periodic resource log; test on a 4 GB and a 6 GB phone in LITE and FULL profiles</td><td><span class="tag part">measured on 870; no 4 GB phone yet</span></td></tr>
   </table></div>
+  <p class="small">Run with <code>tools/eval/run_all.sh</code>; the report is written to <code>docs/eval-results.md</code>. The OnePlus 12 is no longer available, so runs now use the vivo I2202 over USB. Push the models to the phone first.</p>
   <div class="callout al"><strong>Report thermal state with every number.</strong> On our test phone, speed dropped 2–4× once it hit thermal status SEVERE. Judges' phones may run cooler or hotter; show both.</div>
 </section>
 
 <!-- ============ UPGRADES ============ -->
 <section id="upgrades">
   <span class="slideno sys">FULL SYSTEM · UPGRADES</span>
-  <h2>Useful upgrades beyond the current build</h2>
-  <p>Ordered by value for the problem statement. Estimated cost is relative engineering effort.</p>
+  <h2>Upgrades: status against the plan</h2>
+  <p>Ordered by value for the problem statement. Estimated cost is relative engineering effort for what remains.</p>
   <div class="tbl"><table>
-    <tr><th>Upgrade</th><th>What it adds</th><th>Cost</th><th>Stage</th></tr>
+    <tr><th>Upgrade</th><th>What it adds</th><th>Remaining cost</th><th>Stage</th></tr>
+    <tr><td><strong>Drop WavLM at runtime</strong></td><td>94 MB less RAM; voice embeddings are precomputed</td><td>—</td><td><span class="tag done">done</span></td></tr>
+    <tr><td><strong>Compact binary packets</strong> with per-script dictionary compression</td><td>Median 62 B per sentence (from 524 B JSON); needed for LoRa</td><td>—</td><td><span class="tag done">done</span></td></tr>
+    <tr><td><strong>Location in alerts</strong> (GNSS incl. NavIC where supported)</td><td>Coordinates in SOS, spoken on arrival. Next: nearest landmark from an offline gazetteer</td><td>Low</td><td><span class="tag done">done</span></td></tr>
+    <tr><td><strong>One-tap SOS templates</strong></td><td>6 templates (rescue, medical, fire, flood, trapped, safe); one tap sends</td><td>—</td><td><span class="tag done">done</span></td></tr>
+    <tr><td><strong>CAP ingestion</strong> at a control-room gateway</td><td>CAP 1.2 files parsed and re-broadcast in the right language. Next: live SACHET feed, signed broadcasts</td><td>Low</td><td><span class="tag done">done</span></td></tr>
+    <tr><td><strong>End-to-end encryption and signed alerts</strong></td><td>Private channels; only paired senders can raise ALERT. Next: cover partials and the JSON path; load paired devices at startup</td><td>Low</td><td><span class="tag part">partial</span></td></tr>
+    <tr><td><strong>ESP32-S3 BLE ⇄ LoRa bridge</strong></td><td>Kilometre range in the licence-free 865–867 MHz band; covers the PS's "embedded device". Next: flash, pin-map check, range test</td><td>Medium (hardware test + enclosure)</td><td><span class="tag part">compiled</span></td></tr>
+    <tr><td><strong>Accessibility</strong></td><td>Done: alert vibration pattern, large text, text size S–XL, reduced motion. Next: TalkBack pass</td><td>Low</td><td><span class="tag part">partial</span></td></tr>
+    <tr><td><strong>Store-and-forward mesh relay</strong></td><td>Firmware floods with TTL 3 and a 32-entry dedupe cache. Next: phones act on TTL, dedupe received ids, relay and queue</td><td>Medium</td><td><span class="tag part">partial</span></td></tr>
     <tr><td><strong>Small VITS voices for hi, gu, or, en</strong></td><td>Removes the slow autoregressive model from the default path; every language at RTF ≈0.5 and ~40 MB per voice</td><td>Medium (training on open studio data)</td><td><span class="tag next">next</span></td></tr>
     <tr><td><strong>LITE STT</strong> (per-language 130 MB int8 model, loaded on demand)</td><td>Fits 3–4 GB phones; judged efficiency</td><td>Medium</td><td><span class="tag next">next</span></td></tr>
-    <tr><td><strong>Drop WavLM at runtime</strong></td><td>Voice embeddings are precomputed, so 90 MB less RAM and disk</td><td>Low</td><td><span class="tag next">next</span></td></tr>
-    <tr><td><strong>ESP32-S3 BLE ⇄ LoRa bridge</strong></td><td>Kilometre-range, license-free 865–867 MHz band, no phone network; covers the PS's "embedded device"</td><td>Medium (firmware + enclosure)</td><td><span class="tag next">next</span></td></tr>
-    <tr><td><strong>Compact binary packets</strong> with per-script dictionary compression</td><td>Halves bytes per sentence; needed for LoRa</td><td>Low</td><td><span class="tag next">next</span></td></tr>
-    <tr><td><strong>Store-and-forward mesh relay</strong></td><td>Messages hop phone → phone → node until delivered; TTL and de-duplication</td><td>Medium</td><td><span class="tag future">planned</span></td></tr>
+    <tr><td><strong>Keyword boosting</strong></td><td>Better recognition of alert words and place names; engine support exists</td><td>Low</td><td><span class="tag next">next</span></td></tr>
+    <tr><td><strong>Echo/loopback test mode</strong></td><td>One-phone demo: speak, see text, hear it back (exists only as debug commands)</td><td>Low</td><td><span class="tag next">next</span></td></tr>
+    <tr><td><strong>Emotion transfer</strong></td><td>Detect urgency from pitch and energy on the sender; today urgency comes from alert keywords only</td><td>Low</td><td><span class="tag future">planned</span></td></tr>
+    <tr><td><strong>Hands-free wake word</strong> (open KWS in sherpa-onnx)</td><td>Works when hands are busy</td><td>Low–medium</td><td><span class="tag future">planned</span></td></tr>
     <tr><td><strong>Cross-language delivery</strong> (IndicTrans2 distilled on device)</td><td>Hindi speaker, Tamil listener: text translated before TTS</td><td>High (≈200 MB model, adds latency)</td><td><span class="tag future">planned</span></td></tr>
-    <tr><td><strong>Sender's voice</strong> via 512-byte speaker embedding sent once per session</td><td>Listener hears a voice resembling the sender's; trust and recognition. Needs consent</td><td>Medium</td><td><span class="tag future">planned</span></td></tr>
-    <tr><td><strong>Emotion transfer</strong></td><td>Detect urgency or stress from pitch and energy on the sender; 1-byte tag re-voiced by TTS</td><td>Low</td><td><span class="tag future">planned</span></td></tr>
-    <tr><td><strong>Location in alerts</strong> (GNSS incl. NavIC where supported)</td><td>Coordinates appended to SOS; spoken as nearest landmark</td><td>Low</td><td><span class="tag future">planned</span></td></tr>
-    <tr><td><strong>One-tap SOS templates</strong> and hands-free wake word (open KWS in sherpa-onnx)</td><td>Works when hands are busy or the user cannot type</td><td>Low–medium</td><td><span class="tag future">planned</span></td></tr>
-    <tr><td><strong>End-to-end encryption and signed alerts</strong></td><td>Private channels; only authorised senders can raise ALERT</td><td>Medium</td><td><span class="tag future">planned</span></td></tr>
-    <tr><td><strong>CAP / SACHET ingestion</strong> at a control-room gateway</td><td>Official alerts re-broadcast in local languages over the offline mesh</td><td>Medium</td><td><span class="tag future">planned</span></td></tr>
-    <tr><td><strong>Accessibility</strong>: vibration patterns for alerts, large-text mode, TalkBack</td><td>Deaf and low-vision users</td><td>Low</td><td><span class="tag future">planned</span></td></tr>
-    <tr><td><strong>Echo/loopback test mode</strong></td><td>One-phone demo: speak, see text, hear it back</td><td>Low</td><td><span class="tag future">planned</span></td></tr>
+    <tr><td><strong>Sender's voice</strong> via 512-byte speaker embedding sent once per session</td><td>Listener hears a voice resembling the sender's. Needs consent</td><td>Medium</td><td><span class="tag future">planned</span></td></tr>
   </table></div>
 </section>
 
@@ -611,12 +715,13 @@ other types: hello · partial · ack(receivedAt, playStartedAt) · ptt(talking) 
   <h2>How the prototype numbers compare, and where they can improve</h2>
   <div class="tbl"><table>
     <tr><th>Metric</th><th>Ours</th><th>Reference point</th><th>Verdict</th><th>How to improve (no training)</th></tr>
-    <tr><td>STT WER</td><td>5.9% (10 clips)</td><td>SraVaani's own card reports 12–28% averages across harder benchmarks (conversational, noisy)</td><td>Good on read speech; expect 12–25% in the field</td><td>30+ clips per language for an honest figure; keyword boosting for alert and place names; beam search; VAD tuning</td></tr>
+    <tr><td>STT WER</td><td>5.9% (10 clips)</td><td>SraVaani's own card reports 12–28% averages across harder benchmarks (conversational, noisy)</td><td>Good on read speech; expect 12–25% in the field</td><td>Run the 30-clip harness for an honest figure; wire in keyword boosting; beam search; VAD tuning</td></tr>
     <tr><td>STT speed</td><td>RTF 0.05</td><td>Real time = 1.0</td><td>Excellent</td><td>Room to spend speed on accuracy (beam search)</td></tr>
-    <tr><td>TTS speed</td><td>VITS 0.6, Mio 1.0</td><td>Must stay &lt; 1.0 to avoid gaps</td><td>VITS good; Mio borderline</td><td>Clause-level streaming; VITS-first; smaller Mio voices later</td></tr>
-    <tr><td>First audio</td><td>0.6–1.1 s</td><td>Target &lt; 0.6 s</td><td>Close</td><td>Split sentences into clauses; keep engines warm for the peer's language</td></tr>
-    <tr><td>Memory</td><td>2.5 GB all loaded</td><td>Low-end phones have 3–4 GB total</td><td><span class="tag risk">Needs work</span></td><td>Load only the engine needed, unload idle, drop WavLM (90 MB), smaller codec; LITE profile</td></tr>
-    <tr><td>Bandwidth</td><td>≈320 bps per sentence stream</td><td>Opus ≈12 kbps; raw 256 kbps</td><td>Excellent</td><td>Binary packets + dictionary compression → ≈160 bps</td></tr>
+    <tr><td>TTS speed</td><td>VITS 0.6, Mio 1.0–1.46</td><td>Must stay &lt; 1.0 to avoid gaps</td><td>VITS good; Mio covered by pre-roll (0 underruns)</td><td>VITS voices for hi/gu/or/en would remove the problem</td></tr>
+    <tr><td>First audio</td><td>0.6–0.95 s</td><td>Target &lt; 0.6 s</td><td>Close</td><td>Clause streaming and warm engines are done; shorter first clause next</td></tr>
+    <tr><td>Memory</td><td>688 MB LITE idle</td><td>Low-end phones have 3–4 GB total</td><td><span class="tag done">Improved</span></td><td>Per-language STT; confirm on a real 4 GB phone</td></tr>
+    <tr><td>Idle CPU</td><td>0.3–1.6%</td><td>Background apps should stay under ~2%</td><td>Good</td><td>Keep checking after UI changes; two regressions were animation timers</td></tr>
+    <tr><td>Bandwidth</td><td>62 B per sentence (≈165 bps)</td><td>Opus ≈12 kbps; Codec2 1.2 kbps; raw 256 kbps</td><td>Excellent; beats the ≤80 B target</td><td>Larger dictionaries for code-mixed speech</td></tr>
   </table></div>
 </section>
 
@@ -626,76 +731,75 @@ other types: hello · partial · ack(receivedAt, playStartedAt) · ptt(talking) 
   <h2>Implementation plan for each upgrade</h2>
   <p>Each upgrade lists its building blocks, steps, what it depends on, and the number that shows it worked.</p>
 
-  <h3>A. Efficiency pack (in progress)</h3>
+  <h3>A. Efficiency pack <span class="tag done">done</span></h3>
   <ul>
-    <li><strong>Blocks:</strong> engine manager with lazy load/unload, WavLM-free Mio init, quantised codec, ONNX Runtime memory options, clause splitter for VITS.</li>
-    <li><strong>Steps:</strong> load the TTS engine only for the language of the message; unload after 60 s idle (LITE) or 5 min (FULL); init Mio from precomputed voice embeddings; test q8 codec; split text at commas and ~60 characters.</li>
-    <li><strong>Done when:</strong> PSS &lt; 1 GB in LITE, idle CPU &lt; 2% in PTT mode, first audio &lt; 0.6 s.</li>
+    <li><strong>Built:</strong> per-language lazy TTS load, unload after 60 s idle (LITE) or 5 min (FULL), WavLM-free Mio init, F16 codec, VITS clause splitter, gapless playback, idle-CPU fixes.</li>
+    <li><strong>Result:</strong> LITE idle PSS 688 MB, idle CPU 0.3–1.6%, 0 underruns on the 870.</li>
+    <li><strong>Open:</strong> first audio is 0.6–0.95 s against a 0.6 s target. ONNX Runtime memory options are not exposed by the sherpa-onnx prebuilt AAR.</li>
   </ul>
 
-  <h3>B. Compact binary packets</h3>
+  <h3>B. Compact binary packets <span class="tag done">done</span></h3>
   <ul>
-    <li><strong>Blocks:</strong> 24-byte header (see packet table), per-script static dictionary (top 4,000 words per language from open text), zstd/deflate with that dictionary.</li>
-    <li><strong>Steps:</strong> build dictionaries offline; add a codec behind the existing frame interface; negotiate format in the hello frame; keep JSON for debugging.</li>
-    <li><strong>Depends on:</strong> nothing. <strong>Done when:</strong> median sentence ≤ 80 bytes.</li>
+    <li><strong>Built:</strong> 16-byte header, per-script static dictionaries for all 10 languages, codec behind the frame interface, format negotiated in Hello, JSON kept for debugging and simple peers.</li>
+    <li><strong>Result:</strong> median 62 B per sentence over 310 FLEURS sentences in a JVM unit test, better than the ≤ 80 B target. Caveats: the dictionaries were built from the same sentences (in-sample), and encryption (+20 B), an ALERT signature (+64 B), SOS location (+11 B) and link headers are not counted. Next: log real frame sizes on the phone and test on held-out sentences.</li>
   </ul>
 
-  <h3>C. ESP32-S3 BLE ⇄ LoRa bridge</h3>
+  <h3>C. ESP32-S3 BLE ⇄ LoRa bridge <span class="tag part">compiled</span></h3>
   <ul>
-    <li><strong>Blocks:</strong> ESP32-S3 + SX1262 (865–867 MHz), NimBLE Nordic-UART service identical to the app's, LoRa link layer with fragmentation, ACK and retry; battery + optional solar.</li>
-    <li><strong>Steps:</strong> firmware BLE side (reuse app packet format) → LoRa point-to-point → range test (SF7 vs SF12) → enclosure.</li>
-    <li><strong>Depends on:</strong> B for small payloads. <strong>Done when:</strong> 1 km line-of-sight delivery, sentence airtime &lt; 1 s at SF9.</li>
+    <li><strong>Built:</strong> PlatformIO firmware for Heltec LoRa 32 V3 (LilyGO T3-S3 env too): NimBLE Nordic-UART service identical to the app's, SX1262 at 865.0625 MHz, 125 kHz, SF9 default, 14 dBm; 246-byte LoRa fragments, ACK with 3 retries and 4 s timeout. RAM 9.3%, flash 17.2%.</li>
+    <li><strong>Next:</strong> flash two boards → check pin maps and the BLE tie-break → point-to-point test → range test (SF7 vs SF12) → enclosure.</li>
+    <li><strong>Done when:</strong> 1 km line-of-sight delivery, sentence airtime &lt; 1 s at SF9 measured on air.</li>
   </ul>
 
-  <h3>D. Store-and-forward mesh</h3>
+  <h3>D. Store-and-forward mesh <span class="tag part">partial</span></h3>
   <ul>
-    <li><strong>Blocks:</strong> message id cache (de-duplication), TTL/hop count, per-node queue, delivery receipts back to origin.</li>
-    <li><strong>Steps:</strong> phones and nodes rebroadcast unseen ids with TTL−1; queue while no neighbour; forward when a neighbour appears.</li>
-    <li><strong>Depends on:</strong> B, C. <strong>Done when:</strong> 3-hop delivery demo with receipts.</li>
+    <li><strong>Built:</strong> firmware floods unseen ids with TTL−1 (TTL 3), 32-entry dedupe cache, random jitter.</li>
+    <li><strong>Next:</strong> phones read TTL and dedupe received ids; phones relay; queue while no neighbour and forward when one appears; delivery receipts back to origin; destination addressing.</li>
+    <li><strong>Depends on:</strong> C on hardware. <strong>Done when:</strong> 3-hop delivery demo with receipts.</li>
   </ul>
 
-  <h3>E. One-tap SOS with location</h3>
+  <h3>E. One-tap SOS with location <span class="tag done">done</span></h3>
   <ul>
-    <li><strong>Blocks:</strong> localised SOS templates, GNSS fix (NavIC on phones that support it), coordinate → spoken form ("12.97 N, 77.59 E" or nearest named place from an offline gazetteer).</li>
-    <li><strong>Steps:</strong> template chips in UI → ALERT packet with lat/lon field → receiver speaks and shows location.</li>
-    <li><strong>Done when:</strong> SOS sent in &lt; 2 taps; location spoken in the listener's language.</li>
+    <li><strong>Built:</strong> SOS sheet with 6 localised templates, GNSS fix (reports NavIC in use), 11-byte location field, receiver speaks the coordinates. Shown in <code>clips/05_sos.mp4</code>.</li>
+    <li><strong>Next:</strong> nearest named place from an offline gazetteer instead of raw coordinates.</li>
   </ul>
 
-  <h3>F. Emotion and urgency transfer</h3>
+  <h3>F. Emotion and urgency transfer <span class="tag future">planned</span></h3>
   <ul>
-    <li><strong>Blocks:</strong> pitch/energy/speaking-rate features on the sender (no ML needed at first), rule-based urgency score, existing 1-byte emotion tag, TTS style mapping (VITS emotion ids, Mio tags).</li>
+    <li><strong>Blocks:</strong> pitch/energy/speaking-rate features on the sender (no ML needed at first), rule-based urgency score, existing emotion nibble in the header, TTS style mapping (VITS emotion ids, Mio tags; already used for keyword-based URGENT).</li>
     <li><strong>Done when:</strong> listeners pick "urgent" vs "calm" correctly in an A/B test.</li>
   </ul>
 
-  <h3>G. Cross-language delivery</h3>
+  <h3>G. Cross-language delivery <span class="tag future">planned</span></h3>
   <ul>
     <li><strong>Blocks:</strong> IndicTrans2 distilled (≈200M) int8 via CTranslate2 or ONNX; receiver-side translation into the listener's language before TTS; original text kept on screen.</li>
     <li><strong>Steps:</strong> convert model → benchmark on the 870 → enable only in FULL profile.</li>
     <li><strong>Done when:</strong> added latency &lt; 700 ms per sentence; chrF reported on FLORES.</li>
   </ul>
 
-  <h3>H. Sender's voice</h3>
+  <h3>H. Sender's voice <span class="tag future">planned</span></h3>
   <ul>
-    <li><strong>Blocks:</strong> 10-second enrolment on the sender, speaker embedding (128 floats ≈ 512 bytes) sent once per session with consent, Indic-Mio voice conditioning on the receiver.</li>
+    <li><strong>Blocks:</strong> 10-second enrolment on the sender, speaker embedding (128 floats ≈ 512 bytes) sent once per session with consent, Indic-Mio voice conditioning on the receiver (today it uses fixed per-language voices built from FLEURS clips).</li>
     <li><strong>Done when:</strong> listeners recognise the sender more often than with the default voice.</li>
   </ul>
 
-  <h3>I. Security</h3>
+  <h3>I. Security <span class="tag part">partial</span></h3>
   <ul>
-    <li><strong>Blocks:</strong> X25519 pairing by QR code, ChaCha20-Poly1305 per packet, Ed25519-signed ALERTs from authorised devices.</li>
-    <li><strong>Done when:</strong> unsigned ALERTs are shown as normal messages; tampered packets are rejected.</li>
+    <li><strong>Built:</strong> X25519 pairing by QR code, ChaCha20-Poly1305 per packet with the header as associated data, Ed25519-signed ALERTs, replay guard, Keystore-wrapped identity.</li>
+    <li><strong>Gaps:</strong> encryption is off until paired and applies to binary mode only; partial captions are sent in clear; the JSON path does no signature check; paired devices are not reloaded when the service restarts; the 8-byte tag gives a 2⁻⁶⁴ forgery bound.</li>
+    <li><strong>Done when:</strong> unsigned ALERTs are shown as normal messages on every path; tampered packets are rejected.</li>
   </ul>
 
-  <h3>J. Control-room gateway and CAP</h3>
+  <h3>J. Control-room gateway and CAP <span class="tag done">done</span></h3>
   <ul>
-    <li><strong>Blocks:</strong> laptop/Raspberry Pi gateway with a LoRa node, offline dashboard (message log, map, broadcast), CAP 1.2 parser for SACHET feeds when internet is available at the control room.</li>
-    <li><strong>Done when:</strong> a CAP alert is re-broadcast and spoken on field phones in their languages.</li>
+    <li><strong>Built:</strong> Python gateway that joins the phone mesh over mDNS, logs to SQLite, and serves a live dashboard (peers, per-language counts, latency, approximate locations, broadcast). CAP 1.2 parser picks the right language block; sample cyclone and flood alerts included.</li>
+    <li><strong>Next:</strong> LoRa link from the gateway, live SACHET feed, sign gateway broadcasts.</li>
   </ul>
 
-  <h3>K. Friendlier, Indian-first interface (in progress)</h3>
+  <h3>K. Friendlier, Indian-first interface <span class="tag done">done</span></h3>
   <ul>
-    <li><strong>Blocks:</strong> onboarding greeting in all 10 scripts, UI localised in 10 languages, language cards in native script, SOS chips, kolam-pattern empty states, credits to Indian open AI research (IISc ARTPARK, IIT Madras SPRING Lab, AI4Bharat).</li>
-    <li><strong>Done when:</strong> first-time users complete setup without help in a 5-person test.</li>
+    <li><strong>Built:</strong> onboarding greeting in all 10 scripts, UI in 10 languages, language cards in native script, SOS chips, kolam motif, light and dark themes, credits to IISc ARTPARK, IIT Madras SPRING Lab and AI4Bharat.</li>
+    <li><strong>Next:</strong> 5-person first-run test without help.</li>
   </ul>
 </section>
 
@@ -705,11 +809,11 @@ other types: hello · partial · ack(receivedAt, playStartedAt) · ptt(talking) 
   <h2>Roadmap</h2>
   <div class="tbl"><table>
     <tr><th>Phase</th><th>Scope</th><th>Exit criteria</th></tr>
-    <tr><td><span class="tag done">0 · done</span></td><td>Working app: 10-language STT/TTS, PTT and call modes, alerts, Wi-Fi/Wi-Fi Direct/BLE, live captions, voice-note replay, FULL/LITE profiles, metrics, evaluation harness</td><td>Runs end to end on a flagship phone with measured numbers</td></tr>
+    <tr><td><span class="tag done">0 · done</span></td><td>Working app: 10-language STT/TTS, PTT and call modes, alerts, Wi-Fi/Wi-Fi Direct/BLE, live captions, voice-note replay, FULL/LITE profiles, metrics, efficiency pack, binary packets, encryption and signed alerts, SOS with location, control-room gateway, showcase video</td><td>Runs end to end with measured numbers</td></tr>
     <tr><td><span class="tag next">1 · idea round</span></td><td>Deck, 30-clip WER per language, TTS intelligibility CER, e2e latency p50/p95, low-end phone test</td><td>Every judged metric has a number and a source</td></tr>
-    <tr><td><span class="tag next">2 · before finale</span></td><td>Small VITS voices for hi/gu/or/en, LITE STT, WavLM removal, binary packets, two-phone field test, ESP32 BLE bridge</td><td>Smooth on a 4 GB phone; all languages at RTF &lt; 1</td></tr>
-    <tr><td><span class="tag future">3 · finale</span></td><td>LoRa bridge demo, mesh relay, SOS templates with location, human MOS study</td><td>Live multi-hop demo in two languages</td></tr>
-    <tr><td><span class="tag future">4 · after</span></td><td>Translation, sender voice, encryption, CAP gateway, pilot with a district disaster team</td><td>Pilot feedback</td></tr>
+    <tr><td><span class="tag next">2 · before finale</span></td><td>Small VITS voices for hi/gu/or/en, LITE STT, keyword boosting, two-phone field test, ESP32 bridge flashed and range-tested, close security gaps</td><td>Smooth on a 4 GB phone; all languages at RTF &lt; 1</td></tr>
+    <tr><td><span class="tag future">3 · finale</span></td><td>LoRa bridge demo, phone-side mesh relay, landmark names for SOS, human MOS study</td><td>Live multi-hop demo in two languages</td></tr>
+    <tr><td><span class="tag future">4 · after</span></td><td>Translation, sender voice, live SACHET feed, pilot with a district disaster team</td><td>Pilot feedback</td></tr>
   </table></div>
 </section>
 
@@ -719,10 +823,10 @@ other types: hello · partial · ack(receivedAt, playStartedAt) · ptt(talking) 
   <h2>Suggested split for a six-member team</h2>
   <div class="grid3">
     <div class="panel"><h4>Android lead</h4><p>App shell, service, UI, permissions, profiles, release builds.</p></div>
-    <div class="panel"><h4>STT engineer</h4><p>SraVaani export, VAD tuning, keyword lists, LITE STT, WER harness.</p></div>
-    <div class="panel"><h4>TTS engineer</h4><p>VITS voices for hi/gu/or/en, Indic-Mio speed, text normaliser review with native speakers.</p></div>
-    <div class="panel"><h4>Networking / embedded</h4><p>Wi-Fi Direct, BLE, ESP32 + LoRa firmware, binary packets, mesh relay.</p></div>
-    <div class="panel"><h4>Evaluation and UX</h4><p>Latency runs, low-end phone tests, MOS study, accessibility, screenshots for the deck.</p></div>
+    <div class="panel"><h4>STT engineer</h4><p>Run the WER harness, VAD tuning, keyword lists, LITE STT.</p></div>
+    <div class="panel"><h4>TTS engineer</h4><p>VITS voices for hi/gu/or/en, Indic-Mio first-audio time, text normaliser review with native speakers.</p></div>
+    <div class="panel"><h4>Networking / embedded</h4><p>Flash and range-test the ESP32 bridge, phone-side mesh relay, security gaps.</p></div>
+    <div class="panel"><h4>Evaluation and UX</h4><p>Latency runs, low-end phone tests, MOS study, TalkBack pass, first-run test.</p></div>
     <div class="panel"><h4>Presenter / PM</h4><p>Deck, demo script, references, coordination with mentors.</p></div>
   </div>
 </section>
@@ -737,12 +841,19 @@ other types: hello · partial · ack(receivedAt, playStartedAt) · ptt(talking) 
     <li>Use the provided template without changing the idea-detail pointers on each slide.</li>
     <li>Upload as PDF only.</li>
   </ul>
-  <h3>Visual assets to prepare</h3>
+  <h3>Visual assets (ready in the repo)</h3>
+  <div class="tbl"><table>
+    <tr><th>Asset</th><th>Path</th><th>Use on</th></tr>
+    <tr><td>App logo</td><td><code>docs/brand/itantra-logo.png</code></td><td>Slide 1</td></tr>
+    <tr><td>Phone screens</td><td><code>docs/brand/screens/</code> (talk, alerts + SOS, metrics, settings, language picker, pairing)</td><td>Slide 3 strip</td></tr>
+    <tr><td>Feature screens</td><td><code>docs/showcase/images/01_alert_card.png</code> … <code>09_onboarding_credits.png</code>, <code>dashboard.png</code></td><td>Slides 3–5</td></tr>
+    <tr><td>Diagrams (PNG)</td><td><code>docs/showcase/images/diagram_*.png</code> (system block, sender, receiver, link fallback, deployment, latency)</td><td>Slides 2–3</td></tr>
+    <tr><td>Draft slides</td><td><code>docs/showcase/images/slide_00</code>–<code>slide_10</code></td><td>Starting point; cut to six</td></tr>
+    <tr><td>Demo video</td><td><code>docs/showcase/iTantra_explainer.mp4</code> + 8 clips</td><td>Link on slide 3 or 6</td></tr>
+  </table></div>
   <ul>
-    <li>App logo (docs/brand/itantra-logo.png in the repo).</li>
-    <li>Three phone screenshots: live transcript with partial caption, red ALERT band, metrics screen.</li>
-    <li>Block diagram (slide 3), one-line pipeline (slide 2), bandwidth bars (slide 2 or 4), risk table (slide 4).</li>
-    <li>Audience icons (slide 5): responders, fishing boat, village, field worker, hearing-impaired, crowd.</li>
+    <li>Still needed: audience icons (slide 5): responders, fishing boat, village, field worker, hearing-impaired, crowd.</li>
+    <li>Update the diagram PNGs if they predate the diagrams on this page (encryption, gateway, signed ALERT).</li>
   </ul>
   <p class="small">Diagrams on this page are Mermaid; paste the code into mermaid.live to export PNG/SVG for the slides.</p>
 </section>
