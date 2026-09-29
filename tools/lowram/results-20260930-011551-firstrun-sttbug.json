@@ -1,0 +1,346 @@
+{
+ "device": {
+  "model": "I2202",
+  "soc": "SM8250",
+  "android": "14",
+  "reserve_mb": 8192
+ },
+ "runs": [
+  {
+   "tag": "normal",
+   "mem_before": {
+    "MemTotal": 11586,
+    "MemAvailable": 6375,
+    "SwapTotal": 11264,
+    "SwapFree": 8325
+   },
+   "thermal_before": 0,
+   "pid_start": "9966",
+   "pss_after_work_mb": 2117,
+   "cpu_idle_pct_one_core": 0.5,
+   "pss_after_idle_mb": 2121,
+   "pid_end": "9966",
+   "app_survived": true,
+   "metrics": [
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/bn.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/bn.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/en.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/en.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/gu.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/gu.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "resource",
+     "idleCpuPercent": 1,
+     "pssKb": 693041
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/hi.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/hi.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/kn.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/kn.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/ml.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/ml.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "resource",
+     "idleCpuPercent": 1,
+     "pssKb": 692749
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/mr.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/mr.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/or.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/or.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/ta.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/ta.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/te.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/te.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "resource",
+     "idleCpuPercent": 0,
+     "pssKb": 692841
+    },
+    {
+     "event": "debug_speak",
+     "id": "8fc940bf-66aa-4668-a92b-753e8148df6d",
+     "text": "बाढ़ का पानी बढ़ रहा है, कृपया ऊँचे स्थान पर जाएँ।",
+     "lang": "hi",
+     "alert": false,
+     "ssml": false,
+     "segments": 1,
+     "engine": "mio",
+     "synthesisRtf": 1.5570388,
+     "synthMs": 6415,
+     "audioSeconds": 4.12,
+     "timeToFirstAudioMs": 3242,
+     "speechRate": 0.99999994,
+     "playbackMode": "smooth"
+    },
+    {
+     "event": "debug_speak_playback",
+     "id": "8fc940bf-66aa-4668-a92b-753e8148df6d",
+     "text": "बाढ़ का पानी बढ़ रहा है, कृपया ऊँचे स्थान पर जाएँ।",
+     "lang": "hi",
+     "engine": "mio",
+     "timeToFirstAudioMs": 3242,
+     "underrunCountDelta": 0,
+     "preRollMs": 1920,
+     "rebufferPauses": 0,
+     "ttsRtf": 1.3686329,
+     "speechRate": 0.99999994,
+     "playbackMode": "smooth"
+    },
+    {
+     "event": "resource",
+     "idleCpuPercent": 198,
+     "pssKb": 2135484
+    },
+    {
+     "event": "debug_speak",
+     "id": "7b3b896b-5337-4f91-a97e-275e7d392f01",
+     "text": "வெள்ளம் அதிகரிக்கிறது, உயரமான இடத்திற்குச் செல்லுங்கள்.",
+     "lang": "ta",
+     "alert": false,
+     "ssml": false,
+     "segments": 1,
+     "engine": "vits",
+     "synthesisRtf": 1.5158205,
+     "synthMs": 4635,
+     "audioSeconds": 3.05775,
+     "timeToFirstAudioMs": 5565,
+     "speechRate": 0.99999994,
+     "playbackMode": "smooth"
+    },
+    {
+     "event": "debug_speak_playback",
+     "id": "7b3b896b-5337-4f91-a97e-275e7d392f01",
+     "text": "வெள்ளம் அதிகரிக்கிறது, உயரமான இடத்திற்குச் செல்லுங்கள்.",
+     "lang": "ta",
+     "engine": "vits",
+     "timeToFirstAudioMs": 5565,
+     "underrunCountDelta": 0,
+     "preRollMs": 0,
+     "rebufferPauses": 1,
+     "ttsRtf": 1.3432469,
+     "speechRate": 0.99999994,
+     "playbackMode": "smooth"
+    },
+    {
+     "event": "debug_speak",
+     "id": "5970497a-57b3-410d-bf3c-0d29f154017d",
+     "text": "বন্যার জল বাড়ছে, উঁচু জায়গায় যান।",
+     "lang": "bn",
+     "alert": false,
+     "ssml": false,
+     "segments": 1,
+     "engine": "vits",
+     "synthesisRtf": 1.1494225,
+     "synthMs": 2301,
+     "audioSeconds": 2.001875,
+     "timeToFirstAudioMs": 4187,
+     "speechRate": 0.99999994,
+     "playbackMode": "smooth"
+    },
+    {
+     "event": "debug_speak_playback",
+     "id": "5970497a-57b3-410d-bf3c-0d29f154017d",
+     "text": "বন্যার জল বাড়ছে, উঁচু জায়গায় যান।",
+     "lang": "bn",
+     "engine": "vits",
+     "timeToFirstAudioMs": 4187,
+     "underrunCountDelta": 0,
+     "preRollMs": 1910,
+     "rebufferPauses": 0,
+     "ttsRtf": 1.3128927,
+     "speechRate": 0.99999994,
+     "playbackMode": "smooth"
+    },
+    {
+     "event": "debug_speak",
+     "id": "c4b58685-4a8c-42ef-849f-3e82c1ac2467",
+     "text": "Flood water is rising, please move to higher ground.",
+     "lang": "en",
+     "alert": false,
+     "ssml": false,
+     "segments": 1,
+     "engine": "mio",
+     "synthesisRtf": 1.1828947,
+     "synthMs": 2697,
+     "audioSeconds": 2.28,
+     "timeToFirstAudioMs": 2807,
+     "speechRate": 0.99999994,
+     "playbackMode": "smooth"
+    },
+    {
+     "event": "resource",
+     "idleCpuPercent": 179,
+     "pssKb": 2177657
+    },
+    {
+     "event": "debug_speak_playback",
+     "id": "c4b58685-4a8c-42ef-849f-3e82c1ac2467",
+     "text": "Flood water is rising, please move to higher ground.",
+     "lang": "en",
+     "engine": "mio",
+     "timeToFirstAudioMs": 2807,
+     "underrunCountDelta": 0,
+     "preRollMs": 1920,
+     "rebufferPauses": 0,
+     "ttsRtf": 1.336256,
+     "speechRate": 0.99999994,
+     "playbackMode": "smooth"
+    },
+    {
+     "event": "resource",
+     "idleCpuPercent": 0,
+     "pssKb": 2172316
+    }
+   ],
+   "lmk_kills": 0,
+   "mem_after": {
+    "MemTotal": 11586,
+    "MemAvailable": 5006,
+    "SwapTotal": 11264,
+    "SwapFree": 7923
+   },
+   "thermal_after": 0
+  },
+  {
+   "tag": "reserved_8192MB",
+   "mem_before": {
+    "MemTotal": 11586,
+    "MemAvailable": 311,
+    "SwapTotal": 11264,
+    "SwapFree": 1436
+   },
+   "thermal_before": 0,
+   "pid_start": "28423",
+   "pss_after_work_mb": null,
+   "cpu_idle_pct_one_core": null,
+   "pss_after_idle_mb": null,
+   "pid_end": null,
+   "app_survived": false,
+   "metrics": [
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/bn.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/bn.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "resource",
+     "idleCpuPercent": 0,
+     "pssKb": 664814
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/en.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/en.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "resource",
+     "idleCpuPercent": 0,
+     "pssKb": 664205
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/gu.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/gu.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/hi.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/hi.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/kn.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/kn.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "resource",
+     "idleCpuPercent": 0,
+     "pssKb": 664661
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/ml.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/ml.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/mr.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/mr.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/or.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/or.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "resource",
+     "idleCpuPercent": 1,
+     "pssKb": 664050
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/ta.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/ta.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "debug_stt_wav",
+     "path": "/sdcard/Android/data/org.itantra.app/files/lowram/te.wav",
+     "error": "wav_read_failed: /sdcard/Android/data/org.itantra.app/files/lowram/te.wav: open failed: ENOENT (No such file or directory)"
+    },
+    {
+     "event": "resource",
+     "idleCpuPercent": 0,
+     "pssKb": 664159
+    },
+    {
+     "event": "debug_hook_error",
+     "action": "org.itantra.DEBUG_SPEAK",
+     "reason": "TalkService not running"
+    }
+   ],
+   "lmk_kills": 391,
+   "mem_after": {
+    "MemTotal": 11586,
+    "MemAvailable": 601,
+    "SwapTotal": 11264,
+    "SwapFree": 9363
+   },
+   "thermal_after": 0,
+   "memhold_rss_mb": 8193,
+   "memhold_swap_mb": 1
+  }
+ ],
+ "memhold_log_tail": "held 8192 MB\nholding 8192 MB (pid 32471)",
+ "profile_restored_to": "AUTO"
+}

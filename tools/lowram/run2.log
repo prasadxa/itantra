@@ -1,0 +1,5 @@
+wrote /Users/apple/Project/BE_Project/sih/tools/lowram/results-20260930-013303.json
+== normal: MemTotal 11586 MB, MemAvailable 8384 MB -> 7208 MB, PSS work 2227 MB / idle 850 MB, idle CPU 0.27%, app survived True, LMK kill events 3, thermal 0->0, metric lines 29
+== available_3000MB: MemTotal 11586 MB, MemAvailable 3143 MB -> 3123 MB, PSS work 2218 MB / idle 850 MB, idle CPU 0.4%, app survived True, LMK kill events 18, thermal 0->0, metric lines 29
+== available_1800MB: MemTotal 11586 MB, MemAvailable 1724 MB -> 1132 MB, PSS work 1834 MB / idle 765 MB, idle CPU 0.33%, app survived True, LMK kill events 115, thermal 0->0, metric lines 29
+exit 0
