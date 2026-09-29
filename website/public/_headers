@@ -1,0 +1,15 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+/install-models.sh
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=300
+
+/install-models.ps1
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=300
+
+/captions/*
+  Content-Type: text/vtt; charset=utf-8

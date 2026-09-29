@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>iTantra · Offline Multilingual Walkie-Talkie</title>
+<meta name="description" content="iTantra (SIH 2026, ISRO PS 26173): speech becomes text on one phone, crosses Wi-Fi, Bluetooth or LoRa as a few dozen bytes, and is spoken aloud on the other phone in 10 Indian languages, fully offline.">
+<meta property="og:title" content="iTantra: offline multilingual voice walkie-talkie">
+<meta property="og:description" content="Speech → text → speech over links too thin for voice. 10 Indian languages, on-device AI, no tower, no internet.">
+<meta property="og:image" content="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/video/explainer-poster.jpg">
+<meta name="theme-color" content="#0E1013">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <div class="bar-in">
+    <a class="brand" href="#top"><img src="assets/logo.png" alt="" width="32" height="32"><span>iTantra</span></a>
+    <nav aria-label="Sections">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#screens">Screens</a>
+      <a href="#demo">Demo</a>
+      <a href="#results">Results</a>
+      <a href="#try">Try it</a>
+    </nav>
+    <a class="btn btn-sm" href="#download">Download</a>
+  </div>
+  <div class="tricolour" aria-hidden="true"><span></span><span></span><span></span></div>
+</header>
+
+<main id="main">
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="top">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow">Smart India Hackathon 2026 · ISRO · Problem Statement 26173</p>
+      <h1>Speak in your language.<br>Send a few dozen bytes.<br><em>Be heard on the other side.</em></h1>
+      <p class="lede">iTantra is an offline voice walkie-talkie for India. Speech becomes text on one phone, crosses Wi-Fi, Bluetooth LE or a LoRa radio bridge, and is spoken aloud on the other phone in 10 languages. No tower, no internet, no cloud.</p>
+
+      <div class="cta" id="download">
+        <a class="btn btn-primary" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/apk/iTantra-0.1.0-debug.apk" download>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16" /></svg>
+          Download APK <span class="btn-meta">63 MB</span>
+        </a>
+        <a class="btn btn-ghost" href="#demo">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+          Watch the 2-minute demo
+        </a>
+      </div>
+
+      <dl class="apk-facts">
+        <div><dt>Version</dt><dd>0.1.0 (debug build)</dd></div>
+        <div><dt>Needs</dt><dd>Android 8.0+, 64-bit ARM</dd></div>
+        <div><dt>Models</dt><dd>1.2 GB, loaded once <a href="#models">(how)</a></dd></div>
+        <div class="sha"><dt>SHA-256</dt><dd><code id="apk-sha">ad15d2d37ef5933a70f0828266e03e155f68f2bb0ab3b8e559bfcdea2b06f5e0</code><button type="button" class="copy" data-copy="#apk-sha">Copy</button></dd></div>
+      </dl>
+    </div>
+
+    <figure class="phone" aria-label="iTantra talk screen receiving a Hindi flood alert">
+      <img src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/01_alert_card.jpg" width="540" height="1200" alt="iTantra talk screen: a red Hindi flood warning card, Talk, Call and Alert buttons, quick replies, SOS and the push-to-talk button">
+      <figcaption>A flood alert from the control room, spoken aloud at full volume on arrival.</figcaption>
+    </figure>
+  </div>
+
+  <div class="wrap">
+    <ul class="langs" aria-label="Supported languages">
+      <li lang="hi">हिन्दी</li><li lang="bn">বাংলা</li><li lang="mr">मराठी</li><li lang="te">తెలుగు</li><li lang="ta">தமிழ்</li>
+      <li lang="gu">ગુજરાતી</li><li lang="kn">ಕನ್ನಡ</li><li lang="ml">മലയാളം</li><li lang="or">ଓଡ଼ିଆ</li><li lang="en">English</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ PROBLEM ============ -->
+<section id="problem">
+  <div class="wrap">
+    <p class="eyebrow">The problem</p>
+    <h2>Voice is heavy. The links that survive a disaster are thin.</h2>
+    <div class="two">
+      <div class="prose">
+        <p>When towers fail after a flood or cyclone, what is left is Bluetooth, a crowded Wi-Fi hotspot, or a long-range radio that carries a few hundred bits per second. A spoken sentence needs 256 kbps as raw audio and still about 12 kbps with a good voice codec.</p>
+        <p>iTantra sends the <strong>meaning</strong> instead of the sound. It turns speech into text on the phone, sends the text, and speaks it again on arrival. The listener still hears a voice in their own language, so people who cannot read are included.</p>
+        <p class="note">Bars use a log scale and assume a 3-second sentence. iTantra frame sizes are medians from a unit test over 310 FLEURS sentences, before encryption and link headers.</p>
+      </div>
+      <div class="bars" role="img" aria-label="Bits per second needed for one spoken sentence, log scale">
+        <div class="bar"><span class="k">Raw audio, 16 kHz</span><span class="t"><i style="--w:98%"></i></span><span class="v">256 kbps</span></div>
+        <div class="bar"><span class="k">Opus voice codec</span><span class="t"><i style="--w:74%"></i></span><span class="v">12 kbps</span></div>
+        <div class="bar"><span class="k">Codec2, robotic</span><span class="t"><i style="--w:56%"></i></span><span class="v">1.2 kbps</span></div>
+        <div class="bar hi"><span class="k">iTantra, JSON (524 B)</span><span class="t"><i style="--w:57%"></i></span><span class="v">1.4 kbps</span></div>
+        <div class="bar hi"><span class="k">iTantra, binary (287 B)</span><span class="t"><i style="--w:52%"></i></span><span class="v">770 bps</span></div>
+        <div class="bar hi best"><span class="k">iTantra, binary + dictionary (62 B)</span><span class="t"><i style="--w:40%"></i></span><span class="v">165 bps</span></div>
+        <div class="bar ref"><span class="k">LoRa at SF12, slowest</span><span class="t"><i style="--w:44%"></i></span><span class="v">≈250 bps</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW ============ -->
+<section id="how">
+  <div class="wrap">
+    <p class="eyebrow">How it works</p>
+    <h2>Five steps from mouth to ear</h2>
+    <ol class="steps">
+      <li><b>Speak</b><span>Hold the talk button. The phone listens for a pause of half a second to know a sentence has ended.</span></li>
+      <li><b>Recognise</b><span>SraVaani, an open speech model from IISc, turns the sentence into text on the phone, about 20× faster than real time.</span></li>
+      <li><b>Pack</b><span>The text is compressed with a per-language dictionary into a small binary frame, encrypted and signed when phones are paired.</span></li>
+      <li><b>Send</b><span>The frame goes over Wi-Fi, then Wi-Fi Direct, then Bluetooth LE, whichever works. A LoRa bridge extends it to kilometres.</span></li>
+      <li><b>Speak again</b><span>The other phone voices the text with an Indian TTS model. Alerts jump the queue and play at full volume.</span></li>
+    </ol>
+
+    <div class="frame" aria-label="Layout of one binary message frame">
+      <p class="frame-title">One message on the wire <span>binary Msg frame, bytes</span></p>
+      <div class="frame-row">
+        <span style="--b:1">ver·type<small>1</small></span>
+        <span style="--b:1">flags<small>1</small></span>
+        <span style="--b:4">message id<small>4</small></span>
+        <span style="--b:2">sender<small>2</small></span>
+        <span style="--b:1">lang·emo<small>1</small></span>
+        <span style="--b:1">TTL<small>1</small></span>
+        <span style="--b:6">timestamp<small>6</small></span>
+        <span style="--b:1">codec<small>1</small></span>
+        <span class="payload" style="--b:12">compressed text<small>≈40–75</small></span>
+      </div>
+      <p class="frame-foot"><span class="opt">+ 11 B location on SOS</span><span class="opt">+ 64 B Ed25519 signature on ALERT</span><span class="opt">+ 20 B nonce and tag when encrypted</span></p>
+    </div>
+
+    <h3 class="sub">System diagrams</h3>
+    <div class="diagrams">
+      <a class="shot wide" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/diagrams/diagram_system_block.png" data-lightbox>
+        <img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/diagram_system_block.jpg" width="960" height="850" alt="System block diagram: transmit path, transport manager and receive path inside one phone">
+        <span>System block diagram: one phone, both directions</span></a>
+      <a class="shot wide" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/diagrams/diagram_full_deployment.png" data-lightbox>
+        <img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/diagram_full_deployment.jpg" width="960" height="540" alt="Full deployment: phones, LoRa relay nodes and a control-room gateway">
+        <span>Full deployment: phones, LoRa relays, control room</span></a>
+      <a class="shot wide" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/diagrams/diagram_sender_flow.png" data-lightbox>
+        <img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/diagram_sender_flow.jpg" width="960" height="750" alt="Sender flowchart for push-to-talk">
+        <span>Sender flow</span></a>
+      <a class="shot wide" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/diagrams/diagram_receiver_flow.png" data-lightbox>
+        <img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/diagram_receiver_flow.jpg" width="960" height="750" alt="Receiver flowchart">
+        <span>Receiver flow</span></a>
+      <a class="shot wide" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/diagrams/diagram_link_fallback.png" data-lightbox>
+        <img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/diagram_link_fallback.jpg" width="960" height="540" alt="Link selection and fallback state diagram">
+        <span>Link fallback: Wi-Fi → Wi-Fi Direct → BLE → LoRa</span></a>
+      <a class="shot wide" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/diagrams/diagram_latency_sequence.png" data-lightbox>
+        <img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/diagram_latency_sequence.jpg" width="960" height="540" alt="Sequence diagram from sentence spoken to audio heard on the other phone">
+        <span>Latency sequence: said → heard</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section id="features">
+  <div class="wrap">
+    <p class="eyebrow">What the prototype does today</p>
+    <h2>Features, with honest status</h2>
+    <p class="lede">Each item was checked against the source code on 29 Sep 2026. <span class="pill built">Built</span> works in the app now. <span class="pill part">Partial</span> exists with gaps. <span class="pill plan">Planned</span> is not started.</p>
+
+    <div class="feat-grid">
+      <article class="feat"><span class="pill built">Built</span><h3>Push-to-talk</h3><p>Hold to speak; the other phone sees you have the floor and holds its mic. Also on a Quick Settings tile.</p></article>
+      <article class="feat"><span class="pill built">Built</span><h3>Call mode</h3><p>Hands-free both ways with echo cancelling and noise suppression. Speakers take turns: the mic pauses while the phone talks.</p></article>
+      <article class="feat"><span class="pill built">Built</span><h3>10 languages in and out</h3><p>Hindi, Bengali, Marathi, Telugu, Tamil, Gujarati, Kannada, Malayalam, Odia and English, for recognition and speech. The app UI is translated too.</p></article>
+      <article class="feat"><span class="pill built">Built</span><h3>Alerts that cannot be missed</h3><p>ALERT messages use the alarm stream at full volume with exclusive audio focus and a vibration pattern.</p></article>
+      <article class="feat"><span class="pill built">Built</span><h3>SOS with location</h3><p>One tap sends one of 6 templates (rescue, medical, fire, flood, trapped, safe) with GPS/NavIC coordinates, read aloud on arrival.</p></article>
+      <article class="feat"><span class="pill built">Built</span><h3>Live captions</h3><p>Partial text streams to the listener every half second while the speaker is still talking.</p></article>
+      <article class="feat"><span class="pill built">Built</span><h3>Three-link fallback</h3><p>Wi-Fi LAN first; Wi-Fi Direct after 4 s and Bluetooth LE after 8 s if there is no Wi-Fi. Same frames on every link.</p></article>
+      <article class="feat"><span class="pill built">Built</span><h3>Compact binary frames</h3><p>Negotiated between phones on connect. Median 62 B per sentence in a unit test, against 524 B for JSON.</p></article>
+      <article class="feat"><span class="pill built">Built</span><h3>LITE profile for smaller phones</h3><p>Chosen automatically under 6 GB RAM: 2 threads, no live captions, voice engines unload after 60 s idle.</p></article>
+      <article class="feat"><span class="pill built">Built</span><h3>Gapless playback</h3><p>A producer/consumer audio queue with adaptive pre-roll. 0 underruns across 5 languages on a Snapdragon 870.</p></article>
+      <article class="feat"><span class="pill built">Built</span><h3>Metrics, history, replay</h3><p>Latency p50/p95, real-time factor, CPU, memory and thermal state on screen; searchable history; replay the last 20 voice notes.</p></article>
+      <article class="feat"><span class="pill built">Built</span><h3>Control-room dashboard</h3><p>A Python gateway on a laptop joins the network, logs every message, shows peers and latency, broadcasts alerts and reads CAP 1.2 files.</p></article>
+      <article class="feat"><span class="pill part">Partial</span><h3>Encryption and signed alerts</h3><p>X25519 pairing by QR code, ChaCha20-Poly1305, Ed25519-signed ALERTs. Covers binary mode after pairing; captions and the JSON path are not covered yet.</p></article>
+      <article class="feat"><span class="pill part">Partial</span><h3>ESP32 LoRa bridge</h3><p>Firmware for ESP32-S3 + SX1262 at 865 MHz compiles (RAM 9.3%, flash 17.2%). Not yet flashed or range-tested.</p></article>
+      <article class="feat"><span class="pill part">Partial</span><h3>Mesh relay</h3><p>The bridge firmware relays with a hop limit and duplicate filter. Phones do not relay yet.</p></article>
+      <article class="feat"><span class="pill plan">Planned</span><h3>Translation on device</h3><p>A Hindi speaker heard in Tamil, using IndicTrans2. Also planned: small VITS voices for hi/gu/or/en, sender-voice rendering, wake word.</p></article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SCREENS ============ -->
+<section id="screens">
+  <div class="wrap">
+    <p class="eyebrow">Real screenshots</p>
+    <h2>The app on a vivo I2202 (Snapdragon 870)</h2>
+    <p class="lede">Captured from the running prototype. Tap any screen to see it full size.</p>
+    <div class="gallery">
+      <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/01_alert_card.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/01_alert_card.jpg" width="540" height="1200" alt="Talk screen with a Hindi flood alert"><span>Talk screen with a flood alert</span></a>
+      <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/03_sos_sheet.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/03_sos_sheet.jpg" width="540" height="1200" alt="SOS sheet with location and six templates"><span>SOS: location and one-tap templates</span></a>
+      <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/02_sos_sent.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/02_sos_sent.jpg" width="540" height="1200" alt="SOS request delivered"><span>SOS delivered</span></a>
+      <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/07_history.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/07_history.jpg" width="540" height="1200" alt="History with Tamil and Hindi messages"><span>History in Tamil and Hindi</span></a>
+      <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/07_metrics.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/07_metrics.jpg" width="540" height="1200" alt="Metrics screen with profile, thermal state, memory and latency chart"><span>Metrics: latency, memory, thermal</span></a>
+      <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/08_hindi_ui.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/08_hindi_ui.jpg" width="540" height="1200" alt="The app interface in Hindi"><span>Whole interface in Hindi</span></a>
+      <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/09_onboarding_credits.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/09_onboarding_credits.jpg" width="540" height="1200" alt="Onboarding page crediting Indian open AI research"><span>Built on Indian open AI</span></a>
+      <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/pairing.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/pairing.jpg" width="540" height="1200" alt="QR code pairing screen"><span>QR pairing for encrypted links</span></a>
+      <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/04_settings_theme.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/04_settings_theme.jpg" width="540" height="1200" alt="Settings screen"><span>Settings: text size, theme, speech rate</span></a>
+      <a class="shot" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/06_theme_light.png" data-lightbox><img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/06_theme_light.jpg" width="540" height="1200" alt="The app in light theme"><span>Light theme</span></a>
+    </div>
+
+    <a class="shot dash" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/screens/dashboard.png" data-lightbox>
+      <img loading="lazy" src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/dashboard.jpg" width="960" height="540" alt="Control-room gateway dashboard with live feed, status, per-language counts, broadcast and CAP ingestion">
+      <span>Control-room gateway dashboard, running against the phone: live feed, latency, per-language counts, broadcast and CAP alert ingestion</span>
+    </a>
+  </div>
+</section>
+
+<!-- ============ DEMO ============ -->
+<section id="demo">
+  <div class="wrap">
+    <p class="eyebrow">See it working</p>
+    <h2>Demo video and phone recordings</h2>
+    <figure class="explainer">
+      <video controls preload="none" playsinline poster="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/video/explainer-poster.jpg" width="1920" height="1080">
+        <source src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/video/explainer.mp4" type="video/mp4">
+        <track kind="captions" src="captions/explainer.vtt" srclang="en" label="English" default>
+      </video>
+      <figcaption>Narrated walkthrough of the whole system, 1 min 58 s, with English captions.</figcaption>
+    </figure>
+
+    <div class="clips">
+      <figure><video controls preload="none" playsinline poster="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/02_receive_voice.jpg" width="576" height="1280"><source src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/02_receive_voice.mp4" type="video/mp4"></video>
+        <figcaption><b>Receive and speak</b> Messages in Hindi, Tamil and English arrive and are spoken aloud. 25 s</figcaption></figure>
+      <figure><video controls preload="none" playsinline poster="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/03_alert.jpg" width="576" height="1280"><source src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/03_alert.mp4" type="video/mp4"></video>
+        <figcaption><b>Flood alert</b> A Hindi ALERT arrives, flashes red and plays at alarm volume. 16 s</figcaption></figure>
+      <figure><video controls preload="none" playsinline poster="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/05_sos.jpg" width="576" height="1280"><source src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/05_sos.mp4" type="video/mp4"></video>
+        <figcaption><b>SOS</b> One tap sends "बचाव चाहिए" (need rescue) with GPS coordinates. 18 s</figcaption></figure>
+      <figure><video controls preload="none" playsinline poster="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/04_speak_to_text.jpg" width="576" height="1280"><source src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/04_speak_to_text.mp4" type="video/mp4"></video>
+        <figcaption><b>Speech to text</b> Hindi and Tamil test recordings through the real on-device recogniser (audio injected, not live mic). 20 s</figcaption></figure>
+      <figure><video controls preload="none" playsinline poster="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/01_onboarding.jpg" width="576" height="1280"><source src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/01_onboarding.mp4" type="video/mp4"></video>
+        <figcaption><b>First run</b> Greeting in every script, language picker, offline promise, credits. 30 s</figcaption></figure>
+      <figure><video controls preload="none" playsinline poster="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/07_metrics_history.jpg" width="576" height="1280"><source src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/07_metrics_history.mp4" type="video/mp4"></video>
+        <figcaption><b>Metrics and history</b> CPU, RAM, latency histogram, real-time factor, searchable log. 24 s</figcaption></figure>
+      <figure><video controls preload="none" playsinline poster="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/08_hindi_ui.jpg" width="576" height="1280"><source src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/08_hindi_ui.mp4" type="video/mp4"></video>
+        <figcaption><b>Hindi interface</b> Switching the whole app to हिन्दी and back. 38 s</figcaption></figure>
+      <figure><video controls preload="none" playsinline poster="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/06_settings_text_size.jpg" width="576" height="1280"><source src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/06_settings_text_size.mp4" type="video/mp4"></video>
+        <figcaption><b>Settings</b> Text size S to XL, dark and light theme, speech speed 0.8× to 1.3×. 38 s</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RESULTS ============ -->
+<section id="results">
+  <div class="wrap">
+    <p class="eyebrow">Measured on real phones</p>
+    <h2>Prototype numbers</h2>
+    <p class="lede">From the app's own logging on a Snapdragon 870 (vivo I2202) and a Snapdragon 8 Gen 3 (OnePlus 12), unless the note says otherwise.</p>
+
+    <div class="stats">
+      <div class="stat"><span class="n">0.05</span><span class="l">speech-recognition real-time factor, about 20× faster than speech</span></div>
+      <div class="stat"><span class="n">41 ms</span><span class="l">message to acknowledgement over Wi-Fi</span></div>
+      <div class="stat"><span class="n">0.3–1.6%</span><span class="l">idle CPU in push-to-talk mode</span></div>
+      <div class="stat"><span class="n">688 MB</span><span class="l">memory in the LITE profile when idle</span></div>
+    </div>
+
+    <div class="tbl"><table>
+      <thead><tr><th>Metric</th><th class="num">Value</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>Speech-recognition word error rate</td><td class="num">5.9%</td><td>10 FLEURS clips, 1 per language. Preliminary; a 30-clip-per-language run is next</td></tr>
+        <tr><td>Speech end → text ready</td><td class="num">0.4–0.9 s</td><td>Snapdragon 870</td></tr>
+        <tr><td>Text-to-speech first audio</td><td class="num">0.6–0.95 s</td><td>Indic-Mio (hi/gu/en); VITS languages start faster</td></tr>
+        <tr><td>Audio underruns during playback</td><td class="num">0</td><td>hi, en, gu, ta, bn on the Snapdragon 870</td></tr>
+        <tr><td>Alert on the alarm stream</td><td class="num">16/16</td><td>Full volume with exclusive audio focus</td></tr>
+        <tr><td>End to end, said → heard</td><td class="num">≈1.5–2.5 s</td><td>Estimate from one phone in both roles with a peer simulator</td></tr>
+        <tr><td>Median bytes per sentence</td><td class="num">62 B</td><td>JVM unit test, 310 sentences; the binary format itself runs in the app</td></tr>
+        <tr><td>APK size</td><td class="num">60 MB</td><td>Native runtimes; models are installed separately</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">A hot phone can run 2 to 4 times slower. The Metrics screen shows thermal state beside every number, so results can be compared fairly.</p>
+  </div>
+</section>
+
+<!-- ============ STACK ============ -->
+<section id="stack">
+  <div class="wrap">
+    <p class="eyebrow">Open source, end to end</p>
+    <h2>Models and technology</h2>
+    <div class="models">
+      <article><h3>SraVaani-1.0</h3><p class="who">ARTPARK, IISc Bengaluru · MIT</p><p>Speech recognition for all 10 languages. FastConformer, int8 ONNX, 487 MB.</p></article>
+      <article><h3>Indic-Mio</h3><p class="who">SPRING Lab, IIT Madras · Apache-2.0</p><p>Expressive speech for hi, gu, or, en. 0.6B, Q4 GGUF via llama.cpp, 392 MB + 194 MB codec.</p></article>
+      <article><h3>VITS Rasa</h3><p class="who">AI4Bharat, IIT Madras · CC-BY-4.0</p><p>Fast speech for bn, kn, ml, mr, ta, te with 14 emotion styles. 123 MB.</p></article>
+      <article><h3>Silero VAD</h3><p class="who">Silero · MIT</p><p>Detects when someone is speaking and when a sentence ends. 0.6 MB.</p></article>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th>Layer</th><th>Technology</th></tr></thead>
+      <tbody>
+        <tr><td>App</td><td>Kotlin 2.4, Jetpack Compose, Material 3, foreground service; Android 8.0+ (API 26), arm64</td></tr>
+        <tr><td>Speech runtime</td><td>sherpa-onnx 1.13.8 (ONNX Runtime), llama.cpp / ggml with ARM dot-product kernels, C++17 over JNI</td></tr>
+        <tr><td>Text</td><td>Indic number, date, currency and coordinate normaliser; SSML subset; alert-keyword style detection</td></tr>
+        <tr><td>Transport</td><td>TCP over Wi-Fi with mDNS discovery, Wi-Fi Direct, BLE GATT (Nordic UART); binary frames with per-script dictionaries</td></tr>
+        <tr><td>Security</td><td>BouncyCastle: X25519, HKDF-SHA256, ChaCha20-Poly1305, Ed25519; Android Keystore; QR pairing with ZXing and CameraX</td></tr>
+        <tr><td>Hardware</td><td>ESP32-S3 + SX1262 LoRa (865–867 MHz licence-free band), NimBLE, RadioLib; about ₹1,900–3,200 per node</td></tr>
+        <tr><td>Control room</td><td>Python gateway, SQLite log, live dashboard with server-sent events, CAP 1.2 alert parser</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ============ TRY ============ -->
+<section id="try">
+  <div class="wrap">
+    <p class="eyebrow">For reviewers</p>
+    <h2>Install and test the prototype</h2>
+    <p class="lede">About 15 minutes the first time. You need an Android phone (8.0 or newer, 64-bit, 6 GB RAM or more recommended, about 2 GB free) and, for the speech models, a computer with a USB cable.</p>
+
+    <ol class="guide">
+      <li>
+        <h3>Install the app</h3>
+        <p>On the phone, open this page and tap <a href="#download">Download APK</a>. Open the file and allow <em>Install unknown apps</em> for your browser when Android asks. This is a debug build signed with a development key, so Play Protect may warn you; choose <em>Install anyway</em>.</p>
+        <p>Open iTantra once and grant the microphone and notification permissions.</p>
+      </li>
+      <li id="models">
+        <h3>Load the speech models (1.2 GB, once)</h3>
+        <p>The models are too large to put inside the APK, so they are copied to the phone over USB. Turn on <em>Developer options → USB debugging</em>, connect the phone, and accept the prompt. You also need <a href="https://developer.android.com/tools/releases/platform-tools" rel="noopener">Android platform-tools (adb)</a>.</p>
+        <div class="tabs" role="tablist" aria-label="Operating system">
+          <button type="button" role="tab" id="tab-unix" aria-selected="true" aria-controls="panel-unix">macOS / Linux</button>
+          <button type="button" role="tab" id="tab-win" aria-selected="false" aria-controls="panel-win" tabindex="-1">Windows</button>
+          <button type="button" role="tab" id="tab-manual" aria-selected="false" aria-controls="panel-manual" tabindex="-1">Manual</button>
+        </div>
+        <div class="panel" role="tabpanel" id="panel-unix" aria-labelledby="tab-unix">
+          <pre><code id="cmd-unix">curl -fsSL https://itantra-106.pages.dev/install-models.sh -o install-models.sh
+bash install-models.sh</code></pre>
+          <button type="button" class="copy" data-copy="#cmd-unix">Copy</button>
+        </div>
+        <div class="panel" role="tabpanel" id="panel-win" aria-labelledby="tab-win" hidden>
+          <pre><code id="cmd-win">curl.exe -fsSL https://itantra-106.pages.dev/install-models.ps1 -o install-models.ps1
+powershell -ExecutionPolicy Bypass -File install-models.ps1</code></pre>
+          <button type="button" class="copy" data-copy="#cmd-win">Copy</button>
+        </div>
+        <div class="panel" role="tabpanel" id="panel-manual" aria-labelledby="tab-manual" hidden>
+          <p>The script reads <a href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/models/v1/manifest.json">the model list</a>, downloads each file from <code>…/models/v1/&lt;path&gt;</code>, joins the files that are split into <code>.part-aa</code>, <code>.part-ab</code>… pieces, checks the SHA-256 and runs:</p>
+          <pre><code id="cmd-manual">adb shell mkdir -p /sdcard/Android/data/org.itantra.app/files/models
+adb push vad stt tts /sdcard/Android/data/org.itantra.app/files/models/</code></pre>
+          <button type="button" class="copy" data-copy="#cmd-manual">Copy</button>
+        </div>
+        <p class="note">The scripts check every file's checksum and skip files already downloaded, so you can safely run them again. Read them first: <a href="install-models.sh">install-models.sh</a> · <a href="install-models.ps1">install-models.ps1</a>.</p>
+      </li>
+      <li>
+        <h3>Check the models</h3>
+        <p>Open iTantra → <em>Settings → Models</em>. Every row should show as present. Without the models the app still opens and you can explore every screen, but it cannot recognise or speak.</p>
+      </li>
+      <li>
+        <h3>Talk between two phones</h3>
+        <p>Install on two phones and put both on the same Wi-Fi (a phone hotspot works). They find each other automatically within a few seconds; the link type shows at the top. With no Wi-Fi they try Wi-Fi Direct, then Bluetooth.</p>
+        <p>Only one phone? Run the control-room gateway from the <a href="https://github.com/prasadxa/itantra" rel="noopener">source code</a> (<code>tools/gateway</code>) on a laptop on the same Wi-Fi and send messages from its dashboard.</p>
+      </li>
+      <li>
+        <h3>Things to try</h3>
+        <ul class="try-list">
+          <li>Pick your language, hold the orange button, say a sentence, release. Watch the text appear and the other phone speak it.</li>
+          <li>Turn on <em>Alert</em> and send "flood water is rising". The other phone plays it on the alarm channel at full volume and vibrates.</li>
+          <li>Tap <em>SOS</em> and choose a template. The location is spoken on the other phone.</li>
+          <li>Switch to <em>Call</em> for hands-free conversation.</li>
+          <li>Open <em>Metrics</em> to see latency, real-time factor, memory and thermal state.</li>
+        </ul>
+      </li>
+    </ol>
+
+    <div class="known">
+      <h3>Known limitations</h3>
+      <ul>
+        <li>Debug build (0.1.0): expect rough edges. Tested on Snapdragon 870 and 8 Gen 3 phones.</li>
+        <li>The first message after opening can take a few seconds while a voice model loads.</li>
+        <li>Recognition accuracy drops in noisy places and with mixed languages.</li>
+        <li>The LoRa bridge and phone-to-phone relaying are not part of this build's test.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ROADMAP ============ -->
+<section id="roadmap">
+  <div class="wrap">
+    <p class="eyebrow">What comes next</p>
+    <h2>Roadmap</h2>
+    <ol class="road">
+      <li class="done"><b>Working prototype</b><span>10-language speech in and out, alerts, SOS, three links, binary frames, encryption, metrics, gateway, demo video.</span></li>
+      <li class="now"><b>Idea round</b><span>30-clip accuracy per language, speech intelligibility test, end-to-end latency p50/p95, a 4 GB phone test.</span></li>
+      <li><b>Before the finale</b><span>Small fast voices for hi/gu/or/en, smaller recogniser for low-end phones, LoRa bridge on real hardware, two-phone field test.</span></li>
+      <li><b>Finale</b><span>Live multi-hop LoRa demo in two languages, phone relaying, place names for SOS, listener study.</span></li>
+      <li><b>After</b><span>On-device translation, the sender's own voice, live NDMA SACHET alerts, pilot with a district disaster team.</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ REFERENCES ============ -->
+<section id="refs">
+  <div class="wrap">
+    <p class="eyebrow">Credits and references</p>
+    <h2>Built on Indian open AI research</h2>
+    <div class="refs">
+      <ul>
+        <li><a href="https://huggingface.co/ARTPARK-IISc/SraVaani-1.0" rel="noopener">SraVaani-1.0</a>, ARTPARK-IISc</li>
+        <li><a href="https://huggingface.co/SPRINGLab/Indic-Mio" rel="noopener">Indic-Mio</a>, SPRING Lab, IIT Madras</li>
+        <li><a href="https://huggingface.co/ai4bharat/vits_rasa_13" rel="noopener">VITS Rasa 13</a>, AI4Bharat</li>
+        <li><a href="https://github.com/snakers4/silero-vad" rel="noopener">Silero VAD</a></li>
+        <li><a href="https://huggingface.co/datasets/google/fleurs" rel="noopener">Google FLEURS</a> (evaluation)</li>
+      </ul>
+      <ul>
+        <li><a href="https://github.com/k2-fsa/sherpa-onnx" rel="noopener">sherpa-onnx</a></li>
+        <li><a href="https://github.com/ggml-org/llama.cpp" rel="noopener">llama.cpp / ggml</a></li>
+        <li><a href="https://github.com/mmnga/mio-tts-cpp" rel="noopener">mio-tts-cpp</a></li>
+        <li><a href="https://www.bouncycastle.org/" rel="noopener">Bouncy Castle</a></li>
+        <li><a href="https://github.com/jgromes/RadioLib" rel="noopener">RadioLib</a></li>
+      </ul>
+      <ul>
+        <li><a href="https://docs.oasis-open.org/emergency/cap/v1.2/CAP-v1.2.html" rel="noopener">OASIS CAP 1.2</a></li>
+        <li><a href="https://sachet.ndma.gov.in/" rel="noopener">NDMA SACHET</a></li>
+        <li><a href="https://github.com/drowe67/codec2" rel="noopener">Codec2</a> (bitrate baseline)</li>
+        <li><a href="https://meshtastic.org/" rel="noopener">Meshtastic</a> (LoRa mesh reference)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="foot-brand"><img src="assets/logo.png" alt="" width="40" height="40"><div><b>iTantra</b><span>Indian multilingual TTS &amp; STT aided neural transceiver</span></div></div>
+    <nav aria-label="Footer">
+      <a href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/apk/iTantra-0.1.0-debug.apk" download>Download APK</a>
+      <a href="#models">Model installer</a>
+      <a href="https://github.com/prasadxa/itantra" rel="noopener">Source code</a>
+      <a href="#demo">Demo video</a>
+    </nav>
+    <p class="small">SIH 2026 · ISRO · PS 26173 · Software · Smart Automation. Model licences: MIT, Apache-2.0, CC-BY-4.0.</p>
+  </div>
+</footer>
+
+<dialog id="lightbox" aria-label="Enlarged image">
+  <button type="button" class="lb-close" aria-label="Close">×</button>
+  <img alt="">
+  <p class="lb-cap"></p>
+</dialog>
+
+<script src="main.js" defer></script>
+</body>
+</html>

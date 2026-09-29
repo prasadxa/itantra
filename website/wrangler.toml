@@ -1,0 +1,7 @@
+# Cloudflare Pages project for the iTantra reviewer site.
+# Deploy:  wrangler pages deploy        (run from this folder)
+# Heavy files (APK, screenshots, videos, model pack) live in the R2 bucket below and are
+# uploaded with scripts/upload-assets.sh; the page links to them by their public r2.dev URL.
+name = "itantra"
+pages_build_output_dir = "public"
+compatibility_date = "2026-09-29"

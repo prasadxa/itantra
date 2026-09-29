@@ -19,3 +19,8 @@ __pycache__/
 tools/gateway/data/
 *.db
 .pytest_cache/
+
+# reviewer website
+website/.r2-staging/
+website/.wrangler/
+.wrangler/
