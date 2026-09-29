@@ -11,6 +11,7 @@ import org.itantra.core.Lang
 import org.itantra.core.ModelPaths
 import org.itantra.core.TtsEngine
 import org.itantra.core.TtsSegment
+import org.itantra.tts.dsp.Fade
 import org.itantra.tts.text.ClauseSplitter
 
 /**
@@ -91,7 +92,27 @@ class VitsTtsEngine(private val paths: ModelPaths, private val numThreads: Int) 
         if (clauses.size <= 1) {
             engine.generateWithConfigAndCallback(segment.text, config, callback)
         } else {
-            for (clause in clauses) engine.generateWithConfigAndCallback(clause, config, callback)
+            // Each clause is rendered independently (a separate generateWithConfigAndCallback
+            // call), so the join between clauses is a phase/amplitude discontinuity, same as a
+            // TtsSegment boundary in SpeechOutput - a short fade-in on each clause's first chunk
+            // smooths it into an inaudible ramp instead of a click (see Fade's doc).
+            val sr = sampleRate
+            for (clause in clauses) {
+                var firstChunk = true
+                val clauseCallback = object : (FloatArray) -> Int {
+                    override fun invoke(chunk: FloatArray): Int {
+                        val toEmit = if (firstChunk) {
+                            firstChunk = false
+                            Fade.fadeIn(chunk, CLAUSE_FADE_MS, sr)
+                        } else {
+                            chunk
+                        }
+                        onChunk(toEmit)
+                        return 1
+                    }
+                }
+                engine.generateWithConfigAndCallback(clause, config, clauseCallback)
+            }
         }
     }
 
@@ -109,6 +130,9 @@ class VitsTtsEngine(private val paths: ModelPaths, private val numThreads: Int) 
 
     companion object {
         const val SAMPLE_RATE = 22050
+
+        /** Fade-in length applied to each clause's first chunk (5-10ms range); see the [synthesize] doc. */
+        private const val CLAUSE_FADE_MS = 8
 
         /** Style/emotion ids from `ai4bharat/vits_rasa_13`'s speaker-style table. */
         private fun styleId(emotion: Emotion): Int = when (emotion) {

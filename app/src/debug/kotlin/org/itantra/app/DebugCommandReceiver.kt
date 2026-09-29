@@ -402,12 +402,28 @@ class DebugCommandReceiver : BroadcastReceiver() {
             return
         }
         val t0 = System.currentTimeMillis()
+        var timeToFirstAudioMs: Long? = null
+        // SpeechOutput's own playback metrics (underrun/pre-roll/rebuffer counters - see item 4 of
+        // the producer/consumer rework) aren't part of the small SpeechOutputPort contract this
+        // hook otherwise talks through, so they're collected via SpeechOutput's own id-keyed
+        // registry instead (see SpeechOutput.observeMetricsOnce's doc); must be registered before
+        // enqueue() so it can't miss a fast-finishing (e.g. very short/cached) message.
+        org.itantra.tts.output.SpeechOutput.observeMetricsOnce(message.id) { playbackMetrics ->
+            Metrics.log(
+                "event" to "debug_speak_playback", "id" to playbackMetrics.id, "text" to text, "lang" to lang.code,
+                "engine" to engineUsed, "timeToFirstAudioMs" to timeToFirstAudioMs,
+                "underrunCountDelta" to playbackMetrics.underrunCountDelta,
+                "preRollMs" to playbackMetrics.preRollMs,
+                "rebufferPauses" to playbackMetrics.rebufferPauses,
+            )
+        }
         speechOutput.enqueue(message.id, plan, phoneMode = false) { id, playStartedEpochMs ->
+            timeToFirstAudioMs = playStartedEpochMs - t0
             Metrics.log(
                 "event" to "debug_speak", "id" to id, "text" to text, "lang" to lang.code,
                 "alert" to alert, "ssml" to ssml, "segments" to plan.segments.size,
                 "engine" to engineUsed, "synthesisRtf" to rtf, "synthMs" to synthMs,
-                "audioSeconds" to audioSeconds, "timeToFirstAudioMs" to (playStartedEpochMs - t0),
+                "audioSeconds" to audioSeconds, "timeToFirstAudioMs" to timeToFirstAudioMs,
             )
         }
     }
