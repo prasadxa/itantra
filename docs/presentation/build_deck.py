@@ -279,7 +279,7 @@ label(s, 0.45, 1.3, 8, "Analysis of the feasibility of the idea", size=14)
 text(s, 5.1, 1.34, 7.8, 0.25, [[("Measured in the running prototype (in-app logging)", {"size": 10.5, "color": MUTED, "italic": True})]], align=PP_ALIGN.RIGHT)
 tiles = [("zap", "20×", "faster than speech", "STT real-time factor 0.05"),
          ("clock", "0.4–0.9 s", "speech end → text ready", "Snapdragon 870"),
-         ("memory", "688 MB", "app RAM, LITE profile", "LITE forced on test phone"),
+         ("memory", "688 MB", "app RAM, LITE profile", "≈17% of a 4 GB phone"),
          ("cpu", "0.3%", "idle CPU, LITE profile", "1.6% in FULL"),
          ("flask", "5.9%", "word error rate", "preliminary: 10 clips")]
 tw, tg = 2.35, 0.17
@@ -290,16 +290,16 @@ for i, (ic, big, l1, l2) in enumerate(tiles):
     text(s, x + 0.18, 2.2, tw - 0.3, 0.5, [[(big, {"bold": True, "size": 26, "color": TE})]])
     text(s, x + 0.18, 2.68, tw - 0.3, 0.22, [[(l1, {"bold": True, "size": 10})]])
     text(s, x + 0.18, 2.9, tw - 0.3, 0.2, [[(l2, {"size": 9, "color": MUTED})]])
-footnote(s, 3.2, "Test phone: Snapdragon 870 with 12 GB RAM, LITE profile forced. Validation on 4–6 GB phones is in progress. End-to-end phone-to-phone latency: measurement pending.")
+footnote(s, 3.2, "Test phone: Snapdragon 870, 12 GB RAM, LITE profile forced. On 4–6 GB phones LITE switches on by itself; its 688 MB footprint does not depend on the phone's RAM. Speed on budget chips and end-to-end latency: measurement in progress.", h=0.36)
 
-label(s, 0.45, 3.55, 5.6, "Potential challenges and risks", size=12.5)
-label(s, 6.35, 3.55, 6.5, "Strategies for overcoming these challenges", size=12.5)
+label(s, 0.45, 3.63, 5.6, "Potential challenges and risks", size=12.5)
+label(s, 6.35, 3.63, 6.5, "Strategies for overcoming these challenges", size=12.5)
 risks = [("memory", "Phones with 3–6 GB RAM", "LITE profile auto-selects below 6 GB: 2 threads, no live captions, engines unload after 60 s"),
          ("database", "1.14 GB of model files", "Per-language on-demand download and smaller voices for hi/gu/or/en (planned)"),
          ("bt", "Wi-Fi Direct / Bluetooth not yet tested phone-to-phone", "Two-phone tests on real devices; normal Wi-Fi stays the primary link"),
          ("ear", "Noise, accents, code-mixing raise errors", "Keyword boosting for alert words; 30-clip-per-language evaluation; typed text as fallback")]
 for i, (ic, r, st) in enumerate(risks):
-    yy = 3.92 + i * 0.6
+    yy = 3.98 + i * 0.58
     box(s, 0.45, yy, 12.43, 0.52, fill=CARD if i % 2 == 0 else "FFFFFF", radius=0.2)
     icon(s, ic, "sa", 0.62, yy + 0.11, 0.3)
     text(s, 1.05, yy, 4.9, 0.52, [[(r, {"bold": True, "size": 10.5})]], anchor=MSO_ANCHOR.MIDDLE)
