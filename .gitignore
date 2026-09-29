@@ -11,3 +11,11 @@ tools/.venv/
 *.onnx
 *.gguf
 *.nemo
+# build outputs / local environments
+firmware/.pio/
+**/.venv/
+__pycache__/
+*.pyc
+tools/gateway/data/
+*.db
+.pytest_cache/
