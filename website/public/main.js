@@ -87,6 +87,19 @@
     box.addEventListener("close", () => { img.removeAttribute("src"); });
   }
 
+  // Demo film at the top: big play button over the poster; hides while playing, returns at the end.
+  const film = document.getElementById("filmVideo");
+  const filmPlay = document.querySelector(".film-play");
+  if (film && filmPlay) {
+    // Native controls stay off until the film starts, so they never sit under the play button
+    // (without JS the markup keeps `controls`, so the video still works).
+    film.controls = false;
+    filmPlay.addEventListener("click", () => { film.controls = true; film.play().catch(() => {}); });
+    film.addEventListener("play", () => { filmPlay.hidden = true; film.controls = true; });
+    film.addEventListener("ended", () => { filmPlay.hidden = false; film.controls = false; });
+    // Header "Demo" link and #film deep links scroll to the film; they don't auto-play (browsers block sound).
+  }
+
   // Only one video plays at a time.
   const videos = Array.from(document.querySelectorAll("video"));
   videos.forEach((v) => v.addEventListener("play", () => {

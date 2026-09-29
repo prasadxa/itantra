@@ -7,14 +7,14 @@
 <meta name="description" content="iTantra (SIH 2026, ISRO PS 26173): speech becomes text on one phone, crosses Wi-Fi, Bluetooth or LoRa as a few dozen bytes, and is spoken aloud on the other phone in 10 Indian languages, fully offline.">
 <meta property="og:title" content="iTantra: offline multilingual voice walkie-talkie">
 <meta property="og:description" content="Speech → text → speech over links too thin for voice. 10 Indian languages, on-device AI, no tower, no internet.">
-<meta property="og:image" content="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/video/explainer-v2-poster.jpg">
+<meta property="og:image" content="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/video/explainer-v2-hook.jpg">
 <meta name="theme-color" content="#0E1013">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+Devanagari:wght@500&display=swap">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
 
@@ -27,10 +27,10 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path class="l1" d="M4 7h16" /><path class="l2" d="M4 12h16" /><path class="l3" d="M4 17h16" /></svg>
     </button>
     <nav id="site-nav" aria-label="Sections">
+      <a href="#film">Demo</a>
       <a href="#how">How it works</a>
       <a href="#features">Features</a>
       <a href="#screens">Screens</a>
-      <a href="#demo">Demo</a>
       <a href="#results">Results</a>
       <a href="#try">Try it</a>
     </nav>
@@ -43,38 +43,48 @@
 
 <!-- ============ HERO ============ -->
 <section class="hero" id="top">
-  <div class="wrap hero-grid">
-    <div class="hero-copy">
+  <div class="wrap">
+    <div class="hero-head">
       <p class="eyebrow">Smart India Hackathon 2026 · ISRO · Problem Statement 26173</p>
-      <h1>Speak in your language.<br>Send a few dozen bytes.<br><em>Be heard on the other side.</em></h1>
-      <p class="lede">iTantra is an offline voice walkie-talkie for India. Speech becomes text on one phone, crosses Wi-Fi, Bluetooth LE or a LoRa radio bridge, and is spoken aloud on the other phone in 10 languages. No tower, no internet, no cloud.</p>
-
-      <div class="cta" id="download">
-        <a class="btn btn-primary" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/apk/iTantra-0.1.0-debug.apk" download>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16" /></svg>
-          Download APK <span class="btn-meta">63 MB</span>
-        </a>
-        <a class="btn btn-ghost" href="#demo">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-          Watch the 2-minute demo
-        </a>
-      </div>
-
-      <dl class="apk-facts">
-        <div><dt>Version</dt><dd>0.1.0 (debug build)</dd></div>
-        <div><dt>Needs</dt><dd>Android 8.0+, 64-bit ARM</dd></div>
-        <div><dt>Models</dt><dd>1.2 GB, loaded once <a href="#models">(how)</a></dd></div>
-        <div class="sha"><dt>SHA-256</dt><dd><code id="apk-sha">ad15d2d37ef5933a70f0828266e03e155f68f2bb0ab3b8e559bfcdea2b06f5e0</code><button type="button" class="copy" data-copy="#apk-sha">Copy</button></dd></div>
-      </dl>
+      <h1>Speak in your language. <em>Be heard on the other side.</em></h1>
     </div>
 
-    <figure class="phone" aria-label="iTantra talk screen receiving a Hindi flood alert">
-      <img src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/thumbs/01_alert_card.jpg" width="540" height="1200" alt="iTantra talk screen: a red Hindi flood warning card, Talk, Call and Alert buttons, quick replies, SOS and the push-to-talk button">
-      <figcaption>A flood alert from the control room, spoken aloud at full volume on arrival.</figcaption>
+    <figure class="film" id="film">
+      <div class="film-frame">
+        <video id="filmVideo" controls preload="metadata" playsinline poster="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/video/explainer-v2-hook.jpg" width="1920" height="1080">
+          <source src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/video/explainer-v2.mp4" type="video/mp4">
+          <track kind="captions" src="captions/explainer.vtt?v=2" srclang="en" label="English" default>
+        </video>
+        <button type="button" class="film-play" aria-label="Play the demo film">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+          <span>Watch the demo <b>1:55</b></span>
+        </button>
+      </div>
+      <figcaption>
+        <span>Demo film: the problem, how iTantra works, and the app on a real phone. Narrated, English captions.</span>
+        <a href="demo/">Open the film on its own page</a>
+      </figcaption>
     </figure>
-  </div>
 
-  <div class="wrap">
+    <div class="hero-grid">
+      <p class="lede">iTantra is an offline voice walkie-talkie for India. Speech becomes text on one phone, crosses Wi-Fi, Bluetooth LE or a LoRa radio bridge, and is spoken aloud on the other phone in 10 languages. No tower, no internet, no cloud.</p>
+      <div class="hero-side">
+        <div class="cta" id="download">
+          <a class="btn btn-primary" href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/apk/iTantra-0.1.0-debug.apk" download>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16" /></svg>
+            Download APK <span class="btn-meta">63 MB</span>
+          </a>
+          <a class="btn btn-ghost" href="#try">Install guide</a>
+        </div>
+        <dl class="apk-facts">
+          <div><dt>Version</dt><dd>0.1.0 (debug build)</dd></div>
+          <div><dt>Needs</dt><dd>Android 8.0+, 64-bit ARM</dd></div>
+          <div><dt>Models</dt><dd>1.2 GB, loaded once <a href="#models">(how)</a></dd></div>
+          <div class="sha"><dt>SHA-256</dt><dd><code id="apk-sha">ad15d2d37ef5933a70f0828266e03e155f68f2bb0ab3b8e559bfcdea2b06f5e0</code><button type="button" class="copy" data-copy="#apk-sha">Copy</button></dd></div>
+        </dl>
+      </div>
+    </div>
+
     <ul class="langs" aria-label="Supported languages">
       <li lang="hi">हिन्दी</li><li lang="bn">বাংলা</li><li lang="mr">मराठी</li><li lang="te">తెలుగు</li><li lang="ta">தமிழ்</li>
       <li lang="gu">ગુજરાતી</li><li lang="kn">ಕನ್ನಡ</li><li lang="ml">മലയാളം</li><li lang="or">ଓଡ଼ିଆ</li><li lang="en">English</li>
@@ -214,17 +224,10 @@
 </section>
 
 <!-- ============ DEMO ============ -->
-<section id="demo">
+<section id="clips">
   <div class="wrap">
-    <p class="eyebrow">See it working</p>
-    <h2>Demo video and phone recordings</h2>
-    <figure class="explainer">
-      <video controls preload="none" playsinline poster="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/video/explainer-v2-poster.jpg" width="1920" height="1080">
-        <source src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/video/explainer-v2.mp4" type="video/mp4">
-        <track kind="captions" src="captions/explainer.vtt?v=2" srclang="en" label="English" default>
-      </video>
-      <figcaption>Motion-graphics explainer of the whole system, 1 min 55 s, narrated, with English captions.</figcaption>
-    </figure>
+    <p class="eyebrow">Phone recordings</p>
+    <h2>Recorded on a real phone</h2>
 
     <div class="clips">
       <figure><video controls preload="none" playsinline poster="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/02_receive_voice.jpg" width="576" height="1280"><source src="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/media/clips/02_receive_voice.mp4" type="video/mp4"></video>
@@ -430,7 +433,7 @@ adb push vad stt tts /sdcard/Android/data/org.itantra.app/files/models/</code></
       <a href="https://pub-d139da76dbb3434bbcb332e210a95fcf.r2.dev/apk/iTantra-0.1.0-debug.apk" download>Download APK</a>
       <a href="#models">Model installer</a>
       <a href="https://github.com/prasadxa/itantra" rel="noopener">Source code</a>
-      <a href="#demo">Demo video</a>
+      <a href="demo/">Demo film</a>
     </nav>
     <p class="small">SIH 2026 · ISRO · PS 26173 · Software · Smart Automation. Model licences: MIT, Apache-2.0, CC-BY-4.0.</p>
   </div>
@@ -442,6 +445,6 @@ adb push vad stt tts /sdcard/Android/data/org.itantra.app/files/models/</code></
   <p class="lb-cap"></p>
 </dialog>
 
-<script src="main.js?v=3" defer></script>
+<script src="main.js?v=5" defer></script>
 </body>
 </html>
